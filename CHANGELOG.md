@@ -5,6 +5,52 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.6.0] - 2026-03-20
+
+### Added
+- **Task Information Edit Mode**: Manual editing for task details, verification method, and pass criteria
+  - Section-based edit mode toggle with explicit "Edit" button
+  - Edit/Cancel/Save workflow for safe data modification
+  - Real-time validation (task name required)
+  - Automatic change tracking with system comments
+
+### Changed
+- **Enhanced Task Details Modal**: Improved task information display
+  - Added WBS number to view mode
+  - Added task name display in view mode
+  - Clear separation between view mode and edit mode
+  - Better visual hierarchy with edit button in top-right corner
+
+### Features
+- **Editable Fields**:
+  - Task Name (required)
+  - Task Type
+  - Primary Owner
+  - Support Owner
+  - Duration (Business Days)
+  - Predecessors
+  - Verification Method (multi-line)
+  - Pass Criteria (multi-line)
+
+- **Read-Only Fields** (shown in view mode):
+  - WBS Number (structural identifier)
+  - Phase (structural grouping)
+  - Period (editable in separate "Period Edit" section)
+
+- **Safety Features**:
+  - Confirmation required before saving
+  - Cancel button to discard changes
+  - Edit mode resets when closing modal
+  - System comments log all changes
+
+### Technical
+- Added `isEditingTaskInfo` global state variable
+- Modified `renderTaskDetails()` to support dual modes
+- Added `toggleTaskInfoEdit()` for mode switching
+- Added `saveTaskInfo()` with validation and change tracking
+- Added `cancelTaskInfoEdit()` for safe cancellation
+- Modified `closeModal()` to reset edit state
+
 ## [2.5.0] - 2026-03-20
 
 ### Added
@@ -225,6 +271,7 @@ For bug reports, feature requests, or questions:
 
 ---
 
+[2.6.0]: https://github.com/ks-source/task-manager/compare/v2.5.0...v2.6.0
 [2.5.0]: https://github.com/ks-source/task-manager/compare/v2.4.1...v2.5.0
 [2.4.1]: https://github.com/ks-source/task-manager/compare/v2.4.0...v2.4.1
 [2.4.0]: https://github.com/ks-source/task-manager/compare/v2.3.0...v2.4.0

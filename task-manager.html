@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Task Manager - WBS Visualizer v2.5.0</title>
+  <title>Task Manager - WBS Visualizer v2.6.0</title>
   <meta name="description" content="A lightweight, browser-based Work Breakdown Structure (WBS) visualization and management tool">
   <meta name="keywords" content="task manager, WBS, project management, task tracking">
   <meta name="author" content="ks-source">
@@ -873,7 +873,7 @@
    * Header / Menu Bar
    * ========================================== -->
   <header class="header">
-    <h1 class="header-title">Task Manager v2.5.0</h1>
+    <h1 class="header-title">Task Manager v2.6.0</h1>
     <nav class="header-nav">
       <button class="icon-button active" onclick="showDashboard()" title="ダッシュボード">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1253,7 +1253,7 @@
   <script type="application/json" id="initial-wbs-data">
 {
   "meta": {
-    "version": "2.5.0",
+    "version": "2.6.0",
     "project_name": "New Project",
     "project_start": "",
     "project_end": "",
@@ -1277,6 +1277,7 @@
     let isDirty = false;
     let currentFileHandle = null;
     let currentFileName = '(新規ファイル)';
+    let isEditingTaskInfo = false;
 
     // Status mapping (Japanese to English keys)
     const STATUS_MAP = {
@@ -1663,17 +1664,100 @@
     function renderTaskDetails() {
       if (!currentTask) return;
 
-      const detailsHtml = `
-        <p><strong>フェーズ:</strong> ${currentTask.phase}</p>
-        <p><strong>種別:</strong> ${currentTask.task_type}</p>
-        <p><strong>担当:</strong> ${currentTask.primary_owner} (支援: ${currentTask.support_owner})</p>
-        <p><strong>工数:</strong> ${currentTask.duration_bd} BD</p>
-        <p><strong>期間:</strong> ${currentTask.start_date} ~ ${currentTask.finish_date}</p>
-        <p><strong>前提タスク:</strong> ${currentTask.predecessors || 'なし'}</p>
-        <hr style="margin: 1rem 0;">
-        <p><strong>検証方法:</strong><br>${currentTask.verification_method}</p>
-        <p><strong>合格基準:</strong><br>${currentTask.pass_criteria}</p>
-      `;
+      let detailsHtml;
+
+      if (isEditingTaskInfo) {
+        // Edit mode
+        detailsHtml = `
+          <div class="task-info-edit-form">
+            <div style="margin-bottom: 0.75rem;">
+              <label style="display: block; font-weight: 600; margin-bottom: 0.25rem;">タスク名:</label>
+              <input type="text" id="edit-task-name" value="${escapeHtml(currentTask.task_name || '')}"
+                     style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; font-size: 0.9rem;">
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem;">
+              <div>
+                <label style="display: block; font-weight: 600; margin-bottom: 0.25rem;">種別:</label>
+                <input type="text" id="edit-task-type" value="${escapeHtml(currentTask.task_type || '')}"
+                       style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; font-size: 0.9rem;">
+              </div>
+              <div>
+                <label style="display: block; font-weight: 600; margin-bottom: 0.25rem;">工数 (BD):</label>
+                <input type="number" id="edit-duration" value="${currentTask.duration_bd || ''}"
+                       style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; font-size: 0.9rem;">
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem;">
+              <div>
+                <label style="display: block; font-weight: 600; margin-bottom: 0.25rem;">主担当:</label>
+                <input type="text" id="edit-primary-owner" value="${escapeHtml(currentTask.primary_owner || '')}"
+                       style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; font-size: 0.9rem;">
+              </div>
+              <div>
+                <label style="display: block; font-weight: 600; margin-bottom: 0.25rem;">支援担当:</label>
+                <input type="text" id="edit-support-owner" value="${escapeHtml(currentTask.support_owner || '')}"
+                       style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; font-size: 0.9rem;">
+              </div>
+            </div>
+
+            <div style="margin-bottom: 0.75rem;">
+              <label style="display: block; font-weight: 600; margin-bottom: 0.25rem;">前提タスク:</label>
+              <input type="text" id="edit-predecessors" value="${escapeHtml(currentTask.predecessors || '')}"
+                     placeholder="例: WBS1.2.1, WBS1.2.2"
+                     style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; font-size: 0.9rem;">
+            </div>
+
+            <hr style="margin: 1rem 0; border: none; border-top: 1px solid #e0e0e0;">
+
+            <div style="margin-bottom: 0.75rem;">
+              <label style="display: block; font-weight: 600; margin-bottom: 0.25rem;">検証方法:</label>
+              <textarea id="edit-verification" rows="3"
+                        style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; font-size: 0.9rem; resize: vertical;">${escapeHtml(currentTask.verification_method || '')}</textarea>
+            </div>
+
+            <div style="margin-bottom: 1rem;">
+              <label style="display: block; font-weight: 600; margin-bottom: 0.25rem;">合格基準:</label>
+              <textarea id="edit-pass-criteria" rows="3"
+                        style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; font-size: 0.9rem; resize: vertical;">${escapeHtml(currentTask.pass_criteria || '')}</textarea>
+            </div>
+
+            <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+              <button onclick="saveTaskInfo()" class="btn-primary" style="padding: 0.5rem 1.5rem;">保存</button>
+              <button onclick="cancelTaskInfoEdit()" class="btn-secondary" style="padding: 0.5rem 1.5rem; background: #6c757d;">キャンセル</button>
+            </div>
+
+            <p style="margin-top: 1rem; padding: 0.75rem; background: #f8f9fa; border-left: 3px solid #007bff; font-size: 0.85rem; color: #666;">
+              <strong>読み取り専用:</strong> フェーズ (${currentTask.phase}), WBS番号 (${currentTask.wbs_no})<br>
+              <strong>期間編集:</strong> 上記の「期間編集」セクションで編集してください
+            </p>
+          </div>
+        `;
+      } else {
+        // View mode
+        detailsHtml = `
+          <div style="position: relative;">
+            <button onclick="toggleTaskInfoEdit()"
+                    style="position: absolute; top: 0; right: 0; padding: 0.4rem 1rem; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85rem;">
+              編集
+            </button>
+
+            <p><strong>WBS番号:</strong> ${currentTask.wbs_no}</p>
+            <p><strong>タスク名:</strong> ${escapeHtml(currentTask.task_name || '')}</p>
+            <p><strong>フェーズ:</strong> ${currentTask.phase}</p>
+            <p><strong>種別:</strong> ${currentTask.task_type || '-'}</p>
+            <p><strong>主担当:</strong> ${currentTask.primary_owner || '-'} 　<strong>支援:</strong> ${currentTask.support_owner || '-'}</p>
+            <p><strong>工数:</strong> ${currentTask.duration_bd || '-'} BD</p>
+            <p><strong>期間:</strong> ${currentTask.start_date || '-'} ~ ${currentTask.finish_date || '-'}</p>
+            <p><strong>前提タスク:</strong> ${currentTask.predecessors || 'なし'}</p>
+            <hr style="margin: 1rem 0;">
+            <p><strong>検証方法:</strong><br>${escapeHtml(currentTask.verification_method || '-')}</p>
+            <p><strong>合格基準:</strong><br>${escapeHtml(currentTask.pass_criteria || '-')}</p>
+          </div>
+        `;
+      }
+
       document.getElementById('task-details').innerHTML = detailsHtml;
     }
 
@@ -1690,9 +1774,83 @@
       return '';
     }
 
+    function toggleTaskInfoEdit() {
+      isEditingTaskInfo = !isEditingTaskInfo;
+      renderTaskDetails();
+    }
+
+    function saveTaskInfo() {
+      if (!currentTask) return;
+
+      // Get values from form
+      const taskName = document.getElementById('edit-task-name').value.trim();
+      const taskType = document.getElementById('edit-task-type').value.trim();
+      const primaryOwner = document.getElementById('edit-primary-owner').value.trim();
+      const supportOwner = document.getElementById('edit-support-owner').value.trim();
+      const duration = document.getElementById('edit-duration').value.trim();
+      const predecessors = document.getElementById('edit-predecessors').value.trim();
+      const verification = document.getElementById('edit-verification').value.trim();
+      const passCriteria = document.getElementById('edit-pass-criteria').value.trim();
+
+      // Validate required field
+      if (!taskName) {
+        alert('タスク名は必須です');
+        return;
+      }
+
+      // Track changes for comment
+      const changes = [];
+      if (currentTask.task_name !== taskName) changes.push(`タスク名: "${currentTask.task_name}" → "${taskName}"`);
+      if (currentTask.task_type !== taskType) changes.push(`種別: "${currentTask.task_type}" → "${taskType}"`);
+      if (currentTask.primary_owner !== primaryOwner) changes.push(`主担当: "${currentTask.primary_owner}" → "${primaryOwner}"`);
+      if (currentTask.support_owner !== supportOwner) changes.push(`支援担当: "${currentTask.support_owner}" → "${supportOwner}"`);
+      if (currentTask.duration_bd !== duration) changes.push(`工数: "${currentTask.duration_bd}" → "${duration}"`);
+      if (currentTask.predecessors !== predecessors) changes.push(`前提タスク: "${currentTask.predecessors}" → "${predecessors}"`);
+      if (currentTask.verification_method !== verification) changes.push(`検証方法変更`);
+      if (currentTask.pass_criteria !== passCriteria) changes.push(`合格基準変更`);
+
+      // Update task
+      currentTask.task_name = taskName;
+      currentTask.task_type = taskType;
+      currentTask.primary_owner = primaryOwner;
+      currentTask.support_owner = supportOwner;
+      currentTask.duration_bd = duration;
+      currentTask.predecessors = predecessors;
+      currentTask.verification_method = verification;
+      currentTask.pass_criteria = passCriteria;
+
+      // Add system comment if there were changes
+      if (changes.length > 0) {
+        if (!currentTask.comments) {
+          currentTask.comments = [];
+        }
+        currentTask.comments.push({
+          timestamp: new Date().toISOString(),
+          type: 'system',
+          content: 'タスク情報を更新しました:\n' + changes.join('\n')
+        });
+      }
+
+      // Mark as dirty and save
+      markDirty();
+      isEditingTaskInfo = false;
+
+      // Re-render
+      renderTaskDetails();
+      renderTaskTable(); // Update table to reflect task name changes
+
+      console.log('Task info saved:', taskName);
+    }
+
+    function cancelTaskInfoEdit() {
+      isEditingTaskInfo = false;
+      renderTaskDetails();
+    }
+
     function closeModal() {
       document.getElementById('task-modal').classList.remove('active');
       currentTask = null;
+      isEditingTaskInfo = false; // Reset edit mode when closing modal
     }
 
     function addComment() {
