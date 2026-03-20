@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Task Manager - WBS Visualizer v2.8.8</title>
+  <title>Task Manager - WBS Visualizer v2.8.9</title>
   <meta name="description" content="A lightweight, browser-based Work Breakdown Structure (WBS) visualization and management tool">
   <meta name="keywords" content="task manager, WBS, project management, task tracking">
   <meta name="author" content="ks-source">
@@ -873,7 +873,7 @@
    * Header / Menu Bar
    * ========================================== -->
   <header class="header">
-    <h1 class="header-title">Task Manager v2.8.8</h1>
+    <h1 class="header-title">Task Manager v2.8.9</h1>
     <nav class="header-nav">
       <button class="icon-button active" onclick="showDashboard()" title="ダッシュボード">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -3471,7 +3471,6 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
     }
 
     .timeline-cell {
-      flex: 1;
       padding: 0 0.5rem;
       text-align: center;
       font-size: 0.75rem;
@@ -3494,13 +3493,11 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
       position: absolute;
       top: 0;
       left: 0;
-      right: 0;
       bottom: 0;
       display: flex;
     }
 
     .timeline-bg-cell {
-      flex: 1;
       border-right: 1px solid #f0f0f0;
       min-width: 40px;
     }
@@ -3540,28 +3537,6 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
     .task-bar.not-started { background: #95a5a6; }
     .task-bar.on-hold { background: #f39c12; }
     .task-bar.cancelled { background: #e74c3c; }
-
-    .task-name-label {
-      position: absolute;
-      top: -18px;
-      left: 0;
-      font-size: 0.85rem;
-      color: #2c3e50;
-      background: rgba(255, 255, 255, 0.95);
-      padding: 2px 8px;
-      border: 1px solid #ddd;
-      border-radius: 3px;
-      white-space: nowrap;
-      z-index: 7;
-      pointer-events: none;
-      font-weight: 500;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
-
-    .task-name-label.align-right {
-      left: auto;
-      right: 0;
-    }
 
     .legend {
       display: flex;
@@ -3613,14 +3588,26 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
 </head>
 <body>
   <div class="header">
-    <h1>ガントチャート</h1>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 32px; height: 32px; color: #2c3e50;">
+      <rect x="3" y="3" width="18" height="18" rx="3"></rect>
+      <path d="M7 8h4"></path>
+      <path d="M10 12h4"></path>
+      <path d="M13 16h4"></path>
+    </svg>
     <div class="controls">
       <div>
         <button class="view-mode-btn active" onclick="changeViewMode('day')" id="btn-day">日</button>
         <button class="view-mode-btn" onclick="changeViewMode('week')" id="btn-week">週</button>
         <button class="view-mode-btn" onclick="changeViewMode('month')" id="btn-month">月</button>
       </div>
-      <button class="refresh-btn" onclick="refreshData()">更新</button>
+      <button class="refresh-btn" onclick="refreshData()" title="更新">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;">
+          <polyline points="23 4 23 10 17 10"></polyline>
+          <polyline points="1 20 1 14 7 14"></polyline>
+          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"></path>
+          <path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14"></path>
+        </svg>
+      </button>
     </div>
     <div class="legend">
       <div class="legend-item">
@@ -3700,10 +3687,13 @@ Predecessors: \${task.predecessors || 'N/A'}\`;
       // Timeline column
       let timelineHTML = '<div class="timeline">';
 
+      // Calculate total timeline width
+      const totalTimelineWidth = cells.length * cellWidth;
+
       // Timeline header
-      timelineHTML += '<div class="timeline-header"><div class="timeline-grid">';
+      timelineHTML += \`<div class="timeline-header"><div class="timeline-grid" style="min-width: \${totalTimelineWidth}px; width: \${totalTimelineWidth}px;">\`;
       cells.forEach(cell => {
-        timelineHTML += \`<div class="timeline-cell" style="min-width: \${cellWidth}px;">\${cell.label}</div>\`;
+        timelineHTML += \`<div class="timeline-cell" style="min-width: \${cellWidth}px; width: \${cellWidth}px; flex: none;">\${cell.label}</div>\`;
       });
       timelineHTML += '</div></div>';
 
@@ -3733,13 +3723,13 @@ Predecessors: \${task.predecessors || 'N/A'}\`;
         timelineHTML += '<div class="timeline-row">';
 
         // Background grid
-        timelineHTML += '<div class="timeline-bg">';
+        timelineHTML += \`<div class="timeline-bg" style="min-width: \${totalTimelineWidth}px; width: \${totalTimelineWidth}px;">\`;
         cells.forEach(cell => {
           const isToday = cell.date &&
             cell.date.getFullYear() === today.getFullYear() &&
             cell.date.getMonth() === today.getMonth() &&
             cell.date.getDate() === today.getDate();
-          timelineHTML += \`<div class="timeline-bg-cell \${isToday ? 'today' : ''}" style="min-width: \${cellWidth}px;"></div>\`;
+          timelineHTML += \`<div class="timeline-bg-cell \${isToday ? 'today' : ''}" style="min-width: \${cellWidth}px; width: \${cellWidth}px; flex: none;"></div>\`;
         });
         timelineHTML += '</div>';
 
@@ -3755,14 +3745,7 @@ Support: \${task.support_owner || 'N/A'}
 Status: \${task.status}
 Predecessors: \${task.predecessors || 'N/A'}\`;
 
-        // Determine label alignment (right-align if bar ends near right edge)
-        const isNearRightEdge = (startOffset + duration) > 80;
-        const alignClass = isNearRightEdge ? 'align-right' : '';
-
         timelineHTML += \`
-          <div class="task-name-label \${alignClass}">
-            \${task.wbs_no}: \${task.task_name}
-          </div>
           <div class="task-bar \${statusClass}"
                style="left: \${startOffset}%; width: \${duration}%; cursor: pointer;"
                title="\${barTooltipText}"

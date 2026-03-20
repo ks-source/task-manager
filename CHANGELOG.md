@@ -5,6 +5,53 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.8.9] - 2026-03-20
+
+### Removed
+- **Task Name Labels**: Removed task name labels from timeline area
+  - Deleted `.task-name-label` CSS class and `.align-right` variant (lines 3544-3564 removed)
+  - Removed JavaScript generation of task name labels (lines 3736-3743)
+  - Labels were difficult to implement properly and caused visual clutter
+  - Task information still available via tooltip on hover
+
+### Changed
+- **Gantt Chart Header Icon**: Replaced "ガントチャート" text with SVG icon (line 3594)
+  - Changed from `<h1>ガントチャート</h1>` to gantt chart SVG icon
+  - Icon size: 32x32px
+  - Cleaner, more compact header design
+
+- **Refresh Button Icon**: Replaced "更新" text with SVG refresh icon (line 3606)
+  - Changed from `<button>更新</button>` to icon-only button with tooltip
+  - Icon size: 20x20px
+  - More consistent with modern UI patterns
+
+### Fixed
+- **Horizontal Scrollbar Display**: Fixed timeline horizontal scrollbar not appearing
+  - Added explicit width calculation: `totalTimelineWidth = cells.length * cellWidth` (line 3694)
+  - Set timeline-grid width: `min-width: ${totalTimelineWidth}px; width: ${totalTimelineWidth}px` (line 3697)
+  - Set timeline-cell width: `width: ${cellWidth}px; flex: none` (line 3699)
+  - Set timeline-bg width: `width: ${totalTimelineWidth}px` (line 3729)
+  - Set timeline-bg-cell width: `width: ${cellWidth}px; flex: none` (line 3735)
+  - Removed `right: 0` from `.timeline-bg` CSS (line 3493)
+  - Removed `flex: 1` from `.timeline-cell` and `.timeline-bg-cell` CSS
+  - Timeline now properly expands beyond viewport width, triggering horizontal scroll
+
+- **Timeline Header Horizontal Scroll**: Confirmed timeline date headers scroll with timeline content
+  - Timeline header has `position: sticky; top: 0` (sticks vertically, scrolls horizontally)
+  - Task list header has `position: sticky; left: 0; top: 0` (fixed to top-left corner)
+  - Proper synchronization between headers and scrolling content
+
+### Technical
+- **Width Calculation**: Explicit width calculation prevents flexbox from shrinking timeline
+- **CSS Cleanup**: Removed flex properties that interfered with horizontal scrolling
+- **Icon Integration**: SVG icons embedded directly in HTML for better performance
+
+### UI/UX
+- **Cleaner Header**: Icon-only design reduces visual clutter
+- **Proper Scrolling**: Horizontal scrollbar appears when timeline is wide
+- **Simplified Timeline**: Removed overlapping labels for cleaner appearance
+- **Consistent Behavior**: Timeline scrolls naturally with date headers following
+
 ## [2.8.8] - 2026-03-20
 
 ### Fixed
