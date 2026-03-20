@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Task Manager - WBS Visualizer v2.8.9</title>
+  <title>Task Manager - WBS Visualizer v2.9.0</title>
   <meta name="description" content="A lightweight, browser-based Work Breakdown Structure (WBS) visualization and management tool">
   <meta name="keywords" content="task manager, WBS, project management, task tracking">
   <meta name="author" content="ks-source">
@@ -873,7 +873,7 @@
    * Header / Menu Bar
    * ========================================== -->
   <header class="header">
-    <h1 class="header-title">Task Manager v2.8.9</h1>
+    <h1 class="header-title">Task Manager v2.9.0</h1>
     <nav class="header-nav">
       <button class="icon-button active" onclick="showDashboard()" title="ダッシュボード">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -908,10 +908,10 @@
       </button>
       <button class="icon-button" onclick="openGanttChart()" title="ガントチャート">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-          <line x1="9" y1="3" x2="9" y2="21"></line>
-          <line x1="3" y1="9" x2="21" y2="9"></line>
-          <line x1="3" y1="15" x2="21" y2="15"></line>
+          <rect x="3" y="3" width="18" height="18" rx="3"></rect>
+          <path d="M7 8h4"></path>
+          <path d="M10 12h4"></path>
+          <path d="M13 16h4"></path>
         </svg>
       </button>
     </nav>
@@ -3684,11 +3684,11 @@ Predecessors: \${task.predecessors || 'N/A'}\`;
       });
       taskListHTML += '</div>';
 
-      // Timeline column
-      let timelineHTML = '<div class="timeline">';
-
       // Calculate total timeline width
       const totalTimelineWidth = cells.length * cellWidth;
+
+      // Timeline column
+      let timelineHTML = \`<div class="timeline" style="min-width: \${totalTimelineWidth}px; width: \${totalTimelineWidth}px;">\`;
 
       // Timeline header
       timelineHTML += \`<div class="timeline-header"><div class="timeline-grid" style="min-width: \${totalTimelineWidth}px; width: \${totalTimelineWidth}px;">\`;
@@ -3706,19 +3706,6 @@ Predecessors: \${task.predecessors || 'N/A'}\`;
         const duration = Math.max(3, (taskFinish - taskStart) / (maxDate - minDate) * 100);
 
         const statusClass = getStatusClass(task.status);
-
-        // Determine text display based on bar width
-        let displayText = '';
-        if (duration >= 15) {
-          // 15% or more: Show full task name
-          displayText = task.task_name;
-        } else if (duration >= 5) {
-          // 5-15%: Show WBS number only
-          displayText = task.wbs_no;
-        } else {
-          // Less than 5%: No text (tooltip only)
-          displayText = '';
-        }
 
         timelineHTML += '<div class="timeline-row">';
 
@@ -3750,7 +3737,6 @@ Predecessors: \${task.predecessors || 'N/A'}\`;
                style="left: \${startOffset}%; width: \${duration}%; cursor: pointer;"
                title="\${barTooltipText}"
                onclick="openTaskInMainWindow('\${task.wbs_no}')">
-            \${displayText}
           </div>
         \`;
 

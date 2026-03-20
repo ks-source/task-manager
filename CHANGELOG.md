@@ -5,6 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.9.0] - 2026-03-20
+
+### Fixed
+- **CRITICAL: Horizontal Scrollbar Display**: Fixed timeline horizontal scrollbar not appearing
+  - Root cause: `.timeline` element (grid column 2) was set to `auto`, causing it to shrink to parent's remaining width (~950px)
+  - Child elements had explicit widths (e.g., 3000px), but parent element was still shrinking
+  - Solution: Set explicit width on `.timeline` element itself: `style="min-width: ${totalTimelineWidth}px; width: ${totalTimelineWidth}px;"`
+  - Timeline now properly expands beyond viewport width, triggering horizontal scrollbar
+
+### Removed
+- **Task Bar Text Display**: Removed all text display inside task bars on timeline
+  - Deleted `displayText` calculation logic (lines 3710-3721)
+    - Previously showed task name for bars >= 15% width
+    - Previously showed WBS number for bars >= 5% width
+  - Removed `${displayText}` from task bar HTML (line 3753)
+  - Task bars now display as color-only rectangles
+  - Task information still available via tooltip on hover
+  - Eliminates visual issues like "業務要件ヒアリング・整理" and "1.2" appearing on timeline
+
+### Technical
+- **Width Calculation Order**: Moved `totalTimelineWidth` calculation before `.timeline` element creation (line 3688)
+- **Explicit Width Setting**: `.timeline` element now has inline style with calculated width
+- **Grid Column Behavior**: Grid's `auto` column now forced to expand by explicit child width
+
+### UI/UX
+- **Cleaner Timeline**: No text overlap or visual clutter on task bars
+- **Proper Scrolling**: Horizontal scrollbar appears when timeline width exceeds viewport
+- **Color-Only Bars**: Task status indicated purely by color (green/blue/gray/orange/red)
+- **Tooltip Information**: All task details available on hover
+
 ## [2.8.9] - 2026-03-20
 
 ### Removed
