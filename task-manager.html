@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Task Manager - WBS Visualizer v2.6.1</title>
+  <title>Task Manager - WBS Visualizer v2.7.0</title>
   <meta name="description" content="A lightweight, browser-based Work Breakdown Structure (WBS) visualization and management tool">
   <meta name="keywords" content="task manager, WBS, project management, task tracking">
   <meta name="author" content="ks-source">
@@ -873,7 +873,7 @@
    * Header / Menu Bar
    * ========================================== -->
   <header class="header">
-    <h1 class="header-title">Task Manager v2.6.1</h1>
+    <h1 class="header-title">Task Manager v2.7.0</h1>
     <nav class="header-nav">
       <button class="icon-button active" onclick="showDashboard()" title="ダッシュボード">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1252,7 +1252,7 @@
   <script type="application/json" id="initial-wbs-data">
 {
   "meta": {
-    "version": "2.6.1",
+    "version": "2.7.0",
     "project_name": "New Project",
     "project_start": "",
     "project_end": "",
@@ -2172,6 +2172,8 @@ WBSデータをエクスポートします。
 
 1: JSON形式（完全データ）
 2: CSV形式（Excel互換）
+3: AIテンプレート（JSON + プロンプト）
+4: AIテンプレート（CSV + プロンプト）
 
 番号を入力してください:`;
 
@@ -2181,6 +2183,10 @@ WBSデータをエクスポートします。
         exportJSON();
       } else if (choice === '2') {
         exportCSV();
+      } else if (choice === '3') {
+        downloadAITemplate('json');
+      } else if (choice === '4') {
+        downloadAITemplate('csv');
       } else if (choice !== null) {
         alert('無効な選択です');
       }
@@ -2264,6 +2270,280 @@ WBSデータをエクスポートします。
         return '"' + str.replace(/"/g, '""') + '"';
       }
       return str;
+    }
+
+    // ==========================================
+    // AI Template Download
+    // ==========================================
+
+    function downloadAITemplate(format) {
+      const today = new Date().toISOString().split('T')[0].replace(/-/g, '');
+      const filename = `task-manager-ai-prompt-${format}-${today}.md`;
+
+      const promptContent = format === 'json' ? getJSONPromptTemplate() : getCSVPromptTemplate();
+
+      const blob = new Blob([promptContent], { type: 'text/markdown;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+
+      alert(`AIテンプレート（${format.toUpperCase()}）をダウンロードしました\n\nファイル名: ${filename}\n\n使い方:\n1. ダウンロードしたファイルを開く\n2. プロンプト全体をChatGPT/Claude/Gemini等にコピー\n3. AIが生成したデータをTask Managerへインポート`);
+    }
+
+    function getJSONPromptTemplate() {
+      return `# タスクマネージャー AI生成プロンプト
+
+## 指示
+
+あなたはプロジェクトマネージャーです。
+以下のJSON構造を**一切変更せず**厳密に維持して、
+指定されたプロジェクトのWBSタスクリストを生成してください。
+
+---
+
+## 生成条件
+
+### 基本設定
+- **プロジェクト名**: [ここにプロジェクト名を記入してください]
+- **タスク数**: 20個（調整可能）
+- **プロジェクト期間**: 3ヶ月程度
+
+### 必須ルール
+
+#### 1. WBS番号 (wbs_no)
+- 階層構造を維持: \`WBS{番号}.{番号}.{番号}\`
+- 例: WBS1.0.0 → WBS1.1.0 → WBS1.1.1
+- **必須フィールド**: 空文字列不可
+
+#### 2. フェーズ (phase)
+以下から選択（複数フェーズに分散）:
+- \`WBS0\`: プロジェクト計画
+- \`PH1\`: 要件定義・設計
+- \`PH2\`: 開発・実装
+- \`TEST\`: テスト
+- \`RELEASE\`: リリース準備
+
+#### 3. タスク種別 (task_type)
+- 計画、設計、開発、テスト、レビュー、ドキュメント作成など
+- プロジェクトに応じて適切な種別を設定
+
+#### 4. 日付 (start_date, finish_date)
+- **形式**: \`YYYY/M/D\` (例: 2026/3/20)
+- **ゼロパディングなし**: 2026/3/1 ではなく 2026/3/1
+- 開始日は今日以降
+- 終了日 > 開始日
+- タスク間の依存関係を考慮（predecessorsを見て順序を守る）
+
+#### 5. ステータス (status)
+以下から選択:
+- \`未着手\`: 80%
+- \`進行中\`: 15%
+- \`完了\`: 5%
+
+※他に「保留」「延期」「中止」「不明」も使用可能
+
+#### 6. 優先度 (priority)
+- \`最高\`: 10%
+- \`高\`: 30%
+- \`中\`: 50%（デフォルト）
+- \`低\`: 10%
+
+#### 7. その他フィールド
+- \`primary_owner\`: 担当者名（日本人名推奨）
+- \`support_owner\`: 支援者名（空欄も可）
+- \`duration_bd\`: 工数（1-20の整数、Business Days）
+- \`predecessors\`: 前提タスクのWBS番号（カンマ区切り、例: WBS1.1.0,WBS1.2.0）
+- \`verification_method\`: 検証方法（具体的に）
+- \`pass_criteria\`: 合格基準（具体的に）
+- \`mermaid_ids\`: 空文字列でOK
+- \`comments\`: 空配列 \`[]\` で固定
+- \`deleted\`: \`false\` で固定
+- \`deleted_at\`: \`null\` で固定
+
+#### 8. 表示順序 (display_order)
+- 1から順番に連番を振る
+
+---
+
+## 出力形式
+
+**以下のJSONテンプレートをそのままコピーして、
+tasksセクションのみ20個のタスクで埋めてください。**
+
+\`\`\`json
+{
+  "meta": {
+    "version": "2.7.0",
+    "project_name": "[プロジェクト名をここに入力]",
+    "project_start": "2026/3/20",
+    "project_end": "2026/6/30",
+    "total_tasks": 20,
+    "created_at": "2026-03-20T00:00:00.000Z",
+    "last_updated": "2026-03-20T00:00:00.000Z"
+  },
+  "statistics": {
+    "total": 20,
+    "not_started": 16,
+    "in_progress": 3,
+    "completed": 1,
+    "on_hold": 0,
+    "postponed": 0,
+    "cancelled": 0,
+    "unknown": 0,
+    "by_phase": {
+      "WBS0": {"total": 2, "completed": 1},
+      "PH1": {"total": 6, "completed": 0},
+      "PH2": {"total": 8, "completed": 0},
+      "TEST": {"total": 3, "completed": 0},
+      "RELEASE": {"total": 1, "completed": 0}
+    }
+  },
+  "tasks": [
+    {
+      "wbs_no": "WBS1.0.0",
+      "phase": "WBS0",
+      "task_type": "計画",
+      "task_name": "プロジェクトキックオフ",
+      "mermaid_ids": "",
+      "primary_owner": "山田太郎",
+      "support_owner": "佐藤花子",
+      "duration_bd": "1",
+      "start_date": "2026/3/20",
+      "finish_date": "2026/3/20",
+      "predecessors": "",
+      "verification_method": "キックオフ会議の実施と議事録作成",
+      "pass_criteria": "全ステークホルダーの参加と合意形成",
+      "status": "完了",
+      "priority": "最高",
+      "display_order": 1,
+      "deleted": false,
+      "deleted_at": null,
+      "comments": []
+    }
+    // ここに残り19個のタスクを追加してください
+  ]
+}
+\`\`\`
+
+---
+
+## チェックリスト（出力前に必ず確認）
+
+- [ ] JSON構造が完全に一致している
+- [ ] tasksが20個ある
+- [ ] 全タスクにwbs_no, phase, task_nameが入っている
+- [ ] 日付フォーマットが \`YYYY/M/D\` になっている
+- [ ] statusが指定された値のみ（未着手、進行中、完了等）
+- [ ] priorityが指定された値のみ（最高、高、中、低）
+- [ ] display_orderが1から20まで連番
+- [ ] deleted, deleted_at, commentsが正しく設定されている
+- [ ] statisticsの数値が実際のタスクと一致している
+
+---
+
+## 使い方
+
+1. このプロンプト全体をChatGPT/Claude/Gemini等にコピー
+2. [プロジェクト名]を実際のプロジェクト名に置き換え
+3. AIが生成したJSONをコピー
+4. Task Managerの「インポート」→「1: JSON形式」でインポート
+`;
+    }
+
+    function getCSVPromptTemplate() {
+      return `# タスクマネージャー AI生成プロンプト (CSV版)
+
+## 指示
+
+あなたはプロジェクトマネージャーです。
+以下のCSV形式を**一切変更せず**厳密に維持して、
+指定されたプロジェクトのWBSタスクリストを生成してください。
+
+---
+
+## 生成条件
+
+### 基本設定
+- **プロジェクト名**: [ここにプロジェクト名を記入してください]
+- **タスク数**: 20行（ヘッダー除く）
+- **プロジェクト期間**: 3ヶ月程度
+
+### 必須ルール
+
+#### 1. ヘッダー行（1行目）
+**絶対に変更しないでください:**
+\`\`\`
+WBS_No,Phase,Task_Type,Task_Name,Mermaid_IDs,Primary_Owner,Support_Owner,Duration_BD,Start_Date,Finish_Date,Predecessors,Verification_Method,Pass_Criteria,Status
+\`\`\`
+
+#### 2. WBS番号 (WBS_No)
+- 階層構造: \`WBS{番号}.{番号}.{番号}\`
+- 例: WBS1.0.0, WBS1.1.0, WBS1.1.1
+- **必須**: 空欄不可
+
+#### 3. フェーズ (Phase)
+以下から選択:
+- \`WBS0\`: プロジェクト計画
+- \`PH1\`: 要件定義・設計
+- \`PH2\`: 開発・実装
+- \`TEST\`: テスト
+- \`RELEASE\`: リリース準備
+
+#### 4. 日付 (Start_Date, Finish_Date)
+- **形式**: \`YYYY-MM-DD\` (例: 2026-03-20)
+- **ゼロパディング必須**: 2026-03-01
+- 開始日は今日以降
+- 終了日 > 開始日
+
+#### 5. ステータス (Status)
+以下から選択:
+- \`未着手\`, \`進行中\`, \`完了\`, \`保留\`, \`延期\`, \`中止\`, \`不明\`
+
+#### 6. カンマ・改行・引用符の扱い
+- フィールド内にカンマがある場合: ダブルクォートで囲む
+- 例: \`"要件定義, 設計"\`
+- フィールド内に改行がある場合: ダブルクォートで囲む
+- ダブルクォート自体を含む場合: \`""\` にエスケープ
+
+---
+
+## 出力形式
+
+**以下のCSVテンプレートをそのまま使用して、
+データ行を20行追加してください。**
+
+\`\`\`csv
+WBS_No,Phase,Task_Type,Task_Name,Mermaid_IDs,Primary_Owner,Support_Owner,Duration_BD,Start_Date,Finish_Date,Predecessors,Verification_Method,Pass_Criteria,Status
+WBS1.0.0,WBS0,計画,プロジェクトキックオフ,,山田太郎,佐藤花子,1,2026-03-20,2026-03-20,,キックオフ会議の実施と議事録作成,全ステークホルダーの参加と合意形成,完了
+WBS1.1.0,PH1,設計,要件定義書作成,F_01,田中一郎,鈴木次郎,5,2026-03-21,2026-03-27,WBS1.0.0,要件レビュー会議,要件の網羅性と妥当性の確認,進行中
+WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026-03-28,2026-04-10,WBS1.1.0,設計レビュー会議,アーキテクチャの妥当性確認,未着手
+\`\`\`
+※ここに残り17行を追加してください
+
+---
+
+## チェックリスト（出力前に必ず確認）
+
+- [ ] ヘッダー行が完全に一致している
+- [ ] データ行が20行ある
+- [ ] WBS_No, Phase, Task_Nameが全行入っている
+- [ ] 日付フォーマットが \`YYYY-MM-DD\` になっている
+- [ ] カンマを含むフィールドがダブルクォートで囲まれている
+- [ ] Statusが指定された値のみ
+- [ ] 各行のフィールド数が14個（ヘッダーと一致）
+
+---
+
+## 使い方
+
+1. このプロンプト全体をChatGPT/Claude/Gemini等にコピー
+2. [プロジェクト名]を実際のプロジェクト名に置き換え
+3. AIが生成したCSVをコピー
+4. Task Managerの「インポート」→「2: CSV形式」でインポート
+`;
     }
 
     // ==========================================

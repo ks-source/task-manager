@@ -5,6 +5,57 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.7.0] - 2026-03-20
+
+### Added
+- **AI Template Export**: AI-powered task generation templates
+  - Integrated into Export button (options 3 & 4)
+  - Two template formats available:
+    - JSON template with comprehensive prompt
+    - CSV template with comprehensive prompt
+  - Detailed prompts for ChatGPT, Claude, Gemini, and other AI services
+  - Templates include strict formatting rules and validation checklists
+
+### Features
+- **Comprehensive Prompt Templates**:
+  - Project setup instructions with required fields
+  - WBS number hierarchy rules (WBS1.0.0 → WBS1.1.0 → WBS1.1.1)
+  - Phase selection guidelines (WBS0, PH1, PH2, TEST, RELEASE)
+  - Date format specifications (YYYY/M/D for JSON, YYYY-MM-DD for CSV)
+  - Status and priority distribution recommendations
+  - Field-by-field detailed explanations
+  - Sample task data for reference
+  - Pre-export validation checklist
+  - Step-by-step usage instructions
+
+- **Template Content**:
+  - JSON version: ~10KB Markdown file with embedded JSON structure
+  - CSV version: ~8KB Markdown file with embedded CSV format
+  - File naming: `task-manager-ai-prompt-{format}-{date}.md`
+  - Single-file design (prompt + template in one document)
+
+### Changed
+- Export dialog expanded from 2 to 4 options
+- Export functionality now supports both data export and template download
+- No additional UI buttons (integrated into existing Export button)
+
+### Technical
+- Added `downloadAITemplate(format)` function
+- Added `getJSONPromptTemplate()` with embedded template
+- Added `getCSVPromptTemplate()` with embedded template
+- Modified `showExport()` to handle 4 options
+- Template content embedded as JavaScript string literals
+- File size impact: ~15KB added to HTML file
+
+### Use Case
+1. Click "Export" button
+2. Select option 3 (JSON template) or 4 (CSV template)
+3. Download Markdown file with AI prompt
+4. Copy prompt to ChatGPT/Claude/Gemini
+5. Replace [Project Name] with actual project
+6. AI generates structured task data
+7. Import generated data via "Import" button
+
 ## [2.6.1] - 2026-03-20
 
 ### Changed
@@ -288,6 +339,7 @@ For bug reports, feature requests, or questions:
 
 ---
 
+[2.7.0]: https://github.com/ks-source/task-manager/compare/v2.6.1...v2.7.0
 [2.6.1]: https://github.com/ks-source/task-manager/compare/v2.6.0...v2.6.1
 [2.6.0]: https://github.com/ks-source/task-manager/compare/v2.5.0...v2.6.0
 [2.5.0]: https://github.com/ks-source/task-manager/compare/v2.4.1...v2.5.0
