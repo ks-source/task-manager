@@ -5,6 +5,47 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.11.1] - 2026-03-20
+
+### Fixed
+- **CRITICAL: Gantt Chart Row Height Alignment**: Fixed misalignment between task column rows and timeline rows
+  - **Root Cause**: Task column row height was updated to 70px in v2.11.0, but timeline row height remained at 60px
+  - **Symptom**: Border lines between task names and task bars became increasingly misaligned as users scrolled down
+  - **Solution**: Updated `.timeline-row` height from 60px to 70px (task-manager.html:3656)
+  - **Result**: Border lines now perfectly align between task column and timeline, maintaining alignment regardless of scroll position
+
+### Technical Details
+- **CSS Change** (task-manager.html:3656):
+  ```css
+  /* Before */
+  .timeline-row { height: 60px; }
+
+  /* After */
+  .timeline-row { height: 70px; }
+  ```
+- **Synchronization**: Both `.task-row` (task column) and `.timeline-row` (timeline) now use identical 70px height
+- **Grid Alignment**: CSS Grid automatically maintains row alignment when both columns have matching heights
+
+### Visual Impact
+```
+Before (Misaligned):
+┌─────────────┬─────────────┐
+│ Task 1 (70) │ Bar 1 (60)  │
+├─────────────┤ Gap         │ ← Misalignment starts
+│ Task 2 (70) ├─────────────┤
+│             │ Bar 2 (60)  │
+├─────────────┤ Gap grows   │ ← Gets worse
+│ Task 3 (70) ├─────────────┤
+
+After (Aligned):
+┌─────────────┬─────────────┐
+│ Task 1 (70) │ Bar 1 (70)  │
+├─────────────┼─────────────┤ ← Perfect alignment
+│ Task 2 (70) │ Bar 2 (70)  │
+├─────────────┼─────────────┤ ← Perfect alignment
+│ Task 3 (70) │ Bar 3 (70)  │
+```
+
 ## [2.11.0] - 2026-03-20
 
 ### Added
