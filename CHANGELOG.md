@@ -5,6 +5,91 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.10.0] - 2026-03-20
+
+### Fixed
+- **CRITICAL: Complete Gantt Chart Scrolling Architecture Overhaul**: Resolved all three critical issues simultaneously
+  - **Issue 1**: Task column now properly fixed during horizontal scroll (Excel "Freeze Panes" behavior)
+  - **Issue 2**: Date headers now visible during vertical scroll AND follow horizontal scroll correctly
+  - **Issue 3**: Horizontal scrollbar now appears properly when timeline exceeds viewport width
+
+### Root Cause Analysis (External Expert Consultation)
+- Consulted three external AI experts (Opus, GPT, Gemini) who identified two fundamental architectural flaws:
+  1. **CSS Grid `auto` keyword constraint**: `grid-template-columns: 250px auto` caused timeline column to be clamped to parent's available width (~950px), preventing overflow and scrollbar
+  2. **Split scroll container architecture**: Separate `.gantt-container` (vertical) and `.gantt-scroll` (horizontal) wrappers prevented `position: sticky` from working on both axes simultaneously
+
+### Changed
+- **HTML Structure** (line 3758-3761):
+  - **REMOVED**: `.gantt-scroll` wrapper div
+  - **SIMPLIFIED**: Single `.gantt-container` → `.gantt-table` hierarchy
+  - Eliminates scroll context fragmentation
+
+- **CSS: Scroll Container** (`.gantt-container`, lines 3507-3515):
+  - Changed from `overflow-y: auto` to `overflow: auto` (handles both axes)
+  - Added `position: relative` for sticky positioning context
+  - Single unified scroll container for all scrolling behavior
+
+- **CSS: Grid Layout** (`.gantt-table`, lines 3517-3521):
+  - Changed from `grid-template-columns: 250px auto` to `250px max-content`
+  - Changed from `min-width: 800px` to `min-width: max-content`
+  - Timeline column now expands to full calculated width (e.g., 3000px)
+  - Grid no longer constrains timeline to parent's remaining width
+
+- **CSS: Task List Column** (`.task-list`, lines 3523-3529):
+  - **ADDED**: `position: sticky; left: 0; z-index: 20`
+  - Entire column now sticky to left edge (not individual rows)
+  - Simplifies architecture and improves performance
+
+- **CSS: Task List Header** (`.task-list-header`, lines 3531-3544):
+  - Changed `z-index` from 20 to 30 (highest - top-left corner position)
+  - Maintains dual-sticky position: `left: 0; top: 0`
+
+- **CSS: Task Rows** (`.task-row`, lines 3546-3555):
+  - **REMOVED**: `position: sticky; left: 0; z-index: 10`
+  - Individual rows no longer need sticky (parent `.task-list` handles it)
+  - Cleaner CSS architecture
+
+### Removed
+- **CSS Rule**: `.gantt-scroll` class entirely deleted (lines 3516-3519 removed)
+- **Redundant Sticky Positioning**: Individual task row sticky positioning (handled by column-level sticky)
+
+### Technical Implementation
+- **Grid Track Sizing**: `max-content` allows grid column to respect child element's explicit width (3000px)
+- **Single Scroll Context**: Both axes scroll within same container, enabling dual-axis sticky positioning
+- **Z-Index Hierarchy**: 30 (corner) > 20 (task column) > 15 (timeline header) > 10 (content)
+- **Column-Level Sticky**: More efficient than per-row sticky positioning
+
+### JavaScript
+- **No Changes Required**: Existing width calculation logic remains unchanged
+- `.timeline` element still receives explicit width: `style="width: ${totalTimelineWidth}px;"`
+- CSS `max-content` automatically calculates `.gantt-table` width from children
+
+### Documentation
+- Generated 7 comprehensive documentation files for external AI expert consultation:
+  - `00_PROMPT_FOR_AI_EXPERT.md` - Structured question format
+  - `01_CURRENT_ISSUE_SUMMARY.md` - Three critical issues with user feedback history
+  - `02_HTML_STRUCTURE.md` - Complete HTML hierarchy and generation code
+  - `03_CSS_RULES.md` - All relevant CSS rules with annotations
+  - `04_PROBLEM_ANALYSIS.md` - Root cause analysis of `auto` vs `max-content`
+  - `05_PROPOSED_SOLUTIONS.md` - Three solution approaches with comparison matrix
+  - `06_EXPECTED_BEHAVIOR.md` - Excel-like "Freeze Panes" specification with ASCII diagrams
+
+### UI/UX Improvements
+- **Excel-Like Freeze Panes**: Task names always visible during horizontal scroll
+- **Proper Header Behavior**: Date headers scroll horizontally with timeline, stay fixed during vertical scroll
+- **Natural Scrolling**: Horizontal scrollbar appears and functions correctly for wide timelines
+- **Performance**: Column-level sticky positioning more efficient than per-row sticky
+- **Architectural Simplicity**: Single scroll container simplifies event handling and debugging
+
+### Breaking Changes
+- None - Purely internal architectural improvements
+
+### References
+- External expert feedback files in: `/mnt/c/dev/ppt-transfer/docs/session/archive/11_ganttchart_ui/feedback/`
+  - `01_opus.md` - Recommended Flexbox approach
+  - `02_gpt_Gantt Chart UI 技術レビュー（批判的・建設的見解）.md` - Agreed on root causes
+  - `03_gemini_Gantt Chart Architecture Critique & Implementation Guide.md` - **Winning recommendation**: Keep Grid, use `max-content`, single scroll container
+
 ## [2.9.0] - 2026-03-20
 
 ### Fixed

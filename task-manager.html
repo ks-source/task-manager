@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Task Manager - WBS Visualizer v2.9.0</title>
+  <title>Task Manager - WBS Visualizer v2.10.0</title>
   <meta name="description" content="A lightweight, browser-based Work Breakdown Structure (WBS) visualization and management tool">
   <meta name="keywords" content="task manager, WBS, project management, task tracking">
   <meta name="author" content="ks-source">
@@ -447,6 +447,18 @@
     .status-button.btn-not-started { border-color: var(--status-not-started); }
     .status-button.btn-not-started.active { background-color: #e2e3e5; }
 
+    .status-button.btn-on-hold { border-color: var(--status-on-hold); }
+    .status-button.btn-on-hold.active { background-color: #ffe5d0; }
+
+    .status-button.btn-postponed { border-color: var(--status-postponed); }
+    .status-button.btn-postponed.active { background-color: #fce4ec; }
+
+    .status-button.btn-cancelled { border-color: #dc3545; }
+    .status-button.btn-cancelled.active { background-color: #f8d7da; }
+
+    .status-button.btn-unknown { border-color: #6c757d; }
+    .status-button.btn-unknown.active { background-color: #e2e3e5; }
+
     /* ==========================================
      * Priority Buttons
      * ========================================== */
@@ -484,6 +496,7 @@
     }
     .priority-button.btn-critical.active {
       background-color: #dc3545;
+      color: white;
     }
 
     .priority-button.btn-high {
@@ -492,6 +505,7 @@
     }
     .priority-button.btn-high.active {
       background-color: #fd7e14;
+      color: white;
     }
 
     .priority-button.btn-medium {
@@ -509,6 +523,7 @@
     }
     .priority-button.btn-low.active {
       background-color: #28a745;
+      color: white;
     }
 
     /* Priority Badge Styles */
@@ -873,7 +888,7 @@
    * Header / Menu Bar
    * ========================================== -->
   <header class="header">
-    <h1 class="header-title">Task Manager v2.9.0</h1>
+    <h1 class="header-title">Task Manager v2.10.0</h1>
     <nav class="header-nav">
       <button class="icon-button active" onclick="showDashboard()" title="ダッシュボード">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -912,6 +927,13 @@
           <path d="M7 8h4"></path>
           <path d="M10 12h4"></path>
           <path d="M13 16h4"></path>
+        </svg>
+      </button>
+      <button class="icon-button" onclick="openSettingsModal()" title="設定">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M12 1v6m0 6v6M1 12h6m6 0h6"></path>
+          <path d="m4.93 4.93 4.24 4.24m5.66 0 4.24-4.24m0 14.14-4.24-4.24m-5.66 0-4.24 4.24"></path>
         </svg>
       </button>
     </nav>
@@ -1057,8 +1079,8 @@
             <button class="status-button btn-completed" onclick="changeStatus('完了')">完了</button>
             <button class="status-button btn-on-hold" onclick="changeStatus('保留')">保留</button>
             <button class="status-button btn-postponed" onclick="changeStatus('延期')">延期</button>
-            <button class="status-button" onclick="changeStatus('中止')">中止</button>
-            <button class="status-button" onclick="changeStatus('不明')">不明</button>
+            <button class="status-button btn-cancelled" onclick="changeStatus('中止')">中止</button>
+            <button class="status-button btn-unknown" onclick="changeStatus('不明')">不明</button>
           </div>
         </div>
 
@@ -1277,12 +1299,12 @@
         <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1rem;">
           <button onclick="exportJSON(); closeExportDialog();" style="text-align: left; padding: 1rem; background: #2c3e50; color: white; border: none; border-radius: 6px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#34495e'" onmouseout="this.style.background='#2c3e50'">
             <strong>📄 JSON形式（完全データ）</strong>
-            <div style="font-size: 0.85rem; opacity: 0.9; margin-top: 0.25rem;">プロジェクトの全データをJSON形式でエクスポート</div>
+            <div style="font-size: 0.85rem; opacity: 0.9; margin-top: 0.25rem;">プロジェクトの全データ（タスク・担当者等のシステムデータ含む）をJSON形式でエクスポート</div>
           </button>
 
           <button onclick="exportCSV(); closeExportDialog();" style="text-align: left; padding: 1rem; background: #2c3e50; color: white; border: none; border-radius: 6px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#34495e'" onmouseout="this.style.background='#2c3e50'">
             <strong>📊 CSV形式（Excel互換）</strong>
-            <div style="font-size: 0.85rem; opacity: 0.9; margin-top: 0.25rem;">タスクリストをExcelで開けるCSV形式でエクスポート</div>
+            <div style="font-size: 0.85rem; opacity: 0.9; margin-top: 0.25rem;">タスクリストのみをExcelで開けるCSV形式でエクスポート（担当者等のシステムデータは含まれません）</div>
           </button>
 
           <button onclick="downloadAITemplate('json'); closeExportDialog();" style="text-align: left; padding: 1rem; background: linear-gradient(135deg, #1a252f 0%, #2c3e50 100%); color: white; border: none; border-radius: 6px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='linear-gradient(135deg, #2c3e50 0%, #34495e 100%)'" onmouseout="this.style.background='linear-gradient(135deg, #1a252f 0%, #2c3e50 100%)'">
@@ -1318,18 +1340,85 @@
         <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1rem;">
           <button onclick="loadFromFile(); closeImportDialog();" style="text-align: left; padding: 1rem; background: #2c3e50; color: white; border: none; border-radius: 6px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#34495e'" onmouseout="this.style.background='#2c3e50'">
             <strong>📄 JSON形式</strong>
-            <div style="font-size: 0.85rem; opacity: 0.9; margin-top: 0.25rem;">タスクマネージャープロジェクトファイル（完全データ）</div>
+            <div style="font-size: 0.85rem; opacity: 0.9; margin-top: 0.25rem;">タスクマネージャープロジェクトファイル（タスク・担当者等のシステムデータを含む完全データ）</div>
           </button>
 
           <button onclick="importFromCSV(); closeImportDialog();" style="text-align: left; padding: 1rem; background: #2c3e50; color: white; border: none; border-radius: 6px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#34495e'" onmouseout="this.style.background='#2c3e50'">
             <strong>📊 CSV形式</strong>
-            <div style="font-size: 0.85rem; opacity: 0.9; margin-top: 0.25rem;">WBSタスクリスト（既存データは置き換えられます）</div>
+            <div style="font-size: 0.85rem; opacity: 0.9; margin-top: 0.25rem;">WBSタスクリストのみ（担当者等のシステムデータは含まれません・既存データは置き換えられます）</div>
           </button>
         </div>
 
         <div style="display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1.5rem;">
           <button class="btn-secondary" onclick="closeImportDialog()">キャンセル</button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+   * Settings Modal
+   * ========================================== -->
+  <div class="modal" id="settings-modal">
+    <div class="modal-content" style="max-width: 600px;">
+      <div class="modal-header">
+        <h2 class="modal-title">⚙️ プロジェクト設定</h2>
+        <button class="modal-close" onclick="closeSettingsModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-section">
+          <h3 class="modal-section-title">👥 担当者管理</h3>
+
+          <!-- 登録済み担当者リスト -->
+          <div style="margin-bottom: 1rem;">
+            <p style="font-weight: 600; margin-bottom: 0.5rem; color: var(--color-text);">
+              登録済み担当者 (<span id="assignee-count">0</span>名)
+            </p>
+            <div id="assignee-list" style="
+              border: 1px solid var(--color-border);
+              border-radius: 4px;
+              max-height: 300px;
+              overflow-y: auto;
+              background: white;
+              min-height: 100px;
+            ">
+              <!-- 動的に生成 -->
+            </div>
+          </div>
+
+          <!-- 新規追加 -->
+          <div>
+            <p style="font-weight: 600; margin-bottom: 0.5rem; color: var(--color-text);">新規担当者追加</p>
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+              <input
+                type="text"
+                id="new-assignee-id"
+                placeholder="例: DEV1"
+                style="flex: 1; padding: 0.5rem; border: 1px solid var(--color-border); border-radius: 4px; font-size: 0.9rem;"
+                onkeypress="if(event.key==='Enter') addAssignee()"
+              >
+              <button
+                onclick="addAssignee()"
+                style="padding: 0.5rem 1rem; background: var(--color-primary); color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; white-space: nowrap;"
+              >
+                ➕ 追加
+              </button>
+            </div>
+          </div>
+
+          <!-- ヒント -->
+          <div style="margin-top: 1rem; padding: 0.75rem; background: #e7f3ff; border-left: 3px solid var(--color-primary); border-radius: 4px;">
+            <p style="margin: 0; font-size: 0.9rem; font-weight: 600; color: var(--color-text);">💡 ヒント:</p>
+            <ul style="margin: 0.25rem 0 0 1.5rem; font-size: 0.85rem; line-height: 1.6; color: #495057;">
+              <li>IDは短縮コード（PM, ENG, DEV1など）を推奨</li>
+              <li>削除すると既存タスクの担当者情報も削除されます</li>
+              <li>データはJSON形式エクスポートに含まれます（CSV形式には含まれません）</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="closeSettingsModal()">閉じる</button>
       </div>
     </div>
   </div>
@@ -1461,6 +1550,12 @@
 
     function saveToLocalStorage() {
       try {
+        // Sync assignees from separate storage to projectData
+        const assigneesData = localStorage.getItem('taskManagerAssignees');
+        if (assigneesData) {
+          projectData.assignees = JSON.parse(assigneesData).assignees;
+        }
+
         localStorage.setItem('task_manager_v2_project_data', JSON.stringify(projectData));
         console.log('Saved to localStorage');
         isDirty = false;
@@ -1779,8 +1874,10 @@
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem;">
               <div>
                 <label style="display: block; font-weight: 600; margin-bottom: 0.25rem;">主担当:</label>
-                <input type="text" id="edit-primary-owner" value="${escapeHtml(currentTask.primary_owner || '')}"
+                <select id="edit-primary-owner"
                        style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; font-size: 0.9rem;">
+                  <option value="">選択してください</option>
+                </select>
               </div>
               <div>
                 <label style="display: block; font-weight: 600; margin-bottom: 0.25rem;">支援担当:</label>
@@ -1846,6 +1943,16 @@
       }
 
       document.getElementById('task-details').innerHTML = detailsHtml;
+
+      // Populate assignee select if in edit mode
+      if (isEditingTaskInfo) {
+        populateAssigneeSelect('edit-primary-owner');
+        // Set current value
+        const select = document.getElementById('edit-primary-owner');
+        if (select && currentTask.primary_owner) {
+          select.value = currentTask.primary_owner;
+        }
+      }
     }
 
     function convertToISODate(dateStr) {
@@ -2226,6 +2333,13 @@
         currentFileHandle = fileHandle;
         currentFileName = fileHandle.name;
         isDirty = false;
+
+        // Restore assignees to separate storage if present
+        if (data.assignees && Array.isArray(data.assignees)) {
+          localStorage.setItem('taskManagerAssignees',
+            JSON.stringify({ assignees: data.assignees }));
+          console.log('Restored assignees from file:', data.assignees);
+        }
 
         // UI更新
         renderDashboard();
@@ -2844,6 +2958,9 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
       searchInput.value = '';
       searchInput.addEventListener('input', renderInsertTaskList);
 
+      // Populate assignee select
+      populateAssigneeSelect('new-primary-owner');
+
       // Show dialog
       document.getElementById('create-task-dialog').classList.add('active');
     }
@@ -3331,6 +3448,9 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
       display: flex;
       gap: 1rem;
       align-items: center;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      min-height: 60px;
     }
 
     .header h1 {
@@ -3344,6 +3464,12 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
       display: flex;
       gap: 1rem;
       align-items: center;
+      flex-shrink: 0;
+      flex-wrap: nowrap;
+    }
+
+    .controls > div {
+      flex-shrink: 0;
     }
 
     .view-mode-btn {
@@ -3370,14 +3496,25 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
       padding: 0.35rem 0.75rem;
       background: #3498db;
       color: white;
-      border: none;
+      border: 1px solid #3498db;
       border-radius: 3px;
       cursor: pointer;
       font-size: 0.8rem;
+      flex-shrink: 0;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .refresh-btn:hover {
       background: #2980b9;
+    }
+
+    .refresh-btn svg {
+      width: 16px;
+      height: 16px;
+      display: block;
     }
 
     .gantt-container {
@@ -3386,21 +3523,20 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
       border-radius: 0;
       box-shadow: none;
       height: calc(100vh - 60px);
-      overflow-y: auto;
-    }
-
-    .gantt-scroll {
-      overflow-x: auto;
-      overflow-y: visible;
+      overflow: auto;
+      position: relative;
     }
 
     .gantt-table {
       display: grid;
-      grid-template-columns: 250px auto;
-      min-width: 800px;
+      grid-template-columns: 250px max-content;
+      min-width: max-content;
     }
 
     .task-list {
+      position: sticky;
+      left: 0;
+      z-index: 20;
       border-right: 2px solid #e0e0e0;
       background: #fafafa;
     }
@@ -3417,16 +3553,13 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
       position: sticky;
       left: 0;
       top: 0;
-      z-index: 20;
+      z-index: 30;
     }
 
     .task-row {
       padding: 0.75rem 1rem;
       border-bottom: 1px solid #e0e0e0;
       background: white;
-      position: sticky;
-      left: 0;
-      z-index: 10;
       height: 60px;
       overflow: hidden;
       display: flex;
@@ -3543,6 +3676,7 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
       gap: 0.75rem;
       align-items: center;
       margin-left: auto;
+      flex-shrink: 0;
     }
 
     .legend-item {
@@ -3578,11 +3712,6 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
       .header h1 {
         font-size: 1.2rem;
       }
-      .controls {
-        flex-direction: column;
-        gap: 0.5rem;
-        align-items: stretch;
-      }
     }
   </style>
 </head>
@@ -3601,7 +3730,7 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
         <button class="view-mode-btn" onclick="changeViewMode('month')" id="btn-month">月</button>
       </div>
       <button class="refresh-btn" onclick="refreshData()" title="更新">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="23 4 23 10 17 10"></polyline>
           <polyline points="1 20 1 14 7 14"></polyline>
           <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"></path>
@@ -3634,10 +3763,8 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
   </div>
 
   <div class="gantt-container">
-    <div class="gantt-scroll">
-      <div class="gantt-table" id="gantt-table">
-        <!-- Will be populated by JavaScript -->
-      </div>
+    <div class="gantt-table" id="gantt-table">
+      <!-- Will be populated by JavaScript -->
     </div>
   </div>
 
@@ -3891,6 +4018,202 @@ Predecessors: \${task.predecessors || 'N/A'}\`;
         closeImportDialog();
       }
     });
+
+    document.getElementById('settings-modal').addEventListener('click', (e) => {
+      if (e.target.id === 'settings-modal') {
+        closeSettingsModal();
+      }
+    });
+
+    // ==========================================
+    // Assignee Management
+    // ==========================================
+
+    // Default assignees
+    const DEFAULT_ASSIGNEES = ["PM", "ENG", "QA1", "QA2"];
+
+    // Initialize assignees in localStorage
+    function initializeAssignees() {
+      if (!localStorage.getItem('taskManagerAssignees')) {
+        localStorage.setItem('taskManagerAssignees',
+          JSON.stringify({ assignees: DEFAULT_ASSIGNEES }));
+      }
+    }
+
+    // Get assignees from localStorage
+    function getAssignees() {
+      const data = localStorage.getItem('taskManagerAssignees');
+      if (!data) {
+        initializeAssignees();
+        return DEFAULT_ASSIGNEES;
+      }
+      return JSON.parse(data).assignees || DEFAULT_ASSIGNEES;
+    }
+
+    // Save assignees to localStorage
+    function saveAssignees(assignees) {
+      localStorage.setItem('taskManagerAssignees',
+        JSON.stringify({ assignees: assignees }));
+    }
+
+    // Open settings modal
+    function openSettingsModal() {
+      initializeAssignees();
+      renderAssigneeList();
+      document.getElementById('settings-modal').style.display = 'flex';
+    }
+
+    // Close settings modal
+    function closeSettingsModal() {
+      document.getElementById('settings-modal').style.display = 'none';
+    }
+
+    // Render assignee list
+    function renderAssigneeList() {
+      const assignees = getAssignees();
+      const listContainer = document.getElementById('assignee-list');
+      const countSpan = document.getElementById('assignee-count');
+
+      countSpan.textContent = assignees.length;
+
+      if (assignees.length === 0) {
+        listContainer.innerHTML = `
+          <div style="padding: 2rem; text-align: center; color: #6c757d;">
+            <p>担当者が登録されていません</p>
+            <p style="font-size: 0.85rem; margin-top: 0.5rem;">上記のフォームから担当者を追加してください</p>
+          </div>
+        `;
+        return;
+      }
+
+      listContainer.innerHTML = assignees.map(id => `
+        <div style="
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 0.75rem 1rem;
+          border-bottom: 1px solid #e9ecef;
+        ">
+          <span style="font-weight: 500; color: var(--color-text);">${escapeHtml(id)}</span>
+          <button
+            onclick="deleteAssignee('${escapeHtml(id)}')"
+            style="
+              padding: 0.25rem 0.75rem;
+              background: #dc3545;
+              color: white;
+              border: none;
+              border-radius: 4px;
+              cursor: pointer;
+              font-size: 0.85rem;
+            "
+            onmouseover="this.style.background='#c82333'"
+            onmouseout="this.style.background='#dc3545'"
+          >
+            🗑️ 削除
+          </button>
+        </div>
+      `).join('');
+    }
+
+    // Add new assignee
+    function addAssignee() {
+      const input = document.getElementById('new-assignee-id');
+      const id = input.value.trim();
+
+      // Validation
+      if (!id) {
+        alert('IDを入力してください');
+        return;
+      }
+
+      if (!/^[A-Za-z0-9_]+$/.test(id)) {
+        alert('IDは英数字とアンダースコア(_)のみ使用できます');
+        return;
+      }
+
+      const assignees = getAssignees();
+
+      if (assignees.includes(id)) {
+        alert('このIDは既に登録されています');
+        return;
+      }
+
+      // Add assignee
+      assignees.push(id);
+      assignees.sort();
+      saveAssignees(assignees);
+
+      // Clear input
+      input.value = '';
+
+      // Re-render
+      renderAssigneeList();
+      showNotification(`担当者「${id}」を追加しました`);
+    }
+
+    // Delete assignee
+    function deleteAssignee(id) {
+      // Count usage in tasks
+      const usageCount = projectData.tasks.filter(t =>
+        t.primary_owner === id || (t.support_members && t.support_members.includes(id))
+      ).length;
+
+      const message = usageCount > 0
+        ? `この担当者は${usageCount}個のタスクに使われています。削除しますか？\n\n削除すると、これらのタスクから担当者情報が削除されます。`
+        : `担当者「${id}」を削除しますか？`;
+
+      if (!confirm(message)) return;
+
+      // Remove from assignees list
+      const assignees = getAssignees();
+      const newAssignees = assignees.filter(a => a !== id);
+      saveAssignees(newAssignees);
+
+      // Remove from tasks if needed
+      if (usageCount > 0) {
+        projectData.tasks.forEach(task => {
+          if (task.primary_owner === id) {
+            task.primary_owner = '';
+          }
+          if (task.support_members && task.support_members.includes(id)) {
+            task.support_members = task.support_members.filter(m => m !== id);
+          }
+        });
+        saveToLocalStorage();
+        renderTaskList();
+      }
+
+      // Re-render
+      renderAssigneeList();
+      showNotification(`担当者「${id}」を削除しました`);
+    }
+
+    // Populate assignee select box
+    function populateAssigneeSelect(selectElementId) {
+      const assignees = getAssignees();
+      const select = document.getElementById(selectElementId);
+
+      if (!select) return;
+
+      const currentValue = select.value;
+
+      select.innerHTML = '<option value="">選択してください</option>';
+
+      assignees.forEach(id => {
+        const option = document.createElement('option');
+        option.value = id;
+        option.textContent = id;
+        select.appendChild(option);
+      });
+
+      // Restore previous value if it still exists
+      if (currentValue && assignees.includes(currentValue)) {
+        select.value = currentValue;
+      }
+    }
+
+    // Initialize assignees on page load
+    initializeAssignees();
   </script>
 
   <!-- ==========================================
