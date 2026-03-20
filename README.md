@@ -235,17 +235,24 @@ Please use [GitHub Issues](https://github.com/ks-source/task-manager/issues) to 
 
 ## 🗺️ Roadmap
 
-### v2.3.0 (In Progress)
-- [ ] CSV import functionality
-- [ ] Import validation and error handling
-- [ ] User confirmation dialogs
+### v2.3.0 (Released - 2026-03-20)
+- ✅ Generalized from Dify-specific tool to generic task management application
+- ✅ Single-file HTML architecture with no external dependencies
+- ✅ Complete documentation (README, CHANGELOG, LICENSE)
+- ✅ Sample CSV file for import testing
+- ✅ GitHub repository setup with Pages support
 
 ### v2.4.0 (Planned)
+- [ ] CSV import functionality
+- [ ] Import validation and error handling
+- [ ] User confirmation dialogs for data replacement
+
+### v2.5.0 (Future)
 - [ ] Flowchart visualization (SVG-based, no Mermaid.js)
 - [ ] Task-to-flowchart linking
 - [ ] Search and filter capabilities
 
-### v2.5.0 (Future)
+### v2.6.0 (Future)
 - [ ] Dark mode support
 - [ ] Keyboard shortcuts
 - [ ] Undo/redo functionality
