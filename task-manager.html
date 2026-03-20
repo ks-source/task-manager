@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Task Manager - WBS Visualizer v2.8.4</title>
+  <title>Task Manager - WBS Visualizer v2.8.5</title>
   <meta name="description" content="A lightweight, browser-based Work Breakdown Structure (WBS) visualization and management tool">
   <meta name="keywords" content="task manager, WBS, project management, task tracking">
   <meta name="author" content="ks-source">
@@ -873,7 +873,7 @@
    * Header / Menu Bar
    * ========================================== -->
   <header class="header">
-    <h1 class="header-title">Task Manager v2.8.4</h1>
+    <h1 class="header-title">Task Manager v2.8.5</h1>
     <nav class="header-nav">
       <button class="icon-button active" onclick="showDashboard()" title="ダッシュボード">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1340,7 +1340,7 @@
   <script type="application/json" id="initial-wbs-data">
 {
   "meta": {
-    "version": "2.8.4",
+    "version": "2.8.5",
     "project_name": "New Project",
     "project_start": "",
     "project_end": "",
@@ -2446,7 +2446,7 @@ tasksセクションのみ20個のタスクで埋めてください。**
 \`\`\`json
 {
   "meta": {
-    "version": "2.8.4",
+    "version": "2.8.5",
     "project_name": "[プロジェクト名をここに入力]",
     "project_start": "2026/3/20",
     "project_end": "2026/6/30",
@@ -3423,7 +3423,7 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
       background: white;
       position: sticky;
       left: 0;
-      height: 85px;
+      height: 60px;
       overflow: hidden;
       display: flex;
       flex-direction: column;
@@ -3482,8 +3482,7 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
 
     .timeline-row {
       position: relative;
-      height: 85px;
-      padding-top: 25px;
+      height: 60px;
       border-bottom: 1px solid #e0e0e0;
       background: white;
     }
@@ -3541,7 +3540,7 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
 
     .task-name-label {
       position: absolute;
-      top: -22px;
+      top: -18px;
       left: 0;
       font-size: 0.85rem;
       color: #2c3e50;
@@ -3550,7 +3549,7 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
       border: 1px solid #ddd;
       border-radius: 3px;
       white-space: nowrap;
-      z-index: 6;
+      z-index: 7;
       pointer-events: none;
       font-weight: 500;
       box-shadow: 0 1px 3px rgba(0,0,0,0.1);

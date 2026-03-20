@@ -5,6 +5,38 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.8.5] - 2026-03-20
+
+### Fixed
+- **Task Name Label Positioning**: Fixed task name labels to overlay task bars instead of creating separate space
+  - Labels now positioned directly above task bars (top: -18px, was -22px)
+  - Removed extra space: timeline rows reduced from 85px to 60px
+  - Removed padding-top: 25px from .timeline-row
+  - Task list rows also reduced from 85px to 60px for alignment
+  - Labels now properly overlay the task bars instead of occupying independent space
+
+### Changed
+- **Timeline Row Height**: Reduced from 85px to 60px
+  - `.timeline-row` (lines 3483-3488): height: 85px → 60px, removed padding-top: 25px
+  - `.task-row` (line 3426): height: 85px → 60px
+
+- **Task Name Label Position**: Adjusted to overlay task bars
+  - `.task-name-label` (lines 3541-3556): top: -22px → -18px, z-index: 6 → 7
+  - Labels render on top of task bars instead of in separate space
+  - More compact and cleaner visual appearance
+
+### Technical
+- Modified CSS: .timeline-row, .task-row, .task-name-label
+- Label positioning now uses z-index: 7 to ensure proper layering above task bars (z-index: 5)
+- Labels overlay task bars without requiring extra vertical space
+
+### UI/UX
+- Task name labels now overlay task bars instead of occupying separate space
+- More compact timeline view (60px rows vs 85px)
+- Labels remain visible and readable with semi-transparent background
+- Cleaner visual appearance without extra whitespace
+- Maintains all functionality from v2.8.4 (smart positioning, right-edge handling)
+
 ## [2.8.4] - 2026-03-20
 
 ### Fixed
