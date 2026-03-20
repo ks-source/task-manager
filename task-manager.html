@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Task Manager - WBS Visualizer v2.10.0</title>
+  <title>Task Manager - WBS Visualizer v2.11.0</title>
   <meta name="description" content="A lightweight, browser-based Work Breakdown Structure (WBS) visualization and management tool">
   <meta name="keywords" content="task manager, WBS, project management, task tracking">
   <meta name="author" content="ks-source">
@@ -888,7 +888,7 @@
    * Header / Menu Bar
    * ========================================== -->
   <header class="header">
-    <h1 class="header-title">Task Manager v2.10.0</h1>
+    <h1 class="header-title">Task Manager v2.11.0</h1>
     <nav class="header-nav">
       <button class="icon-button active" onclick="showDashboard()" title="ダッシュボード">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -2254,6 +2254,12 @@
     // ==========================================
     async function saveToFile() {
       try {
+        // Sync assignees from separate storage to projectData before saving
+        const assigneesData = localStorage.getItem('taskManagerAssignees');
+        if (assigneesData) {
+          projectData.assignees = JSON.parse(assigneesData).assignees;
+        }
+
         // File System Access APIのサポート確認
         if (!('showSaveFilePicker' in window)) {
           alert('お使いのブラウザはFile System Access APIをサポートしていません。\nMicrosoft Edge 90以降をご利用ください。\n\n現在はLocalStorageに保存されています。');
@@ -2378,6 +2384,12 @@
 
     function exportJSON() {
       try {
+        // Sync assignees from separate storage to projectData before exporting
+        const assigneesData = localStorage.getItem('taskManagerAssignees');
+        if (assigneesData) {
+          projectData.assignees = JSON.parse(assigneesData).assignees;
+        }
+
         const jsonData = JSON.stringify(projectData, null, 2);
         const blob = new Blob([jsonData], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
@@ -3426,6 +3438,10 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ガントチャート - ${projectData.meta.project_name}</title>
   <style>
+    :root {
+      --task-column-width: 250px;
+    }
+
     * {
       margin: 0;
       padding: 0;
@@ -3529,7 +3545,7 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
 
     .gantt-table {
       display: grid;
-      grid-template-columns: 250px max-content;
+      grid-template-columns: var(--task-column-width) max-content;
       min-width: max-content;
     }
 
@@ -3539,6 +3555,26 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
       z-index: 20;
       border-right: 2px solid #e0e0e0;
       background: #fafafa;
+    }
+
+    .column-resizer {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 8px;
+      height: 100%;
+      cursor: col-resize;
+      background: transparent;
+      z-index: 25;
+      user-select: none;
+    }
+
+    .column-resizer:hover {
+      background: rgba(52, 152, 219, 0.3);
+    }
+
+    .column-resizer.resizing {
+      background: rgba(52, 152, 219, 0.5);
     }
 
     .task-list-header {
@@ -3557,10 +3593,10 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
     }
 
     .task-row {
-      padding: 0.75rem 1rem;
+      padding: 0.5rem 1rem;
       border-bottom: 1px solid #e0e0e0;
       background: white;
-      height: 60px;
+      height: 70px;
       overflow: hidden;
       display: flex;
       flex-direction: column;
@@ -3809,6 +3845,7 @@ Predecessors: \${task.predecessors || 'N/A'}\`;
           </div>
         \`;
       });
+      taskListHTML += '<div class="column-resizer" id="column-resizer"></div>';
       taskListHTML += '</div>';
 
       // Calculate total timeline width
@@ -3978,6 +4015,76 @@ Predecessors: \${task.predecessors || 'N/A'}\`;
 
     // Initial render
     renderGantt();
+
+    // ==========================================
+    // Column Resizer
+    // ==========================================
+
+    // Restore saved column width from localStorage
+    const savedWidth = localStorage.getItem('gantt_task_column_width');
+    if (savedWidth) {
+      const width = parseInt(savedWidth, 10);
+      if (width >= 150 && width <= 500) {
+        document.documentElement.style.setProperty('--task-column-width', width + 'px');
+      }
+    }
+
+    // Setup column resizer
+    let isResizing = false;
+    let startX = 0;
+    let startWidth = 0;
+
+    function initResizer() {
+      const resizer = document.getElementById('column-resizer');
+      if (!resizer) return;
+
+      resizer.addEventListener('mousedown', (e) => {
+        isResizing = true;
+        startX = e.clientX;
+
+        const currentWidth = getComputedStyle(document.documentElement)
+          .getPropertyValue('--task-column-width');
+        startWidth = parseInt(currentWidth, 10);
+
+        resizer.classList.add('resizing');
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+
+        e.preventDefault();
+      });
+    }
+
+    document.addEventListener('mousemove', (e) => {
+      if (!isResizing) return;
+
+      const deltaX = e.clientX - startX;
+      let newWidth = startWidth + deltaX;
+
+      // Constrain width between 150px and 500px
+      newWidth = Math.max(150, Math.min(500, newWidth));
+
+      document.documentElement.style.setProperty('--task-column-width', newWidth + 'px');
+    });
+
+    document.addEventListener('mouseup', () => {
+      if (!isResizing) return;
+
+      isResizing = false;
+      const resizer = document.getElementById('column-resizer');
+      if (resizer) {
+        resizer.classList.remove('resizing');
+      }
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+
+      // Save to localStorage
+      const currentWidth = getComputedStyle(document.documentElement)
+        .getPropertyValue('--task-column-width');
+      localStorage.setItem('gantt_task_column_width', parseInt(currentWidth, 10));
+    });
+
+    // Initialize resizer after initial render
+    setTimeout(initResizer, 100);
   <\/script>
 </body>
 </html>

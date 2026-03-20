@@ -5,6 +5,71 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.11.0] - 2026-03-20
+
+### Added
+- **Gantt Chart: Resizable Task Column**: Task column width can now be manually adjusted by dragging
+  - Excel-like column resizer on the right edge of task column
+  - Drag to resize between 150px and 500px
+  - Width preference saved to localStorage and persists across sessions
+  - Visual feedback: Blue highlight on hover, stronger blue during drag
+  - Smooth cursor change to `col-resize` during interaction
+
+### Fixed
+- **Gantt Chart: Task Row Text Clipping**: Fixed task name text being cut off at bottom
+  - Increased `.task-row` height from 60px to 70px (task-manager.html:3575)
+  - Reduced vertical padding from 0.75rem to 0.5rem (task-manager.html:3572)
+  - Provides adequate space for both WBS number and task name display
+
+### Technical Implementation
+- **CSS Variables** (task-manager.html:3441-3443):
+  - Added `:root { --task-column-width: 250px; }` for dynamic width control
+  - Changed `grid-template-columns: 250px max-content` to `var(--task-column-width) max-content` (line 3548)
+
+- **Resizer UI** (task-manager.html:3561-3579):
+  - `.column-resizer`: 8px wide absolute-positioned element on right edge
+  - Transparent background, blue highlight on hover, stronger blue during drag
+  - Z-index: 25 (above task content, below headers)
+
+- **JavaScript Resizer Logic** (task-manager.html:4019-4087):
+  - localStorage restoration on page load (lines 4024-4030)
+  - Mouse event handlers for drag interaction (lines 4037-4084)
+  - Width constraints: 150px ≤ width ≤ 500px
+  - Real-time CSS variable update during drag
+  - Persistent storage on mouseup
+
+### UI/UX Improvements
+- **Better Text Readability**: Task names and WBS numbers fully visible without clipping
+- **Flexible Layout**: Users can adjust task column width based on task name length
+- **Visual Feedback**: Clear indication of draggable area with hover and drag states
+- **Persistent Preferences**: Column width remembered across browser sessions
+
+## [2.10.1] - 2026-03-20
+
+### Fixed
+- **CRITICAL: Assignee data export/import**: Assignee configurations (custom IDs like DEV1, DEV2) are now properly included in JSON exports and restored on import
+  - Fixed `saveToFile()` and `exportJSON()` to sync assignee data from localStorage to projectData before saving
+  - Fixed `loadFromFile()` to restore assignee data from imported JSON to localStorage
+  - Resolved data loss issue when transferring projects between browsers/PCs
+
+### Changed
+- **Export Dialog** (task-manager.html:1302, 1307):
+  - JSON description: Added "(タスク・担当者等のシステムデータ含む)" to clarify system data inclusion
+  - CSV description: Added "(担当者等のシステムデータは含まれません)" to clarify CSV limitations
+- **Import Dialog** (task-manager.html:1343, 1348):
+  - JSON description: Added "(タスク・担当者等のシステムデータを含む完全データ)" for clarity
+  - CSV description: Added "(担当者等のシステムデータは含まれません・既存データは置き換えられます)"
+- **Settings Modal Hint** (task-manager.html:1415):
+  - Changed from "データはローカルストレージに保存されます"
+  - To "データはJSON形式エクスポートに含まれます（CSV形式には含まれません）"
+
+### Technical Details
+- Added assignee sync logic in `saveToFile()` (lines 2257-2261)
+- Added assignee sync logic in `exportJSON()` (lines 2387-2391)
+- Assignee restore logic in `loadFromFile()` already present (lines 2337-2342)
+- JSON structure now includes `"assignees": ["PM", "ENG", ...]` field
+- Backward compatible: Old JSON files without assignees field continue to work
+
 ## [2.10.0] - 2026-03-20
 
 ### Fixed
