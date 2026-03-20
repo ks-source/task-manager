@@ -29,7 +29,7 @@
     .header {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
-      padding: 0.75rem 1rem;
+      padding: 0.5rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -51,7 +51,7 @@
      * ========================================== */
     .toolbar {
       background: white;
-      padding: 0.75rem 1rem;
+      padding: 0.25rem 0.5rem;
       display: flex;
       gap: 0.5rem;
       align-items: center;
@@ -60,13 +60,13 @@
     }
 
     .btn {
-      padding: 0.5rem 1rem;
+      padding: 0.35rem 0.75rem;
       border: 1px solid #dee2e6;
       background: white;
       color: #495057;
       border-radius: 4px;
       cursor: pointer;
-      font-size: 13px;
+      font-size: 12px;
       display: flex;
       align-items: center;
       gap: 0.25rem;
@@ -126,7 +126,7 @@
      * ========================================== */
     .main-container {
       display: flex;
-      height: calc(100vh - 110px);
+      height: calc(100vh - 115px); /* ヘッダー(45px) + ツールバー(40px) + ステータスバー(30px) */
     }
 
     /* ==========================================
@@ -141,19 +141,20 @@
     }
 
     .sidebar-header {
-      padding: 1rem;
+      padding: 0.5rem;
       border-bottom: 1px solid #dee2e6;
       font-weight: 600;
       background: #f8f9fa;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      font-size: 13px;
     }
 
     .task-list {
       flex: 1;
       overflow-y: auto;
-      padding: 0.5rem;
+      padding: 0.25rem;
     }
 
     .task-item {
@@ -263,43 +264,53 @@
      * ========================================== */
     .canvas-area {
       flex: 1;
-      background: #f8f9fa;
+      background: white;
       position: relative;
-      overflow: auto;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
     }
 
     .canvas-wrapper {
-      min-width: 800px;
-      min-height: 600px;
-      padding: 2rem;
+      flex: 1;
+      padding: 0;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
     }
 
     /* ==========================================
-     * SVG Styles
+     * SVG Styles (Mermaid SVG用)
      * ========================================== */
-    .node {
+    [data-et="node"] {
       cursor: pointer;
       transition: all 0.3s ease;
     }
 
-    .node:hover rect,
-    .node:hover path {
-      stroke-width: 3;
+    [data-et="node"]:hover rect,
+    [data-et="node"]:hover path,
+    [data-et="node"]:hover circle,
+    [data-et="node"]:hover polygon {
+      stroke-width: 3 !important;
       filter: drop-shadow(0 0 5px rgba(0, 123, 255, 0.5));
     }
 
-    .node.highlighted-primary rect,
-    .node.highlighted-primary path {
+    [data-et="node"].highlighted-primary rect,
+    [data-et="node"].highlighted-primary path,
+    [data-et="node"].highlighted-primary circle,
+    [data-et="node"].highlighted-primary polygon {
       stroke: #ff6b6b !important;
       stroke-width: 4 !important;
       filter: drop-shadow(0 0 10px rgba(255, 107, 107, 0.8));
       animation: pulse-primary 1s infinite;
     }
 
-    .node.highlighted-secondary rect,
-    .node.highlighted-secondary path {
+    [data-et="node"].highlighted-secondary rect,
+    [data-et="node"].highlighted-secondary path,
+    [data-et="node"].highlighted-secondary circle,
+    [data-et="node"].highlighted-secondary polygon {
       stroke: #ff9800 !important;
-      stroke-width: 2 !important;
+      stroke-width: 3 !important;
     }
 
     @keyframes pulse-primary {
@@ -307,32 +318,45 @@
       50% { opacity: 0.7; }
     }
 
-    .edge {
+    [data-et="edge"] {
       pointer-events: stroke;
+      cursor: pointer;
     }
 
-    .edge.highlighted-primary line,
-    .edge.highlighted-primary path {
+    [data-et="edge"].highlighted-primary line,
+    [data-et="edge"].highlighted-primary path {
       stroke: #ff6b6b !important;
       stroke-width: 4 !important;
       filter: drop-shadow(0 0 10px rgba(255, 107, 107, 0.8));
     }
 
-    .edge.highlighted-secondary line,
-    .edge.highlighted-secondary path {
+    [data-et="edge"].highlighted-secondary line,
+    [data-et="edge"].highlighted-secondary path {
       stroke: #ff9800 !important;
       stroke-width: 3 !important;
     }
 
-    .edge text.highlighted-primary {
+    [data-et="edge"] text.highlighted-primary,
+    .edgeLabel.highlighted-primary {
       fill: #ff6b6b !important;
       font-weight: 700;
       filter: drop-shadow(0 0 5px rgba(255, 107, 107, 0.8));
     }
 
-    .edge text.highlighted-secondary {
+    [data-et="edge"] text.highlighted-secondary,
+    .edgeLabel.highlighted-secondary {
       fill: #ff9800 !important;
       font-weight: 600;
+    }
+
+    [data-et="cluster"] {
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    [data-et="cluster"]:hover rect {
+      stroke-width: 2 !important;
+      filter: drop-shadow(0 0 5px rgba(0, 123, 255, 0.3));
     }
 
     /* ==========================================
@@ -345,12 +369,13 @@
       right: 0;
       background: white;
       border-top: 1px solid #dee2e6;
-      padding: 0.5rem 1rem;
+      padding: 0.25rem 0.5rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
       font-size: 12px;
       color: #6c757d;
+      height: 30px;
     }
 
     .status-info {
@@ -820,6 +845,187 @@
         opacity: 1;
       }
     }
+
+    /* ==========================================
+     * Tooltip for Flowchart Elements
+     * ========================================== */
+    .flowchart-tooltip {
+      position: fixed;
+      background: rgba(0, 0, 0, 0.9);
+      color: white;
+      padding: 0.75rem 1rem;
+      border-radius: 6px;
+      font-size: 12px;
+      pointer-events: none;
+      z-index: 10000;
+      max-width: 400px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .flowchart-tooltip.show {
+      opacity: 1;
+    }
+
+    .tooltip-header {
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+      color: #ffd700;
+    }
+
+    .tooltip-row {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .tooltip-label {
+      font-weight: 600;
+      color: #a8dadc;
+      min-width: 80px;
+    }
+
+    .tooltip-value {
+      color: #fff;
+      word-break: break-all;
+    }
+
+    .svg-wrapper {
+      flex: 1;
+      width: 100%;
+      overflow: auto; /* 縦横両方のスクロールバーを表示 */
+      position: relative;
+      background: white;
+      border: none;
+      border-radius: 0;
+    }
+
+    /* スクロールバーのスタイル（Edgeでも動作） */
+    .svg-wrapper::-webkit-scrollbar {
+      width: 12px;
+      height: 12px;
+    }
+
+    .svg-wrapper::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 4px;
+    }
+
+    .svg-wrapper::-webkit-scrollbar-thumb {
+      background: #888;
+      border-radius: 4px;
+    }
+
+    .svg-wrapper::-webkit-scrollbar-thumb:hover {
+      background: #555;
+    }
+
+    .svg-wrapper svg {
+      max-width: none;
+      max-height: none;
+      display: block;
+      transition: width 0.2s ease, height 0.2s ease;
+    }
+
+    /* ==========================================
+     * File Upload Area
+     * ========================================== */
+    .upload-area {
+      flex: 1;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      border: none;
+      border-radius: 0;
+    }
+
+    .upload-box {
+      background: white;
+      border: 2px dashed #cbd5e0;
+      border-radius: 12px;
+      padding: 3rem 2rem;
+      text-align: center;
+      max-width: 500px;
+      transition: all 0.3s ease;
+    }
+
+    .upload-box.dragover {
+      border-color: #4299e1;
+      background: #ebf8ff;
+      transform: scale(1.02);
+    }
+
+    .upload-icon {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 1.5rem;
+      color: #4299e1;
+    }
+
+    .upload-box h3 {
+      margin: 0 0 0.5rem 0;
+      color: #2d3748;
+      font-size: 1.5rem;
+    }
+
+    .upload-box p {
+      margin: 0 0 1.5rem 0;
+      color: #718096;
+      font-size: 0.95rem;
+    }
+
+    .upload-button {
+      background: #4299e1;
+      color: white;
+      border: none;
+      padding: 0.75rem 2rem;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .upload-button:hover {
+      background: #3182ce;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(66, 153, 225, 0.4);
+    }
+
+    .upload-hint {
+      margin-top: 1rem;
+      color: #a0aec0;
+      font-size: 0.85rem;
+    }
+
+    .file-info {
+      margin-top: 1rem;
+      padding: 1rem;
+      background: #f7fafc;
+      border-radius: 8px;
+      text-align: left;
+    }
+
+    .file-info-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+      font-size: 0.9rem;
+    }
+
+    .file-info-label {
+      color: #4a5568;
+      font-weight: 600;
+    }
+
+    .file-info-value {
+      color: #718096;
+    }
   </style>
 </head>
 <body>
@@ -842,6 +1048,31 @@
     </button>
     <button class="btn">
       📤 エクスポート ▾
+    </button>
+
+    <div class="toolbar-divider"></div>
+
+    <button class="btn" id="reload-svg-btn" onclick="reloadSVGFile()" style="display: none;">
+      📂 SVG変更
+    </button>
+
+    <div class="toolbar-divider" id="zoom-divider" style="display: none;"></div>
+
+    <button class="btn" id="zoom-out-btn" onclick="zoomOut()" style="display: none;">
+      🔍− 縮小
+    </button>
+    <span id="zoom-level" style="display: none; padding: 0 0.5rem; font-weight: 600; color: #495057;">100%</span>
+    <button class="btn" id="zoom-in-btn" onclick="zoomIn()" style="display: none;">
+      🔍+ 拡大
+    </button>
+    <button class="btn" id="zoom-reset-btn" onclick="zoomReset()" style="display: none;">
+      🔍 リセット
+    </button>
+
+    <div class="toolbar-divider" id="scroll-divider" style="display: none;"></div>
+
+    <button class="btn" id="scroll-test-btn" onclick="testScroll()" style="display: none;">
+      📏 スクロールテスト
     </button>
 
     <div class="toolbar-divider"></div>
@@ -887,38 +1118,28 @@
     <!-- Canvas Area -->
     <div class="canvas-area">
       <div class="canvas-wrapper">
-        <svg id="flowchart-canvas" width="800" height="600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600">
-          <!-- グリッド背景 -->
-          <defs>
-            <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
-              <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#e0e0e0" stroke-width="0.5"/>
-            </pattern>
+        <!-- File Upload UI -->
+        <div id="upload-area" class="upload-area">
+          <div class="upload-box">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="upload-icon">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+            <h3>フローチャートSVGファイルを読み込む</h3>
+            <p>MermaidからエクスポートしたSVGファイルを選択してください</p>
+            <input type="file" id="svg-file-input" accept=".svg" style="display: none;">
+            <button onclick="document.getElementById('svg-file-input').click()" class="upload-button">
+              📁 ファイルを選択
+            </button>
+            <div class="upload-hint">または、このエリアにファイルをドラッグ＆ドロップ</div>
+          </div>
+        </div>
 
-            <!-- Arrow Markers -->
-            <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
-              <polygon points="0 0, 10 3, 0 6" fill="#333"/>
-            </marker>
-            <marker id="arrowhead-green" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
-              <polygon points="0 0, 10 3, 0 6" fill="#4CAF50"/>
-            </marker>
-            <marker id="arrowhead-red" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
-              <polygon points="0 0, 10 3, 0 6" fill="#f44336"/>
-            </marker>
-          </defs>
-
-          <rect width="100%" height="100%" fill="url(#grid)" />
-
-          <!-- Edges Layer -->
-          <g id="edges-layer">
-            <!-- 動的生成 -->
-          </g>
-
-          <!-- Nodes Layer -->
-          <g id="nodes-layer">
-            <!-- 動的生成 -->
-          </g>
-
-        </svg>
+        <!-- Flowchart Container (hidden initially) -->
+        <div id="flowchart-container" class="svg-wrapper" style="display: none;">
+          <!-- Mermaid SVG will be loaded here -->
+        </div>
       </div>
     </div>
 
@@ -933,6 +1154,12 @@
     <div id="highlight-info">
       ハイライト: なし
     </div>
+  </div>
+
+  <!-- Flowchart Tooltip -->
+  <div id="flowchart-tooltip" class="flowchart-tooltip">
+    <div class="tooltip-header" id="tooltip-header">Element Info</div>
+    <div id="tooltip-content"></div>
   </div>
 
   <!-- Task Edit Modal -->
@@ -1215,10 +1442,29 @@
 
     document.addEventListener('DOMContentLoaded', () => {
       renderTaskList();
-      renderFlowchart();
-      populateNodeSelector();
-      populateEdgeSelector();
+      setupFileUpload();
+      setupTooltipListeners();
+      setupMouseWheelZoom();
       updateStatusBar();
+
+      // デバッグ: 各要素の実際の高さを測定
+      setTimeout(() => {
+        const header = document.querySelector('.header');
+        const toolbar = document.querySelector('.toolbar');
+        const statusBar = document.querySelector('.status-bar');
+        const mainContainer = document.querySelector('.main-container');
+
+        console.log('=== 要素の実際の高さ ===');
+        console.log('ヘッダー高さ:', header.offsetHeight + 'px');
+        console.log('ツールバー高さ:', toolbar.offsetHeight + 'px');
+        console.log('ステータスバー高さ:', statusBar.offsetHeight + 'px');
+        console.log('メインコンテナ高さ:', mainContainer.offsetHeight + 'px');
+        console.log('画面高さ:', window.innerHeight + 'px');
+        console.log('合計(H+T+S+M):', (header.offsetHeight + toolbar.offsetHeight + statusBar.offsetHeight + mainContainer.offsetHeight) + 'px');
+
+        const shouldBe = header.offsetHeight + toolbar.offsetHeight + statusBar.offsetHeight;
+        console.log('メインコンテナの正しい高さ: calc(100vh - ' + shouldBe + 'px)');
+      }, 500);
     });
 
     // ========================================
@@ -1297,117 +1543,447 @@
     }
 
     // ========================================
-    // フローチャートレンダリング
+    // Mermaid SVG読み込みとツールチップ
     // ========================================
 
-    function renderFlowchart() {
-      renderEdges();
-      renderNodes();
+    // ズームレベル（グローバル変数）
+    let currentZoom = 1.0;
+    const ZOOM_STEP = 0.25;  // 25%刻み
+    const MIN_ZOOM = 0.25;   // 最小25%
+    const MAX_ZOOM = 5.0;    // 最大500%
+
+    /**
+     * ズーム拡大
+     */
+    function zoomIn() {
+      if (currentZoom >= MAX_ZOOM) return;
+      currentZoom = Math.min(MAX_ZOOM, currentZoom + ZOOM_STEP);
+      applyZoom();
     }
 
-    function renderNodes() {
-      const nodesLayer = document.getElementById('nodes-layer');
-      nodesLayer.innerHTML = '';
+    /**
+     * ズーム縮小
+     */
+    function zoomOut() {
+      if (currentZoom <= MIN_ZOOM) return;
+      currentZoom = Math.max(MIN_ZOOM, currentZoom - ZOOM_STEP);
+      applyZoom();
+    }
 
-      mockFlowchart.nodes.forEach(node => {
-        const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-        g.classList.add('node');
-        g.setAttribute('data-node-id', node.id);
+    /**
+     * ズームリセット
+     */
+    function zoomReset() {
+      currentZoom = 1.0;
+      applyZoom();
+    }
 
-        const cx = node.position.x + node.size.width / 2;
-        const cy = node.position.y + node.size.height / 2;
+    /**
+     * ズームを適用
+     */
+    function applyZoom() {
+      const container = document.getElementById('flowchart-container');
+      const svg = container.querySelector('svg');
+      if (!svg) return;
 
-        if (node.type === 'decision') {
-          // 菱形
-          const w = node.size.width / 2;
-          const h = node.size.height / 2;
-          const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-          const d = `M ${cx} ${cy - h} L ${cx + w} ${cy} L ${cx} ${cy + h} L ${cx - w} ${cy} Z`;
-          path.setAttribute('d', d);
-          path.setAttribute('fill', '#e9ecef');
-          path.setAttribute('stroke', '#6c757d');
-          path.setAttribute('stroke-width', '2');
-          g.appendChild(path);
+      // SVGの元のサイズを取得（初回のみ）
+      if (!svg.dataset.originalWidth) {
+        // まず現在のサイズを取得
+        const currentWidth = svg.clientWidth || svg.width.baseVal.value;
+        const currentHeight = svg.clientHeight || svg.height.baseVal.value;
+
+        // viewBoxがある場合はそれを使用
+        if (svg.viewBox && svg.viewBox.baseVal && svg.viewBox.baseVal.width > 0) {
+          svg.dataset.originalWidth = svg.viewBox.baseVal.width;
+          svg.dataset.originalHeight = svg.viewBox.baseVal.height;
         } else {
-          // 矩形
-          const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-          rect.setAttribute('x', node.position.x);
-          rect.setAttribute('y', node.position.y);
-          rect.setAttribute('width', node.size.width);
-          rect.setAttribute('height', node.size.height);
-          rect.setAttribute('fill', node.type === 'start' ? '#4CAF50' : node.type === 'end' ? '#f44336' : '#cfe2ff');
-          rect.setAttribute('stroke', node.type === 'start' ? '#2E7D32' : node.type === 'end' ? '#c62828' : '#007bff');
-          rect.setAttribute('stroke-width', '2');
-          rect.setAttribute('rx', node.type === 'start' || node.type === 'end' ? '20' : '5');
-          g.appendChild(rect);
+          // viewBoxがない場合は現在のサイズを使用
+          svg.dataset.originalWidth = currentWidth || 800;
+          svg.dataset.originalHeight = currentHeight || 600;
         }
 
-        // テキスト
-        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        text.setAttribute('x', cx);
-        text.setAttribute('y', cy + 5);
-        text.setAttribute('text-anchor', 'middle');
-        text.setAttribute('font-size', '14');
-        text.setAttribute('font-weight', '600');
-        text.setAttribute('fill', node.type === 'start' || node.type === 'end' ? 'white' : '#495057');
-        text.textContent = node.label;
-        g.appendChild(text);
+        console.log('SVG元サイズ:', svg.dataset.originalWidth, 'x', svg.dataset.originalHeight);
+      }
 
-        g.addEventListener('click', () => {
-          onNodeClick(node.id);
-        });
+      const originalWidth = parseFloat(svg.dataset.originalWidth);
+      const originalHeight = parseFloat(svg.dataset.originalHeight);
 
-        nodesLayer.appendChild(g);
+      // SVGのサイズを直接変更（transformではなくサイズで拡大）
+      const newWidth = originalWidth * currentZoom;
+      const newHeight = originalHeight * currentZoom;
+
+      console.log(`ズーム適用: ${currentZoom * 100}% - 新サイズ: ${newWidth}px x ${newHeight}px`);
+
+      // SVGのサイズを明示的に設定
+      svg.style.width = `${newWidth}px`;
+      svg.style.height = `${newHeight}px`;
+      svg.style.minWidth = `${newWidth}px`;
+      svg.style.minHeight = `${newHeight}px`;
+      svg.style.display = 'block';
+
+      // コンテナサイズとSVGサイズを確認
+      setTimeout(() => {
+        console.log('コンテナサイズ:', container.clientWidth, 'x', container.clientHeight);
+        console.log('SVG実サイズ:', svg.clientWidth, 'x', svg.clientHeight);
+        console.log('SVG scrollWidth:', container.scrollWidth, 'scrollHeight:', container.scrollHeight);
+      }, 100);
+
+      // SVGのviewBoxを維持
+      if (!svg.getAttribute('viewBox') && originalWidth && originalHeight) {
+        svg.setAttribute('viewBox', `0 0 ${originalWidth} ${originalHeight}`);
+      }
+
+      updateZoomLabel();
+    }
+
+    /**
+     * ズームレベル表示を更新
+     */
+    function updateZoomLabel() {
+      const label = document.getElementById('zoom-level');
+      if (label) {
+        label.textContent = `${Math.round(currentZoom * 100)}%`;
+      }
+    }
+
+    /**
+     * ズームコントロールを表示
+     */
+    function showZoomControls() {
+      document.getElementById('zoom-divider').style.display = 'inline-block';
+      document.getElementById('zoom-out-btn').style.display = 'inline-block';
+      document.getElementById('zoom-level').style.display = 'inline-block';
+      document.getElementById('zoom-in-btn').style.display = 'inline-block';
+      document.getElementById('zoom-reset-btn').style.display = 'inline-block';
+      document.getElementById('scroll-divider').style.display = 'inline-block';
+      document.getElementById('scroll-test-btn').style.display = 'inline-block';
+      updateZoomLabel();
+    }
+
+    /**
+     * ズームコントロールを非表示
+     */
+    function hideZoomControls() {
+      document.getElementById('zoom-divider').style.display = 'none';
+      document.getElementById('zoom-out-btn').style.display = 'none';
+      document.getElementById('zoom-level').style.display = 'none';
+      document.getElementById('zoom-in-btn').style.display = 'none';
+      document.getElementById('zoom-reset-btn').style.display = 'none';
+      document.getElementById('scroll-divider').style.display = 'none';
+      document.getElementById('scroll-test-btn').style.display = 'none';
+    }
+
+    /**
+     * スクロールテスト（デバッグ用）
+     */
+    function testScroll() {
+      const container = document.getElementById('flowchart-container');
+
+      console.log('=== スクロールテスト開始 ===');
+      console.log('現在のスクロール位置 - Left:', container.scrollLeft, 'Top:', container.scrollTop);
+      console.log('最大スクロール可能範囲 - Width:', container.scrollWidth - container.clientWidth, 'Height:', container.scrollHeight - container.clientHeight);
+
+      // 右下にスクロール
+      container.scrollLeft = 1000;
+      container.scrollTop = 3000;
+
+      setTimeout(() => {
+        console.log('スクロール後の位置 - Left:', container.scrollLeft, 'Top:', container.scrollTop);
+
+        if (container.scrollLeft === 0 && container.scrollTop === 0) {
+          alert('❌ スクロールが機能していません！');
+        } else if (container.scrollLeft > 0 && container.scrollTop > 0) {
+          alert('✓ スクロールは機能しています\nLeft: ' + container.scrollLeft + 'px\nTop: ' + container.scrollTop + 'px');
+        }
+
+        // 元に戻す
+        container.scrollLeft = 0;
+        container.scrollTop = 0;
+      }, 100);
+    }
+
+    /**
+     * ユーザーが選択したSVGファイルを読み込む
+     */
+    function loadSVGFile(file) {
+      if (!file) {
+        console.warn('No file selected');
+        return;
+      }
+
+      if (!file.name.endsWith('.svg')) {
+        alert('SVGファイルを選択してください');
+        return;
+      }
+
+      const reader = new FileReader();
+
+      reader.onload = function(e) {
+        const svgText = e.target.result;
+        const container = document.getElementById('flowchart-container');
+        const uploadArea = document.getElementById('upload-area');
+
+        try {
+          // SVGを挿入
+          container.innerHTML = svgText;
+
+          // アップロードエリアを非表示、フローチャートを表示
+          uploadArea.style.display = 'none';
+          container.style.display = 'block';
+
+          console.log('Mermaid SVG loaded successfully from file:', file.name);
+          showNotification(`フローチャートを読み込みました: ${file.name}`);
+
+          // ノード一覧を再読み込み
+          populateNodeSelector();
+          populateEdgeSelector();
+
+          // SVG変更ボタンとズーム機能を表示
+          document.getElementById('reload-svg-btn').style.display = 'inline-block';
+          showZoomControls();
+
+        } catch (error) {
+          console.error('Failed to load SVG:', error);
+          alert(`SVGの読み込みに失敗しました: ${error.message}`);
+        }
+      };
+
+      reader.onerror = function(e) {
+        console.error('FileReader error:', e);
+        alert('ファイルの読み込みに失敗しました');
+      };
+
+      reader.readAsText(file);
+    }
+
+    /**
+     * SVGファイルを再読み込み（別のファイルを選択）
+     */
+    function reloadSVGFile() {
+      const uploadArea = document.getElementById('upload-area');
+      const container = document.getElementById('flowchart-container');
+      const reloadBtn = document.getElementById('reload-svg-btn');
+
+      // コンテナをクリア
+      container.innerHTML = '';
+      container.style.display = 'none';
+
+      // アップロードエリアを再表示
+      uploadArea.style.display = 'flex';
+
+      // ボタンを非表示
+      reloadBtn.style.display = 'none';
+      hideZoomControls();
+
+      // ズームをリセット
+      currentZoom = 1.0;
+
+      // セレクタをクリア
+      document.getElementById('node-selector').innerHTML = '<option value="">ノードを選択...</option>';
+      document.getElementById('edge-selector').innerHTML = '<option value="">エッジを選択...</option>';
+    }
+
+    /**
+     * ファイルアップロード機能のセットアップ
+     */
+    function setupFileUpload() {
+      const fileInput = document.getElementById('svg-file-input');
+      const uploadBox = document.querySelector('.upload-box');
+      const uploadArea = document.getElementById('upload-area');
+
+      // ファイル選択ボタン
+      fileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          loadSVGFile(file);
+        }
+      });
+
+      // ドラッグ＆ドロップ
+      uploadBox.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        uploadBox.classList.add('dragover');
+      });
+
+      uploadBox.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        uploadBox.classList.remove('dragover');
+      });
+
+      uploadBox.addEventListener('drop', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        uploadBox.classList.remove('dragover');
+
+        const file = e.dataTransfer.files[0];
+        if (file) {
+          loadSVGFile(file);
+        }
       });
     }
 
-    function renderEdges() {
-      const edgesLayer = document.getElementById('edges-layer');
-      edgesLayer.innerHTML = '';
+    /**
+     * マウスホイールズーム機能のセットアップ
+     */
+    function setupMouseWheelZoom() {
+      const container = document.getElementById('flowchart-container');
 
-      mockFlowchart.edges.forEach(edge => {
-        const fromNode = mockFlowchart.nodes.find(n => n.id === edge.from);
-        const toNode = mockFlowchart.nodes.find(n => n.id === edge.to);
+      container.addEventListener('wheel', (e) => {
+        // Ctrlキーが押されている場合のみズーム
+        if (e.ctrlKey) {
+          e.preventDefault();
 
-        if (!fromNode || !toNode) return;
-
-        const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-        g.classList.add('edge');
-        g.setAttribute('data-edge-id', edge.id);
-
-        const x1 = fromNode.position.x + fromNode.size.width / 2;
-        const y1 = fromNode.position.y + fromNode.size.height;
-        const x2 = toNode.position.x + toNode.size.width / 2;
-        const y2 = toNode.position.y;
-
-        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        line.setAttribute('x1', x1);
-        line.setAttribute('y1', y1);
-        line.setAttribute('x2', x2);
-        line.setAttribute('y2', y2);
-        line.setAttribute('stroke', edge.label === 'YES' ? '#4CAF50' : edge.label === 'NO' ? '#f44336' : '#333');
-        line.setAttribute('stroke-width', '2');
-        line.setAttribute('marker-end', edge.label === 'YES' ? 'url(#arrowhead-green)' : edge.label === 'NO' ? 'url(#arrowhead-red)' : 'url(#arrowhead)');
-
-        if (edge.label === 'NO') {
-          line.setAttribute('stroke-dasharray', '5,5');
+          if (e.deltaY < 0) {
+            // ホイール上 = 拡大
+            zoomIn();
+          } else {
+            // ホイール下 = 縮小
+            zoomOut();
+          }
         }
+      }, { passive: false });
+    }
 
-        g.appendChild(line);
+    function setupTooltipListeners() {
+      const tooltip = document.getElementById('flowchart-tooltip');
+      const tooltipHeader = document.getElementById('tooltip-header');
+      const tooltipContent = document.getElementById('tooltip-content');
 
-        if (edge.label) {
-          const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-          text.setAttribute('x', (x1 + x2) / 2 + 10);
-          text.setAttribute('y', (y1 + y2) / 2);
-          text.setAttribute('font-size', '12');
-          text.setAttribute('fill', edge.label === 'YES' ? '#4CAF50' : '#f44336');
-          text.setAttribute('font-weight', '600');
-          text.textContent = edge.label;
-          g.appendChild(text);
+      // ノード、エッジ、クラスタにマウスイベントを追加
+      document.addEventListener('mouseover', (e) => {
+        const element = e.target.closest('[data-et="node"], [data-et="edge"], [data-et="cluster"]');
+
+        if (element) {
+          const elementType = element.getAttribute('data-et');
+          const elementId = element.getAttribute('data-id') || element.id;
+
+          // ツールチップ内容を生成
+          const tooltipData = extractElementInfo(element, elementType);
+
+          tooltipHeader.textContent = `${getElementTypeLabel(elementType)} 情報`;
+          tooltipContent.innerHTML = formatTooltipContent(tooltipData);
+
+          // ツールチップを表示
+          tooltip.classList.add('show');
+
+          // マウス位置に追従
+          updateTooltipPosition(e, tooltip);
         }
-
-        edgesLayer.appendChild(g);
       });
+
+      document.addEventListener('mousemove', (e) => {
+        if (tooltip.classList.contains('show')) {
+          updateTooltipPosition(e, tooltip);
+        }
+      });
+
+      document.addEventListener('mouseout', (e) => {
+        const element = e.target.closest('[data-et="node"], [data-et="edge"], [data-et="cluster"]');
+
+        if (element && !e.relatedTarget?.closest('[data-et]')) {
+          tooltip.classList.remove('show');
+        }
+      });
+    }
+
+    function extractElementInfo(element, elementType) {
+      const info = {
+        type: elementType,
+        id: element.getAttribute('data-id') || element.id,
+        dataId: element.getAttribute('data-id'),
+        htmlId: element.id
+      };
+
+      // ラベルテキストを取得
+      if (elementType === 'node' || elementType === 'cluster') {
+        const labelElement = element.querySelector('.nodeLabel, .cluster-label');
+        if (labelElement) {
+          info.label = labelElement.textContent.trim();
+        }
+      }
+
+      if (elementType === 'edge') {
+        const labelElement = element.querySelector('.edgeLabel');
+        if (labelElement) {
+          info.label = labelElement.textContent.trim();
+        }
+      }
+
+      // data-look属性
+      info.dataLook = element.getAttribute('data-look');
+
+      return info;
+    }
+
+    function getElementTypeLabel(type) {
+      const labels = {
+        'node': '🔵 ノード',
+        'edge': '🔗 エッジ',
+        'cluster': '📦 クラスタ'
+      };
+      return labels[type] || '❓ 要素';
+    }
+
+    function formatTooltipContent(data) {
+      let html = '';
+
+      if (data.type) {
+        html += `<div class="tooltip-row">
+          <span class="tooltip-label">タイプ:</span>
+          <span class="tooltip-value">${data.type}</span>
+        </div>`;
+      }
+
+      if (data.dataId) {
+        html += `<div class="tooltip-row">
+          <span class="tooltip-label">data-id:</span>
+          <span class="tooltip-value">${data.dataId}</span>
+        </div>`;
+      }
+
+      if (data.htmlId && data.htmlId !== data.dataId) {
+        html += `<div class="tooltip-row">
+          <span class="tooltip-label">HTML id:</span>
+          <span class="tooltip-value">${data.htmlId}</span>
+        </div>`;
+      }
+
+      if (data.label) {
+        html += `<div class="tooltip-row">
+          <span class="tooltip-label">ラベル:</span>
+          <span class="tooltip-value">${data.label}</span>
+        </div>`;
+      }
+
+      if (data.dataLook) {
+        html += `<div class="tooltip-row">
+          <span class="tooltip-label">スタイル:</span>
+          <span class="tooltip-value">${data.dataLook}</span>
+        </div>`;
+      }
+
+      return html;
+    }
+
+    function updateTooltipPosition(e, tooltip) {
+      const offset = 15;
+      let x = e.clientX + offset;
+      let y = e.clientY + offset;
+
+      // 画面右端のチェック
+      if (x + tooltip.offsetWidth > window.innerWidth) {
+        x = e.clientX - tooltip.offsetWidth - offset;
+      }
+
+      // 画面下端のチェック
+      if (y + tooltip.offsetHeight > window.innerHeight) {
+        y = e.clientY - tooltip.offsetHeight - offset;
+      }
+
+      tooltip.style.left = `${x}px`;
+      tooltip.style.top = `${y}px`;
     }
 
     // ========================================
@@ -1427,14 +2003,15 @@
 
       const primaryNodes = task.flowchartLinks.nodes.filter(n => n.highlightType === 'primary');
       primaryNodes.forEach(node => {
-        const svgNode = document.querySelector(`[data-node-id="${node.id}"]`);
+        // Mermaid SVG用のセレクタ（data-id属性またはid属性）
+        const svgNode = document.querySelector(`[data-id="${node.id}"], #${CSS.escape(node.id)}`);
         if (svgNode) {
           svgNode.classList.add('highlighted-primary');
         }
       });
 
       if (primaryNodes.length > 0) {
-        const firstNode = document.querySelector(`[data-node-id="${primaryNodes[0].id}"]`);
+        const firstNode = document.querySelector(`[data-id="${primaryNodes[0].id}"], #${CSS.escape(primaryNodes[0].id)}`);
         if (firstNode) {
           firstNode.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
@@ -1442,19 +2019,19 @@
 
       const secondaryNodes = task.flowchartLinks.nodes.filter(n => n.highlightType === 'secondary');
       secondaryNodes.forEach(node => {
-        const svgNode = document.querySelector(`[data-node-id="${node.id}"]`);
+        const svgNode = document.querySelector(`[data-id="${node.id}"], #${CSS.escape(node.id)}`);
         if (svgNode) {
           svgNode.classList.add('highlighted-secondary');
         }
       });
 
       task.flowchartLinks.edges.forEach(edge => {
-        const svgEdge = document.querySelector(`[data-edge-id="${edge.id}"]`);
+        const svgEdge = document.querySelector(`[data-id="${edge.id}"], #${CSS.escape(edge.id)}`);
         if (svgEdge) {
           const highlightClass = edge.highlightType === 'primary' ? 'highlighted-primary' : 'highlighted-secondary';
 
           if (edge.highlightMode === 'label-only') {
-            const edgeLabel = svgEdge.querySelector('text');
+            const edgeLabel = svgEdge.querySelector('text, .edgeLabel');
             if (edgeLabel) {
               edgeLabel.classList.add(highlightClass);
             }
@@ -1485,7 +2062,7 @@
           }
         });
 
-        const svgNode = document.querySelector(`[data-node-id="${nodeId}"]`);
+        const svgNode = document.querySelector(`[data-id="${nodeId}"], #${CSS.escape(nodeId)}`);
         if (svgNode) {
           svgNode.classList.add('highlighted-primary');
         }
@@ -1498,10 +2075,11 @@
     }
 
     function clearAllHighlights() {
-      document.querySelectorAll('.node, .edge').forEach(el => {
+      // Mermaid SVG用のセレクタ（data-et属性）
+      document.querySelectorAll('[data-et="node"], [data-et="edge"], [data-et="cluster"]').forEach(el => {
         el.classList.remove('highlighted-primary', 'highlighted-secondary');
       });
-      document.querySelectorAll('.edge text').forEach(el => {
+      document.querySelectorAll('.edgeLabel, text').forEach(el => {
         el.classList.remove('highlighted-primary', 'highlighted-secondary');
       });
     }
@@ -1592,10 +2170,8 @@
       noEdgesMsg.style.display = 'none';
 
       edges.forEach(edge => {
-        const fromNode = mockFlowchart.nodes.find(n => n.id === edge.from);
-        const toNode = mockFlowchart.nodes.find(n => n.id === edge.to);
         const edgeLabel = edge.label ? ` (${edge.label})` : '';
-        const displayLabel = `${edge.id}: ${fromNode.label} → ${toNode.label}${edgeLabel}`;
+        const displayLabel = `${edge.id}${edgeLabel}`;
 
         const item = document.createElement('div');
         item.className = 'linked-item';
@@ -1616,13 +2192,23 @@
       const selector = document.getElementById('node-selector');
       selector.innerHTML = '<option value="">ノードを選択...</option>';
 
-      mockFlowchart.nodes.forEach(node => {
-        if (node.type === 'start' || node.type === 'end') return;
+      // 実際にロードされたSVGからノードを取得
+      const svg = document.querySelector('#flowchart-container svg');
+      if (!svg) {
+        console.warn('SVG not loaded yet');
+        return;
+      }
+
+      const nodes = svg.querySelectorAll('[data-et="node"]');
+      nodes.forEach(node => {
+        const nodeId = node.getAttribute('data-id') || node.id;
+        const labelElement = node.querySelector('.nodeLabel');
+        const label = labelElement ? labelElement.textContent.trim() : nodeId;
 
         const option = document.createElement('option');
-        option.value = node.id;
-        option.textContent = `${node.id} - ${node.label}`;
-        option.dataset.label = node.label;
+        option.value = nodeId;
+        option.textContent = `${nodeId} - ${label}`;
+        option.dataset.label = label;
         selector.appendChild(option);
       });
     }
@@ -1631,17 +2217,23 @@
       const selector = document.getElementById('edge-selector');
       selector.innerHTML = '<option value="">エッジを選択...</option>';
 
-      mockFlowchart.edges.forEach(edge => {
-        const fromNode = mockFlowchart.nodes.find(n => n.id === edge.from);
-        const toNode = mockFlowchart.nodes.find(n => n.id === edge.to);
-        const label = edge.label ? ` (${edge.label})` : '';
+      // 実際にロードされたSVGからエッジを取得
+      const svg = document.querySelector('#flowchart-container svg');
+      if (!svg) {
+        console.warn('SVG not loaded yet');
+        return;
+      }
+
+      const edges = svg.querySelectorAll('[data-et="edge"]');
+      edges.forEach(edge => {
+        const edgeId = edge.getAttribute('data-id') || edge.id;
+        const labelElement = edge.querySelector('.edgeLabel');
+        const label = labelElement ? labelElement.textContent.trim() : '';
 
         const option = document.createElement('option');
-        option.value = edge.id;
-        option.textContent = `${edge.id}: ${fromNode.label} → ${toNode.label}${label}`;
-        option.dataset.from = edge.from;
-        option.dataset.to = edge.to;
-        option.dataset.label = edge.label || '';
+        option.value = edgeId;
+        option.textContent = label ? `${edgeId} (${label})` : edgeId;
+        option.dataset.label = label;
         selector.appendChild(option);
       });
     }
@@ -1670,12 +2262,20 @@
         return;
       }
 
-      const node = mockFlowchart.nodes.find(n => n.id === nodeId);
-      if (!node) return;
+      // 実際のSVGからノード情報を取得
+      const svg = document.querySelector('#flowchart-container svg');
+      const nodeElement = svg.querySelector(`[data-id="${nodeId}"], #${CSS.escape(nodeId)}`);
+      if (!nodeElement) {
+        alert('ノードが見つかりません。');
+        return;
+      }
+
+      const labelElement = nodeElement.querySelector('.nodeLabel');
+      const label = labelElement ? labelElement.textContent.trim() : nodeId;
 
       currentEditingTask.flowchartLinks.nodes.push({
-        id: node.id,
-        label: node.label,
+        id: nodeId,
+        label: label,
         highlightType: priority
       });
 
@@ -1701,14 +2301,22 @@
         return;
       }
 
-      const edge = mockFlowchart.edges.find(e => e.id === edgeId);
-      if (!edge) return;
+      // 実際のSVGからエッジ情報を取得
+      const svg = document.querySelector('#flowchart-container svg');
+      const edgeElement = svg.querySelector(`[data-id="${edgeId}"], #${CSS.escape(edgeId)}`);
+      if (!edgeElement) {
+        alert('エッジが見つかりません。');
+        return;
+      }
+
+      const labelElement = edgeElement.querySelector('.edgeLabel');
+      const label = labelElement ? labelElement.textContent.trim() : '';
 
       currentEditingTask.flowchartLinks.edges.push({
-        id: edge.id,
-        from: edge.from,
-        to: edge.to,
-        label: edge.label || '',
+        id: edgeId,
+        from: '',  // Mermaid SVGには明示的なfrom/to情報がないため空
+        to: '',
+        label: label,
         highlightType: priority,
         highlightMode: labelOnly ? 'label-only' : 'full'
       });
