@@ -5,6 +5,59 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.8.6] - 2026-03-20
+
+### Fixed
+- **Gantt Chart Header Layout**: Minimized and unified header into single row
+  - Combined title, view mode buttons, refresh button, and status legend into one row
+  - Reduced header padding: 1rem 1.5rem → 0.5rem 1rem
+  - Reduced title font size: 1.5rem → 1.2rem
+  - Removed emoji from title
+  - Removed status title ("ステータス")
+  - Status legend now inline on the right side of header
+
+- **Task/Date Headers Sticky**: Made task and date headers always visible during scroll
+  - Added `top: 0` to `.task-list-header` (z-index: 50)
+  - Confirmed `top: 0` on `.timeline-header` (z-index: 49)
+  - Headers remain visible when scrolling vertically
+  - Date labels always visible for timeline reference
+
+### Changed
+- **Header Layout**: Single-row compact design
+  - `.header` (lines 3324-3334): Reduced padding, changed to flex with gap
+  - Title, buttons, and legend all in one row with `gap: 1rem`
+  - Legend positioned with `margin-left: auto` to push to right
+
+- **Status Legend**: Inline horizontal layout
+  - `.legend` (lines 3565-3570): Changed to inline flex layout
+  - `.legend-item` (lines 3572-3578): Reduced font size to 0.8rem, gap to 0.3rem
+  - `.legend-color` (lines 3580-3584): Reduced size 20px → 12px
+  - Removed `.legend-title` completely
+
+- **Button Styles**: Minimized for compact layout
+  - `.view-mode-btn` (lines 3349-3357): Reduced padding 0.5rem 1rem → 0.35rem 0.75rem
+  - `.refresh-btn` (lines 3369-3377): Reduced padding and font size to 0.8rem
+  - Border radius reduced: 4px → 3px
+
+- **Gantt Container**: Removed extra spacing
+  - `.gantt-container` (lines 3383-3389): margin: 1rem → 0, removed border-radius and box-shadow
+  - Full-width layout without margins
+
+### Technical
+- Modified generateGanttHTML() function (lines 3261-3900):
+  - Updated header HTML structure (lines 3615-3647)
+  - Combined header, controls, and legend into single div
+  - Removed separate legend div
+  - Modified CSS for compact layout
+
+### UI/UX
+- Much more compact gantt chart header (single row vs multi-row)
+- More screen space for actual gantt chart content
+- Task and date headers always visible during vertical scroll
+- Cleaner, more professional appearance
+- Legend always visible without taking extra vertical space
+- Easier timeline navigation with sticky date headers
+
 ## [2.8.5] - 2026-03-20
 
 ### Fixed

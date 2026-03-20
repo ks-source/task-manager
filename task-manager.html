@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Task Manager - WBS Visualizer v2.8.5</title>
+  <title>Task Manager - WBS Visualizer v2.8.6</title>
   <meta name="description" content="A lightweight, browser-based Work Breakdown Structure (WBS) visualization and management tool">
   <meta name="keywords" content="task manager, WBS, project management, task tracking">
   <meta name="author" content="ks-source">
@@ -873,7 +873,7 @@
    * Header / Menu Bar
    * ========================================== -->
   <header class="header">
-    <h1 class="header-title">Task Manager v2.8.5</h1>
+    <h1 class="header-title">Task Manager v2.8.6</h1>
     <nav class="header-nav">
       <button class="icon-button active" onclick="showDashboard()" title="ダッシュボード">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1340,7 +1340,7 @@
   <script type="application/json" id="initial-wbs-data">
 {
   "meta": {
-    "version": "2.8.5",
+    "version": "2.8.6",
     "project_name": "New Project",
     "project_start": "",
     "project_end": "",
@@ -2446,7 +2446,7 @@ tasksセクションのみ20個のタスクで埋めてください。**
 \`\`\`json
 {
   "meta": {
-    "version": "2.8.5",
+    "version": "2.8.6",
     "project_name": "[プロジェクト名をここに入力]",
     "project_start": "2026/3/20",
     "project_end": "2026/6/30",
@@ -3324,18 +3324,20 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
     .header {
       background-color: white;
       border-bottom: 2px solid #e0e0e0;
-      padding: 1rem 1.5rem;
+      padding: 0.5rem 1rem;
       position: sticky;
       top: 0;
       z-index: 100;
       display: flex;
-      justify-content: space-between;
+      gap: 1rem;
       align-items: center;
     }
 
     .header h1 {
-      font-size: 1.5rem;
+      font-size: 1.2rem;
       color: #2c3e50;
+      margin: 0;
+      white-space: nowrap;
     }
 
     .controls {
@@ -3345,12 +3347,12 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
     }
 
     .view-mode-btn {
-      padding: 0.5rem 1rem;
+      padding: 0.35rem 0.75rem;
       border: 1px solid #ddd;
       background: white;
-      border-radius: 4px;
+      border-radius: 3px;
       cursor: pointer;
-      font-size: 0.9rem;
+      font-size: 0.8rem;
       transition: all 0.2s;
     }
 
@@ -3365,13 +3367,13 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
     }
 
     .refresh-btn {
-      padding: 0.5rem 1rem;
+      padding: 0.35rem 0.75rem;
       background: #3498db;
       color: white;
       border: none;
-      border-radius: 4px;
+      border-radius: 3px;
       cursor: pointer;
-      font-size: 0.9rem;
+      font-size: 0.8rem;
     }
 
     .refresh-btn:hover {
@@ -3380,9 +3382,9 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
 
     .gantt-container {
       background-color: white;
-      margin: 1rem;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      margin: 0;
+      border-radius: 0;
+      box-shadow: none;
       overflow-x: auto;
     }
 
@@ -3410,7 +3412,8 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
       border-bottom: 1px solid #e0e0e0;
       position: sticky;
       left: 0;
-      z-index: 10;
+      top: 0;
+      z-index: 50;
       height: 50px;
       min-height: 50px;
       display: flex;
@@ -3458,7 +3461,7 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
       border-bottom: 1px solid #e0e0e0;
       position: sticky;
       top: 0;
-      z-index: 9;
+      z-index: 49;
       height: 50px;
       min-height: 50px;
     }
@@ -3561,36 +3564,24 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
     }
 
     .legend {
-      padding: 1rem 1.5rem;
-      background: white;
-      margin: 0 1rem 1rem;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-
-    .legend-title {
-      font-weight: 600;
-      margin-bottom: 0.5rem;
-      color: #2c3e50;
-    }
-
-    .legend-items {
       display: flex;
-      gap: 1.5rem;
-      flex-wrap: wrap;
+      gap: 0.75rem;
+      align-items: center;
+      margin-left: auto;
     }
 
     .legend-item {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
-      font-size: 0.85rem;
+      gap: 0.3rem;
+      font-size: 0.8rem;
+      white-space: nowrap;
     }
 
     .legend-color {
-      width: 20px;
-      height: 20px;
-      border-radius: 3px;
+      width: 12px;
+      height: 12px;
+      border-radius: 2px;
     }
 
     @media (max-width: 1200px) {
@@ -3622,20 +3613,16 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
 </head>
 <body>
   <div class="header">
-    <h1>📊 ガントチャート - ${projectData.meta.project_name}</h1>
+    <h1>ガントチャート</h1>
     <div class="controls">
       <div>
         <button class="view-mode-btn active" onclick="changeViewMode('day')" id="btn-day">日</button>
         <button class="view-mode-btn" onclick="changeViewMode('week')" id="btn-week">週</button>
         <button class="view-mode-btn" onclick="changeViewMode('month')" id="btn-month">月</button>
       </div>
-      <button class="refresh-btn" onclick="refreshData()">🔄 更新</button>
+      <button class="refresh-btn" onclick="refreshData()">更新</button>
     </div>
-  </div>
-
-  <div class="legend">
-    <div class="legend-title">ステータス</div>
-    <div class="legend-items">
+    <div class="legend">
       <div class="legend-item">
         <div class="legend-color" style="background: #27ae60;"></div>
         <span>完了</span>
