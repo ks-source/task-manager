@@ -5,6 +5,51 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.8.4] - 2026-03-20
+
+### Fixed
+- **Gantt Chart Horizontal Scrollbar**: Fixed missing horizontal scrollbar in gantt chart
+  - Changed `.gantt-table` grid-template-columns from `250px 1fr` to `250px auto`
+  - Timeline now expands to full content width
+  - Horizontal scrollbar appears when timeline exceeds viewport width
+  - Applied to all responsive breakpoints (1200px, 800px)
+
+### Added
+- **Task Name Labels on Timeline**: Added task name labels above task bars in gantt chart
+  - Labels show format: `WBS_No: Task_Name` (e.g., "WBS1.2.3: Login Implementation")
+  - Smart positioning: left-aligned by default, right-aligned when near right edge (>80%)
+  - Semi-transparent white background with subtle border for readability
+  - Labels can extend beyond task bar width
+  - Non-interactive (pointer-events: none) to avoid blocking clicks
+
+### Changed
+- **Timeline Row Height**: Increased from 60px to 85px to accommodate task labels
+  - Added 25px top padding for label space
+  - Task list rows also increased to 85px for alignment
+  - Maintains perfect vertical alignment between task list and timeline
+
+- **CSS Modifications**:
+  - `.gantt-table` (lines 3394-3398): Changed grid-template-columns to `250px auto`
+  - `.task-row` (line 3426): Changed height from `60px` to `85px`
+  - `.timeline-row` (lines 3483-3489): Changed height to `85px`, added `padding-top: 25px`
+  - Added `.task-name-label` (lines 3541-3561): New label styling with positioning logic
+  - Applied grid changes to media queries (lines 3576, 3588)
+
+### Technical
+- Modified gantt HTML generation (lines 3772-3786):
+  - Added right-edge detection: `(startOffset + duration) > 80`
+  - Added conditional alignment class: `align-right` for labels near right edge
+  - Labels positioned at `top: -22px` above task bars
+  - Labels render before task bars in DOM for proper z-index layering
+
+### UI/UX
+- Horizontal scrollbar now visible when timeline content is wide
+- Task names always visible above bars, not just on hover
+- Labels intelligently positioned to avoid right-edge cutoff
+- Improved readability with semi-transparent background
+- Increased row height provides better visual breathing room
+- Seamless scrolling experience across wide timelines
+
 ## [2.8.3] - 2026-03-20
 
 ### Fixed
