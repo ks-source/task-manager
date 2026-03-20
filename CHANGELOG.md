@@ -5,6 +5,43 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.7.1] - 2026-03-20
+
+### Changed
+- **UI Improvement**: Replaced text input dialogs with modal selection dialogs
+  - Export selection now uses clickable buttons instead of `prompt()` text input
+  - Import selection now uses clickable buttons instead of `prompt()` text input
+  - Improved user experience with visual selection interface
+  - Modal dialogs properly centered on screen using flexbox layout
+- **Button Color Redesign**: Changed modal selection buttons to calming navy/dark color scheme
+  - Export/Import buttons: Navy (#2c3e50) with hover effect (#34495e)
+  - AI template buttons: Dark navy gradient (#1a252f to #2c3e50)
+  - Improved visual hierarchy and professional appearance
+- **New Task Creation Button**: Redesigned task creation button
+  - Moved from filter bar to "タスク一覧" header (right side)
+  - Changed from text button to icon-only button
+  - Uses SVG icon (square with plus symbol)
+  - Tooltip shows "新規タスク作成" on hover
+
+### Technical
+- Added `export-selection-dialog` modal with 4 option buttons
+- Added `import-selection-dialog` modal with 2 option buttons
+- Modified `showExport()` to display modal dialog with `display: flex` (for proper centering)
+- Modified `showImportDialog()` to display modal dialog with `display: flex` (for proper centering)
+- Added `closeExportDialog()` function
+- Added `closeImportDialog()` function
+- Added click-outside-to-close event listeners for both dialogs
+- Removed old text-based "新規タスク作成" button from filter bar
+- Added icon-based "新規タスク作成" button to card header
+
+### UI/UX
+- Export/Import options now displayed as large, descriptive buttons
+- AI template options visually distinguished with darker gradient background
+- Each option includes icon, title, and description
+- Consistent modal design with other dialogs in the application
+- Modal dialogs properly centered using existing flexbox layout
+- New task creation button more compact and integrated into header
+
 ## [2.7.0] - 2026-03-20
 
 ### Added
@@ -339,6 +376,7 @@ For bug reports, feature requests, or questions:
 
 ---
 
+[2.7.1]: https://github.com/ks-source/task-manager/compare/v2.7.0...v2.7.1
 [2.7.0]: https://github.com/ks-source/task-manager/compare/v2.6.1...v2.7.0
 [2.6.1]: https://github.com/ks-source/task-manager/compare/v2.6.0...v2.6.1
 [2.6.0]: https://github.com/ks-source/task-manager/compare/v2.5.0...v2.6.0
