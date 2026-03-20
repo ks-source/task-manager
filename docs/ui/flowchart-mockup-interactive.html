@@ -1,0 +1,1849 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>フローチャート表示 - 手動連携デモ（インタラクティブ版）</title>
+  <style>
+    /* ==========================================
+     * Reset & Base
+     * ========================================== */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-size: 14px;
+      line-height: 1.6;
+      color: #343a40;
+      background-color: #f8f9fa;
+      overflow: hidden;
+    }
+
+    /* ==========================================
+     * Header
+     * ========================================== */
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 0.75rem 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .header h1 {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    /* ==========================================
+     * Toolbar
+     * ========================================== */
+    .toolbar {
+      background: white;
+      padding: 0.75rem 1rem;
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      border-bottom: 1px solid #dee2e6;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+
+    .btn {
+      padding: 0.5rem 1rem;
+      border: 1px solid #dee2e6;
+      background: white;
+      color: #495057;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      transition: all 0.2s;
+    }
+
+    .btn:hover {
+      background: #f8f9fa;
+      border-color: #adb5bd;
+    }
+
+    .btn-primary {
+      background: #007bff;
+      color: white;
+      border-color: #007bff;
+    }
+
+    .btn-primary:hover {
+      background: #0056b3;
+      border-color: #0056b3;
+    }
+
+    .btn-sm {
+      padding: 0.25rem 0.5rem;
+      font-size: 12px;
+    }
+
+    .toolbar-divider {
+      width: 1px;
+      height: 24px;
+      background: #dee2e6;
+      margin: 0 0.5rem;
+    }
+
+    .legend {
+      display: flex;
+      gap: 1rem;
+      margin-left: auto;
+      font-size: 12px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .legend-color {
+      width: 16px;
+      height: 16px;
+      border: 1px solid #dee2e6;
+      border-radius: 2px;
+    }
+
+    /* ==========================================
+     * Main Layout
+     * ========================================== */
+    .main-container {
+      display: flex;
+      height: calc(100vh - 110px);
+    }
+
+    /* ==========================================
+     * Sidebar (TODO Task List)
+     * ========================================== */
+    .sidebar {
+      width: 280px;
+      background: white;
+      border-right: 1px solid #dee2e6;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar-header {
+      padding: 1rem;
+      border-bottom: 1px solid #dee2e6;
+      font-weight: 600;
+      background: #f8f9fa;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .task-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0.5rem;
+    }
+
+    .task-item {
+      padding: 0.75rem;
+      margin-bottom: 0.5rem;
+      background: white;
+      border: 1px solid #dee2e6;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .task-item:hover {
+      background: #f8f9fa;
+      border-color: #007bff;
+    }
+
+    .task-item.active {
+      background: #e7f1ff;
+      border-color: #007bff;
+      border-width: 2px;
+    }
+
+    .task-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .task-checkbox {
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+    }
+
+    .task-wbs {
+      font-size: 11px;
+      font-weight: 600;
+      color: #6c757d;
+    }
+
+    .status-badge {
+      padding: 0.125rem 0.5rem;
+      border-radius: 12px;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      margin-left: auto;
+    }
+
+    .status-badge.completed {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .status-badge.in-progress {
+      background: #cfe2ff;
+      color: #004085;
+    }
+
+    .status-badge.not-started {
+      background: #e9ecef;
+      color: #495057;
+    }
+
+    .task-name {
+      font-size: 13px;
+      font-weight: 500;
+      color: #495057;
+      margin-bottom: 0.5rem;
+    }
+
+    .task-links {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      color: #6c757d;
+    }
+
+    .link-icon {
+      font-size: 11px;
+    }
+
+    .link-icon.gray {
+      color: #adb5bd;
+    }
+
+    .btn-edit-task {
+      padding: 0.25rem 0.5rem;
+      background: #28a745;
+      color: white;
+      border: none;
+      border-radius: 3px;
+      font-size: 11px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-edit-task:hover {
+      background: #218838;
+    }
+
+    /* ==========================================
+     * Canvas Area
+     * ========================================== */
+    .canvas-area {
+      flex: 1;
+      background: #f8f9fa;
+      position: relative;
+      overflow: auto;
+    }
+
+    .canvas-wrapper {
+      min-width: 800px;
+      min-height: 600px;
+      padding: 2rem;
+    }
+
+    /* ==========================================
+     * SVG Styles
+     * ========================================== */
+    .node {
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .node:hover rect,
+    .node:hover path {
+      stroke-width: 3;
+      filter: drop-shadow(0 0 5px rgba(0, 123, 255, 0.5));
+    }
+
+    .node.highlighted-primary rect,
+    .node.highlighted-primary path {
+      stroke: #ff6b6b !important;
+      stroke-width: 4 !important;
+      filter: drop-shadow(0 0 10px rgba(255, 107, 107, 0.8));
+      animation: pulse-primary 1s infinite;
+    }
+
+    .node.highlighted-secondary rect,
+    .node.highlighted-secondary path {
+      stroke: #ff9800 !important;
+      stroke-width: 2 !important;
+    }
+
+    @keyframes pulse-primary {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+
+    .edge {
+      pointer-events: stroke;
+    }
+
+    .edge.highlighted-primary line,
+    .edge.highlighted-primary path {
+      stroke: #ff6b6b !important;
+      stroke-width: 4 !important;
+      filter: drop-shadow(0 0 10px rgba(255, 107, 107, 0.8));
+    }
+
+    .edge.highlighted-secondary line,
+    .edge.highlighted-secondary path {
+      stroke: #ff9800 !important;
+      stroke-width: 3 !important;
+    }
+
+    .edge text.highlighted-primary {
+      fill: #ff6b6b !important;
+      font-weight: 700;
+      filter: drop-shadow(0 0 5px rgba(255, 107, 107, 0.8));
+    }
+
+    .edge text.highlighted-secondary {
+      fill: #ff9800 !important;
+      font-weight: 600;
+    }
+
+    /* ==========================================
+     * Status Bar
+     * ========================================== */
+    .status-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: white;
+      border-top: 1px solid #dee2e6;
+      padding: 0.5rem 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      color: #6c757d;
+    }
+
+    .status-info {
+      display: flex;
+      gap: 2rem;
+    }
+
+    /* ==========================================
+     * Modal
+     * ========================================== */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 999;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 90%;
+      max-width: 700px;
+      max-height: 90vh;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      z-index: 1000;
+      overflow: hidden;
+    }
+
+    .modal-header {
+      padding: 1rem 1.5rem;
+      background: #f8f9fa;
+      border-bottom: 1px solid #dee2e6;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-header h2 {
+      font-size: 18px;
+      font-weight: 600;
+      margin: 0;
+    }
+
+    .btn-close {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #6c757d;
+      padding: 0;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+
+    .btn-close:hover {
+      background: #e9ecef;
+      color: #495057;
+    }
+
+    .modal-body {
+      padding: 1.5rem;
+      max-height: calc(90vh - 140px);
+      overflow-y: auto;
+    }
+
+    .modal-footer {
+      padding: 1rem 1.5rem;
+      background: #f8f9fa;
+      border-top: 1px solid #dee2e6;
+      display: flex;
+      gap: 0.5rem;
+      justify-content: flex-end;
+    }
+
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #495057;
+      margin-bottom: 0.5rem;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 0.5rem;
+      border: 1px solid #ced4da;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: #007bff;
+      box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+
+    .form-select {
+      width: 100%;
+      padding: 0.5rem;
+      border: 1px solid #ced4da;
+      border-radius: 4px;
+      font-size: 13px;
+      background: white;
+      cursor: pointer;
+    }
+
+    /* ==========================================
+     * Flowchart Link Panel
+     * ========================================== */
+    .flowchart-link-panel {
+      margin-top: 1.5rem;
+      padding: 1rem;
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 6px;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+
+    .panel-header h3 {
+      font-size: 16px;
+      font-weight: 600;
+      color: #495057;
+      margin: 0;
+    }
+
+    .panel-hint {
+      font-size: 13px;
+      color: #6c757d;
+      margin-bottom: 1rem;
+      padding: 0.5rem;
+      background: #e7f1ff;
+      border-left: 3px solid #007bff;
+      border-radius: 3px;
+    }
+
+    .link-section {
+      margin-bottom: 1.5rem;
+    }
+
+    .link-section.collapsible {
+      padding: 0;
+      border: 1px solid #dee2e6;
+      border-radius: 4px;
+      background: white;
+    }
+
+    .section-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #495057;
+      margin-bottom: 0.75rem;
+      padding: 0.5rem;
+      background: white;
+      border-radius: 4px;
+    }
+
+    .link-section.collapsible summary {
+      cursor: pointer;
+      user-select: none;
+      list-style: none;
+      margin: 0;
+    }
+
+    .link-section.collapsible summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .link-section.collapsible summary::before {
+      content: '▶';
+      display: inline-block;
+      margin-right: 0.5rem;
+      transition: transform 0.2s;
+    }
+
+    .link-section.collapsible[open] summary::before {
+      transform: rotate(90deg);
+    }
+
+    .link-section.collapsible .linked-items-container,
+    .link-section.collapsible .add-link-controls {
+      padding: 0.5rem;
+    }
+
+    .linked-items-container {
+      margin-bottom: 0.75rem;
+    }
+
+    .linked-items-list {
+      max-height: 200px;
+      overflow-y: auto;
+      margin-bottom: 0.5rem;
+    }
+
+    .linked-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem;
+      background: white;
+      border: 1px solid #dee2e6;
+      border-radius: 4px;
+      margin-bottom: 0.5rem;
+      transition: all 0.2s;
+    }
+
+    .linked-item:hover {
+      background: #f8f9fa;
+      border-color: #adb5bd;
+    }
+
+    .priority-badge {
+      padding: 0.25rem 0.5rem;
+      border-radius: 3px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .priority-badge.primary {
+      background: #ffe0e0;
+      color: #c82333;
+      border: 1px solid #ff6b6b;
+    }
+
+    .priority-badge.secondary {
+      background: #fff3cd;
+      color: #856404;
+      border: 1px solid #ff9800;
+    }
+
+    .item-label {
+      flex: 1;
+      font-size: 13px;
+      color: #495057;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .mode-badge {
+      padding: 0.25rem 0.5rem;
+      border-radius: 3px;
+      font-size: 11px;
+      background: #e9ecef;
+      color: #495057;
+      border: 1px solid #ced4da;
+    }
+
+    .btn-remove {
+      background: #dc3545;
+      color: white;
+      border: none;
+      border-radius: 3px;
+      padding: 0.25rem 0.5rem;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: bold;
+      transition: background 0.2s;
+    }
+
+    .btn-remove:hover {
+      background: #c82333;
+    }
+
+    .empty-message {
+      padding: 1rem;
+      text-align: center;
+      color: #6c757d;
+      font-size: 13px;
+      font-style: italic;
+      background: #f8f9fa;
+      border: 1px dashed #dee2e6;
+      border-radius: 4px;
+    }
+
+    .add-link-controls {
+      padding: 0.75rem;
+      background: white;
+      border: 1px solid #dee2e6;
+      border-radius: 4px;
+    }
+
+    .control-row {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+
+    .control-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .form-select-sm {
+      padding: 0.5rem;
+      border: 1px solid #ced4da;
+      border-radius: 4px;
+      font-size: 12px;
+      background: white;
+      cursor: pointer;
+      min-width: 80px;
+    }
+
+    .btn-add {
+      padding: 0.5rem 1rem;
+      background: #28a745;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 13px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.2s;
+    }
+
+    .btn-add:hover:not(:disabled) {
+      background: #218838;
+    }
+
+    .btn-add:disabled {
+      background: #6c757d;
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 13px;
+      color: #495057;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .checkbox-label input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+    }
+
+    .link-preview {
+      padding: 0.75rem;
+      background: #e7f1ff;
+      border: 1px solid #b8daff;
+      border-radius: 4px;
+      font-size: 13px;
+      color: #004085;
+    }
+
+    .link-preview strong {
+      display: inline-block;
+      margin-right: 0.5rem;
+    }
+
+    .preview-text {
+      font-style: italic;
+    }
+
+    /* ==========================================
+     * Debug Panel
+     * ========================================== */
+    .debug-panel {
+      position: fixed;
+      top: 110px;
+      right: 10px;
+      width: 350px;
+      max-height: calc(100vh - 160px);
+      background: white;
+      border: 2px solid #007bff;
+      border-radius: 6px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      z-index: 900;
+      display: none;
+    }
+
+    .debug-panel.show {
+      display: block;
+    }
+
+    .debug-header {
+      padding: 0.75rem 1rem;
+      background: #007bff;
+      color: white;
+      font-weight: 600;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .debug-body {
+      padding: 1rem;
+      max-height: calc(100vh - 220px);
+      overflow-y: auto;
+      font-size: 12px;
+    }
+
+    .debug-section {
+      margin-bottom: 1rem;
+    }
+
+    .debug-section h4 {
+      font-size: 13px;
+      font-weight: 600;
+      color: #495057;
+      margin-bottom: 0.5rem;
+    }
+
+    .debug-code {
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 4px;
+      padding: 0.5rem;
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .notification {
+      position: fixed;
+      top: 120px;
+      right: 20px;
+      padding: 1rem 1.5rem;
+      background: #28a745;
+      color: white;
+      border-radius: 6px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      z-index: 1100;
+      animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(400px);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="header">
+    <h1>🎯 フローチャート - 手動連携デモ（インタラクティブ版）</h1>
+    <div class="header-actions">
+      <button class="btn btn-sm" onclick="toggleDebugPanel()">🔧 デバッグパネル</button>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <button class="btn btn-primary">
+      🔄 更新
+    </button>
+    <button class="btn">
+      💾 保存
+    </button>
+    <button class="btn">
+      📤 エクスポート ▾
+    </button>
+
+    <div class="toolbar-divider"></div>
+
+    <button class="btn">
+      ⚙️ 設定
+    </button>
+
+    <div class="legend">
+      <div class="legend-item">
+        <div class="legend-color" style="background: #d4edda;"></div>
+        <span>完了</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background: #cfe2ff;"></div>
+        <span>進行中</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background: #e9ecef;"></div>
+        <span>未着手</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Container -->
+  <div class="main-container">
+
+    <!-- Sidebar (TODO Task List) -->
+    <div class="sidebar">
+      <div class="sidebar-header">
+        📋 TODOタスク一覧
+        <label style="font-size: 12px; font-weight: normal;">
+          <input type="checkbox" id="hide-completed" onchange="toggleCompletedTasks()">
+          完了済みを隠す
+        </label>
+      </div>
+
+      <div class="task-list" id="task-list">
+        <!-- 動的生成 -->
+      </div>
+    </div>
+
+    <!-- Canvas Area -->
+    <div class="canvas-area">
+      <div class="canvas-wrapper">
+        <svg id="flowchart-canvas" width="800" height="600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600">
+          <!-- グリッド背景 -->
+          <defs>
+            <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+              <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#e0e0e0" stroke-width="0.5"/>
+            </pattern>
+
+            <!-- Arrow Markers -->
+            <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+              <polygon points="0 0, 10 3, 0 6" fill="#333"/>
+            </marker>
+            <marker id="arrowhead-green" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+              <polygon points="0 0, 10 3, 0 6" fill="#4CAF50"/>
+            </marker>
+            <marker id="arrowhead-red" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+              <polygon points="0 0, 10 3, 0 6" fill="#f44336"/>
+            </marker>
+          </defs>
+
+          <rect width="100%" height="100%" fill="url(#grid)" />
+
+          <!-- Edges Layer -->
+          <g id="edges-layer">
+            <!-- 動的生成 -->
+          </g>
+
+          <!-- Nodes Layer -->
+          <g id="nodes-layer">
+            <!-- 動的生成 -->
+          </g>
+
+        </svg>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Status Bar -->
+  <div class="status-bar">
+    <div class="status-info">
+      <div>タスク数: <strong id="task-count">0</strong></div>
+      <div>選択中: <strong id="selected-task">なし</strong></div>
+    </div>
+    <div id="highlight-info">
+      ハイライト: なし
+    </div>
+  </div>
+
+  <!-- Task Edit Modal -->
+  <div class="modal-overlay" id="modal-overlay" onclick="closeTaskEditModal()"></div>
+  <div class="modal" id="task-edit-modal">
+    <div class="modal-header">
+      <h2 id="modal-title">タスク編集</h2>
+      <button class="btn-close" onclick="closeTaskEditModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <!-- 基本情報 -->
+      <div class="form-group">
+        <label class="form-label">タスク名</label>
+        <input type="text" class="form-control" id="edit-task-name">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">ステータス</label>
+        <select class="form-select" id="edit-task-status">
+          <option value="Not Started">未着手</option>
+          <option value="In Progress">進行中</option>
+          <option value="Completed">完了</option>
+        </select>
+      </div>
+
+      <!-- フローチャート連携設定パネル -->
+      <div class="flowchart-link-panel">
+        <div class="panel-header">
+          <h3>📊 フローチャート連携設定</h3>
+        </div>
+
+        <p class="panel-hint">
+          このタスクに関連するフローチャート要素を設定できます。クリック時にハイライト表示されます。
+        </p>
+
+        <!-- ノード連携セクション -->
+        <div class="link-section">
+          <h4 class="section-title">🔵 ノード連携</h4>
+
+          <div class="linked-items-container">
+            <div class="linked-items-list" id="linked-nodes-list">
+              <!-- 動的生成 -->
+            </div>
+            <div class="empty-message" id="no-nodes-message">
+              紐付け済みノードはありません
+            </div>
+          </div>
+
+          <div class="add-link-controls">
+            <div class="control-row">
+              <select id="node-selector" class="form-select" onchange="onNodeSelectorChange()">
+                <option value="">ノードを選択...</option>
+              </select>
+              <select id="node-priority" class="form-select-sm">
+                <option value="primary">主要</option>
+                <option value="secondary">副次</option>
+              </select>
+              <button class="btn btn-add" id="add-node-btn" onclick="onAddNode()" disabled>
+                ➕ 追加
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- エッジ連携セクション -->
+        <details class="link-section collapsible">
+          <summary class="section-title">🔗 エッジ連携（オプション）</summary>
+
+          <div class="linked-items-container">
+            <div class="linked-items-list" id="linked-edges-list">
+              <!-- 動的生成 -->
+            </div>
+            <div class="empty-message" id="no-edges-message">
+              紐付け済みエッジはありません
+            </div>
+          </div>
+
+          <div class="add-link-controls">
+            <div class="control-row">
+              <select id="edge-selector" class="form-select" onchange="onEdgeSelectorChange()">
+                <option value="">エッジを選択...</option>
+              </select>
+              <select id="edge-priority" class="form-select-sm">
+                <option value="primary">主要</option>
+                <option value="secondary">副次</option>
+              </select>
+              <button class="btn btn-add" id="add-edge-btn" onclick="onAddEdge()" disabled>
+                ➕ 追加
+              </button>
+            </div>
+            <div class="control-row">
+              <label class="checkbox-label">
+                <input type="checkbox" id="edge-label-only">
+                <span>ラベルのみハイライト（線は含まない）</span>
+              </label>
+            </div>
+          </div>
+        </details>
+
+        <!-- プレビュー -->
+        <div class="link-preview">
+          <strong>📋 プレビュー:</strong>
+          <span id="preview-text" class="preview-text">連携なし</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeTaskEditModal()">キャンセル</button>
+      <button class="btn btn-primary" onclick="saveTaskEditModal()">保存して閉じる</button>
+    </div>
+  </div>
+
+  <!-- Debug Panel -->
+  <div class="debug-panel" id="debug-panel">
+    <div class="debug-header">
+      🔧 デバッグパネル
+      <button class="btn-close" style="color: white;" onclick="toggleDebugPanel()">×</button>
+    </div>
+    <div class="debug-body">
+      <div class="debug-section">
+        <h4>選択中タスク</h4>
+        <div id="debug-task-info">なし</div>
+      </div>
+
+      <div class="debug-section">
+        <h4>flowchartLinks データ</h4>
+        <div class="debug-code" id="debug-flowchart-links">
+          なし
+        </div>
+      </div>
+
+      <div class="debug-section">
+        <h4>mermaidIds（自動生成）</h4>
+        <div id="debug-mermaid-ids">なし</div>
+      </div>
+
+      <div class="debug-section">
+        <h4>ハイライト状態</h4>
+        <div id="debug-highlight-state">なし</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ========================================
+    // モックデータ定義
+    // ========================================
+
+    let mockTasks = [
+      {
+        wbs: "WBS1.1.0",
+        taskName: "要件ヒアリング",
+        status: "Completed",
+        mermaidIds: "F_01",
+        flowchartLinks: {
+          nodes: [
+            { id: "F_01", label: "要件定義", highlightType: "primary" }
+          ],
+          edges: []
+        }
+      },
+      {
+        wbs: "WBS1.1.1",
+        taskName: "要件定義書作成",
+        status: "Completed",
+        mermaidIds: "F_01,E_02",
+        flowchartLinks: {
+          nodes: [
+            { id: "F_01", label: "要件定義", highlightType: "secondary" }
+          ],
+          edges: [
+            {
+              id: "E_02",
+              from: "F_01",
+              to: "F_02",
+              label: "",
+              highlightType: "primary",
+              highlightMode: "full"
+            }
+          ]
+        }
+      },
+      {
+        wbs: "WBS1.2.0",
+        taskName: "要件承認会議",
+        status: "Completed",
+        mermaidIds: "F_02,E_03",
+        flowchartLinks: {
+          nodes: [
+            { id: "F_02", label: "要件承認OK?", highlightType: "primary" }
+          ],
+          edges: [
+            {
+              id: "E_03",
+              from: "F_02",
+              to: "F_03",
+              label: "YES",
+              highlightType: "primary",
+              highlightMode: "label-only"
+            }
+          ]
+        }
+      },
+      {
+        wbs: "WBS1.3.0",
+        taskName: "基本設計書作成",
+        status: "In Progress",
+        mermaidIds: "F_03",
+        flowchartLinks: {
+          nodes: [
+            { id: "F_03", label: "基本設計", highlightType: "primary" }
+          ],
+          edges: []
+        }
+      },
+      {
+        wbs: "WBS1.4.0",
+        taskName: "詳細設計書作成",
+        status: "Not Started",
+        mermaidIds: "",
+        flowchartLinks: {
+          nodes: [],
+          edges: []
+        }
+      }
+    ];
+
+    const mockFlowchart = {
+      nodes: [
+        {
+          id: "START",
+          type: "start",
+          label: "開始",
+          position: { x: 350, y: 20 },
+          size: { width: 100, height: 40 }
+        },
+        {
+          id: "F_01",
+          type: "process",
+          label: "要件定義",
+          position: { x: 300, y: 100 },
+          size: { width: 200, height: 80 }
+        },
+        {
+          id: "F_02",
+          type: "decision",
+          label: "要件\n承認OK?",
+          position: { x: 300, y: 220 },
+          size: { width: 200, height: 100 }
+        },
+        {
+          id: "F_03",
+          type: "process",
+          label: "基本設計",
+          position: { x: 300, y: 360 },
+          size: { width: 200, height: 80 }
+        },
+        {
+          id: "END",
+          type: "end",
+          label: "終了",
+          position: { x: 350, y: 480 },
+          size: { width: 100, height: 40 }
+        }
+      ],
+      edges: [
+        { id: "E_01", from: "START", to: "F_01", label: "" },
+        { id: "E_02", from: "F_01", to: "F_02", label: "" },
+        { id: "E_03", from: "F_02", to: "F_03", label: "YES" },
+        { id: "E_04", from: "F_02", to: "F_01", label: "NO" },
+        { id: "E_05", from: "F_03", to: "END", label: "" }
+      ]
+    };
+
+    let currentEditingTask = null;
+
+    // ========================================
+    // 初期化
+    // ========================================
+
+    document.addEventListener('DOMContentLoaded', () => {
+      renderTaskList();
+      renderFlowchart();
+      populateNodeSelector();
+      populateEdgeSelector();
+      updateStatusBar();
+    });
+
+    // ========================================
+    // タスク一覧レンダリング
+    // ========================================
+
+    function renderTaskList() {
+      const container = document.getElementById('task-list');
+      container.innerHTML = '';
+
+      const hideCompleted = document.getElementById('hide-completed').checked;
+
+      mockTasks.forEach(task => {
+        if (hideCompleted && task.status === 'Completed') {
+          return;
+        }
+
+        const taskItem = document.createElement('div');
+        taskItem.className = 'task-item';
+        taskItem.dataset.wbs = task.wbs;
+
+        const statusClass = getStatusClass(task.status);
+
+        const linkInfo = task.flowchartLinks.nodes.length > 0
+          ? `📌 ${task.flowchartLinks.nodes.map(n => n.id).join(', ')}`
+          : '📌 未設定';
+
+        taskItem.innerHTML = `
+          <div class="task-header">
+            <input type="checkbox" class="task-checkbox"
+                   ${task.status === 'Completed' ? 'checked' : ''}
+                   onclick="event.stopPropagation()">
+            <span class="task-wbs">${task.wbs}</span>
+            <span class="status-badge ${statusClass}">${getStatusLabel(task.status)}</span>
+          </div>
+          <div class="task-name">${task.taskName}</div>
+          <div class="task-links">
+            <span class="link-icon ${task.flowchartLinks.nodes.length === 0 ? 'gray' : ''}"
+                  title="フローチャート連携: ${task.flowchartLinks.nodes.length}ノード, ${task.flowchartLinks.edges.length}エッジ">
+              ${linkInfo}
+            </span>
+            <button class="btn-edit-task" onclick="event.stopPropagation(); openTaskEditModal('${task.wbs}')">✏️ 編集</button>
+          </div>
+        `;
+
+        taskItem.addEventListener('click', () => {
+          onTaskClick(task.wbs);
+        });
+
+        container.appendChild(taskItem);
+      });
+
+      updateStatusBar();
+    }
+
+    function getStatusClass(status) {
+      const map = {
+        'Completed': 'completed',
+        'In Progress': 'in-progress',
+        'Not Started': 'not-started'
+      };
+      return map[status] || 'not-started';
+    }
+
+    function getStatusLabel(status) {
+      const map = {
+        'Completed': '完了',
+        'In Progress': '進行中',
+        'Not Started': '未着手'
+      };
+      return map[status] || status;
+    }
+
+    function toggleCompletedTasks() {
+      renderTaskList();
+    }
+
+    // ========================================
+    // フローチャートレンダリング
+    // ========================================
+
+    function renderFlowchart() {
+      renderEdges();
+      renderNodes();
+    }
+
+    function renderNodes() {
+      const nodesLayer = document.getElementById('nodes-layer');
+      nodesLayer.innerHTML = '';
+
+      mockFlowchart.nodes.forEach(node => {
+        const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        g.classList.add('node');
+        g.setAttribute('data-node-id', node.id);
+
+        const cx = node.position.x + node.size.width / 2;
+        const cy = node.position.y + node.size.height / 2;
+
+        if (node.type === 'decision') {
+          // 菱形
+          const w = node.size.width / 2;
+          const h = node.size.height / 2;
+          const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+          const d = `M ${cx} ${cy - h} L ${cx + w} ${cy} L ${cx} ${cy + h} L ${cx - w} ${cy} Z`;
+          path.setAttribute('d', d);
+          path.setAttribute('fill', '#e9ecef');
+          path.setAttribute('stroke', '#6c757d');
+          path.setAttribute('stroke-width', '2');
+          g.appendChild(path);
+        } else {
+          // 矩形
+          const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+          rect.setAttribute('x', node.position.x);
+          rect.setAttribute('y', node.position.y);
+          rect.setAttribute('width', node.size.width);
+          rect.setAttribute('height', node.size.height);
+          rect.setAttribute('fill', node.type === 'start' ? '#4CAF50' : node.type === 'end' ? '#f44336' : '#cfe2ff');
+          rect.setAttribute('stroke', node.type === 'start' ? '#2E7D32' : node.type === 'end' ? '#c62828' : '#007bff');
+          rect.setAttribute('stroke-width', '2');
+          rect.setAttribute('rx', node.type === 'start' || node.type === 'end' ? '20' : '5');
+          g.appendChild(rect);
+        }
+
+        // テキスト
+        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        text.setAttribute('x', cx);
+        text.setAttribute('y', cy + 5);
+        text.setAttribute('text-anchor', 'middle');
+        text.setAttribute('font-size', '14');
+        text.setAttribute('font-weight', '600');
+        text.setAttribute('fill', node.type === 'start' || node.type === 'end' ? 'white' : '#495057');
+        text.textContent = node.label;
+        g.appendChild(text);
+
+        g.addEventListener('click', () => {
+          onNodeClick(node.id);
+        });
+
+        nodesLayer.appendChild(g);
+      });
+    }
+
+    function renderEdges() {
+      const edgesLayer = document.getElementById('edges-layer');
+      edgesLayer.innerHTML = '';
+
+      mockFlowchart.edges.forEach(edge => {
+        const fromNode = mockFlowchart.nodes.find(n => n.id === edge.from);
+        const toNode = mockFlowchart.nodes.find(n => n.id === edge.to);
+
+        if (!fromNode || !toNode) return;
+
+        const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        g.classList.add('edge');
+        g.setAttribute('data-edge-id', edge.id);
+
+        const x1 = fromNode.position.x + fromNode.size.width / 2;
+        const y1 = fromNode.position.y + fromNode.size.height;
+        const x2 = toNode.position.x + toNode.size.width / 2;
+        const y2 = toNode.position.y;
+
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', x1);
+        line.setAttribute('y1', y1);
+        line.setAttribute('x2', x2);
+        line.setAttribute('y2', y2);
+        line.setAttribute('stroke', edge.label === 'YES' ? '#4CAF50' : edge.label === 'NO' ? '#f44336' : '#333');
+        line.setAttribute('stroke-width', '2');
+        line.setAttribute('marker-end', edge.label === 'YES' ? 'url(#arrowhead-green)' : edge.label === 'NO' ? 'url(#arrowhead-red)' : 'url(#arrowhead)');
+
+        if (edge.label === 'NO') {
+          line.setAttribute('stroke-dasharray', '5,5');
+        }
+
+        g.appendChild(line);
+
+        if (edge.label) {
+          const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+          text.setAttribute('x', (x1 + x2) / 2 + 10);
+          text.setAttribute('y', (y1 + y2) / 2);
+          text.setAttribute('font-size', '12');
+          text.setAttribute('fill', edge.label === 'YES' ? '#4CAF50' : '#f44336');
+          text.setAttribute('font-weight', '600');
+          text.textContent = edge.label;
+          g.appendChild(text);
+        }
+
+        edgesLayer.appendChild(g);
+      });
+    }
+
+    // ========================================
+    // タスククリック処理
+    // ========================================
+
+    function onTaskClick(wbs) {
+      const task = mockTasks.find(t => t.wbs === wbs);
+      if (!task) return;
+
+      clearAllHighlights();
+
+      document.querySelectorAll('.task-item').forEach(item => {
+        item.classList.remove('active');
+      });
+      document.querySelector(`[data-wbs="${wbs}"]`).classList.add('active');
+
+      const primaryNodes = task.flowchartLinks.nodes.filter(n => n.highlightType === 'primary');
+      primaryNodes.forEach(node => {
+        const svgNode = document.querySelector(`[data-node-id="${node.id}"]`);
+        if (svgNode) {
+          svgNode.classList.add('highlighted-primary');
+        }
+      });
+
+      if (primaryNodes.length > 0) {
+        const firstNode = document.querySelector(`[data-node-id="${primaryNodes[0].id}"]`);
+        if (firstNode) {
+          firstNode.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }
+
+      const secondaryNodes = task.flowchartLinks.nodes.filter(n => n.highlightType === 'secondary');
+      secondaryNodes.forEach(node => {
+        const svgNode = document.querySelector(`[data-node-id="${node.id}"]`);
+        if (svgNode) {
+          svgNode.classList.add('highlighted-secondary');
+        }
+      });
+
+      task.flowchartLinks.edges.forEach(edge => {
+        const svgEdge = document.querySelector(`[data-edge-id="${edge.id}"]`);
+        if (svgEdge) {
+          const highlightClass = edge.highlightType === 'primary' ? 'highlighted-primary' : 'highlighted-secondary';
+
+          if (edge.highlightMode === 'label-only') {
+            const edgeLabel = svgEdge.querySelector('text');
+            if (edgeLabel) {
+              edgeLabel.classList.add(highlightClass);
+            }
+          } else {
+            svgEdge.classList.add(highlightClass);
+          }
+        }
+      });
+
+      updateStatusBar(task);
+      updateDebugPanel(task);
+    }
+
+    function onNodeClick(nodeId) {
+      clearAllHighlights();
+
+      document.querySelectorAll('.task-item').forEach(item => item.classList.remove('active'));
+
+      const relatedTasks = mockTasks.filter(task =>
+        task.flowchartLinks.nodes.some(n => n.id === nodeId)
+      );
+
+      if (relatedTasks.length > 0) {
+        relatedTasks.forEach(task => {
+          const taskItem = document.querySelector(`[data-wbs="${task.wbs}"]`);
+          if (taskItem) {
+            taskItem.classList.add('active');
+          }
+        });
+
+        const svgNode = document.querySelector(`[data-node-id="${nodeId}"]`);
+        if (svgNode) {
+          svgNode.classList.add('highlighted-primary');
+        }
+
+        if (relatedTasks.length === 1) {
+          updateStatusBar(relatedTasks[0]);
+          updateDebugPanel(relatedTasks[0]);
+        }
+      }
+    }
+
+    function clearAllHighlights() {
+      document.querySelectorAll('.node, .edge').forEach(el => {
+        el.classList.remove('highlighted-primary', 'highlighted-secondary');
+      });
+      document.querySelectorAll('.edge text').forEach(el => {
+        el.classList.remove('highlighted-primary', 'highlighted-secondary');
+      });
+    }
+
+    // ========================================
+    // タスク編集モーダル
+    // ========================================
+
+    function openTaskEditModal(wbs) {
+      const task = mockTasks.find(t => t.wbs === wbs);
+      if (!task) return;
+
+      currentEditingTask = task;
+
+      document.getElementById('modal-title').textContent = `タスク編集 - ${task.wbs}`;
+      document.getElementById('edit-task-name').value = task.taskName;
+      document.getElementById('edit-task-status').value = task.status;
+
+      renderLinkedNodesInModal(task.flowchartLinks.nodes);
+      renderLinkedEdgesInModal(task.flowchartLinks.edges);
+
+      updateModalPreview();
+
+      document.getElementById('modal-overlay').style.display = 'block';
+      document.getElementById('task-edit-modal').style.display = 'block';
+    }
+
+    function closeTaskEditModal() {
+      document.getElementById('modal-overlay').style.display = 'none';
+      document.getElementById('task-edit-modal').style.display = 'none';
+      currentEditingTask = null;
+    }
+
+    function saveTaskEditModal() {
+      if (!currentEditingTask) return;
+
+      currentEditingTask.taskName = document.getElementById('edit-task-name').value;
+      currentEditingTask.status = document.getElementById('edit-task-status').value;
+
+      currentEditingTask.mermaidIds = currentEditingTask.flowchartLinks.nodes
+        .map(n => n.id)
+        .join(',');
+
+      renderTaskList();
+      closeTaskEditModal();
+      showNotification('タスクを保存しました');
+    }
+
+    function renderLinkedNodesInModal(nodes) {
+      const list = document.getElementById('linked-nodes-list');
+      const noNodesMsg = document.getElementById('no-nodes-message');
+
+      list.innerHTML = '';
+
+      if (!nodes || nodes.length === 0) {
+        noNodesMsg.style.display = 'block';
+        return;
+      }
+
+      noNodesMsg.style.display = 'none';
+
+      nodes.forEach(node => {
+        const item = document.createElement('div');
+        item.className = 'linked-item';
+        item.dataset.nodeId = node.id;
+
+        item.innerHTML = `
+          <span class="priority-badge ${node.highlightType}">${node.highlightType === 'primary' ? '主要' : '副次'}</span>
+          <span class="item-label">${node.id} - ${node.label}</span>
+          <button class="btn-remove" onclick="onRemoveNode('${node.id}')">×</button>
+        `;
+
+        list.appendChild(item);
+      });
+    }
+
+    function renderLinkedEdgesInModal(edges) {
+      const list = document.getElementById('linked-edges-list');
+      const noEdgesMsg = document.getElementById('no-edges-message');
+
+      list.innerHTML = '';
+
+      if (!edges || edges.length === 0) {
+        noEdgesMsg.style.display = 'block';
+        return;
+      }
+
+      noEdgesMsg.style.display = 'none';
+
+      edges.forEach(edge => {
+        const fromNode = mockFlowchart.nodes.find(n => n.id === edge.from);
+        const toNode = mockFlowchart.nodes.find(n => n.id === edge.to);
+        const edgeLabel = edge.label ? ` (${edge.label})` : '';
+        const displayLabel = `${edge.id}: ${fromNode.label} → ${toNode.label}${edgeLabel}`;
+
+        const item = document.createElement('div');
+        item.className = 'linked-item';
+        item.dataset.edgeId = edge.id;
+
+        item.innerHTML = `
+          <span class="priority-badge ${edge.highlightType}">${edge.highlightType === 'primary' ? '主要' : '副次'}</span>
+          <span class="item-label">${displayLabel}</span>
+          <span class="mode-badge">${edge.highlightMode === 'label-only' ? 'ラベルのみ' : '全体'}</span>
+          <button class="btn-remove" onclick="onRemoveEdge('${edge.id}')">×</button>
+        `;
+
+        list.appendChild(item);
+      });
+    }
+
+    function populateNodeSelector() {
+      const selector = document.getElementById('node-selector');
+      selector.innerHTML = '<option value="">ノードを選択...</option>';
+
+      mockFlowchart.nodes.forEach(node => {
+        if (node.type === 'start' || node.type === 'end') return;
+
+        const option = document.createElement('option');
+        option.value = node.id;
+        option.textContent = `${node.id} - ${node.label}`;
+        option.dataset.label = node.label;
+        selector.appendChild(option);
+      });
+    }
+
+    function populateEdgeSelector() {
+      const selector = document.getElementById('edge-selector');
+      selector.innerHTML = '<option value="">エッジを選択...</option>';
+
+      mockFlowchart.edges.forEach(edge => {
+        const fromNode = mockFlowchart.nodes.find(n => n.id === edge.from);
+        const toNode = mockFlowchart.nodes.find(n => n.id === edge.to);
+        const label = edge.label ? ` (${edge.label})` : '';
+
+        const option = document.createElement('option');
+        option.value = edge.id;
+        option.textContent = `${edge.id}: ${fromNode.label} → ${toNode.label}${label}`;
+        option.dataset.from = edge.from;
+        option.dataset.to = edge.to;
+        option.dataset.label = edge.label || '';
+        selector.appendChild(option);
+      });
+    }
+
+    function onNodeSelectorChange() {
+      const selector = document.getElementById('node-selector');
+      document.getElementById('add-node-btn').disabled = !selector.value;
+    }
+
+    function onEdgeSelectorChange() {
+      const selector = document.getElementById('edge-selector');
+      document.getElementById('add-edge-btn').disabled = !selector.value;
+    }
+
+    function onAddNode() {
+      if (!currentEditingTask) return;
+
+      const selector = document.getElementById('node-selector');
+      const priority = document.getElementById('node-priority').value;
+      const nodeId = selector.value;
+
+      if (!nodeId) return;
+
+      if (currentEditingTask.flowchartLinks.nodes.some(n => n.id === nodeId)) {
+        alert('このノードは既に紐付けられています。');
+        return;
+      }
+
+      const node = mockFlowchart.nodes.find(n => n.id === nodeId);
+      if (!node) return;
+
+      currentEditingTask.flowchartLinks.nodes.push({
+        id: node.id,
+        label: node.label,
+        highlightType: priority
+      });
+
+      renderLinkedNodesInModal(currentEditingTask.flowchartLinks.nodes);
+      updateModalPreview();
+
+      selector.value = '';
+      document.getElementById('add-node-btn').disabled = true;
+    }
+
+    function onAddEdge() {
+      if (!currentEditingTask) return;
+
+      const selector = document.getElementById('edge-selector');
+      const priority = document.getElementById('edge-priority').value;
+      const labelOnly = document.getElementById('edge-label-only').checked;
+      const edgeId = selector.value;
+
+      if (!edgeId) return;
+
+      if (currentEditingTask.flowchartLinks.edges.some(e => e.id === edgeId)) {
+        alert('このエッジは既に紐付けられています。');
+        return;
+      }
+
+      const edge = mockFlowchart.edges.find(e => e.id === edgeId);
+      if (!edge) return;
+
+      currentEditingTask.flowchartLinks.edges.push({
+        id: edge.id,
+        from: edge.from,
+        to: edge.to,
+        label: edge.label || '',
+        highlightType: priority,
+        highlightMode: labelOnly ? 'label-only' : 'full'
+      });
+
+      renderLinkedEdgesInModal(currentEditingTask.flowchartLinks.edges);
+      updateModalPreview();
+
+      selector.value = '';
+      document.getElementById('edge-label-only').checked = false;
+      document.getElementById('add-edge-btn').disabled = true;
+    }
+
+    function onRemoveNode(nodeId) {
+      if (!currentEditingTask) return;
+
+      if (!confirm('この紐付けを削除しますか？')) return;
+
+      currentEditingTask.flowchartLinks.nodes =
+        currentEditingTask.flowchartLinks.nodes.filter(n => n.id !== nodeId);
+
+      renderLinkedNodesInModal(currentEditingTask.flowchartLinks.nodes);
+      updateModalPreview();
+    }
+
+    function onRemoveEdge(edgeId) {
+      if (!currentEditingTask) return;
+
+      if (!confirm('この紐付けを削除しますか？')) return;
+
+      currentEditingTask.flowchartLinks.edges =
+        currentEditingTask.flowchartLinks.edges.filter(e => e.id !== edgeId);
+
+      renderLinkedEdgesInModal(currentEditingTask.flowchartLinks.edges);
+      updateModalPreview();
+    }
+
+    function updateModalPreview() {
+      if (!currentEditingTask) return;
+
+      const previewText = document.getElementById('preview-text');
+      const nodes = currentEditingTask.flowchartLinks.nodes;
+      const edges = currentEditingTask.flowchartLinks.edges;
+
+      if (nodes.length === 0 && edges.length === 0) {
+        previewText.textContent = '連携なし';
+        previewText.style.fontStyle = 'italic';
+        return;
+      }
+
+      const parts = [];
+      if (nodes.length > 0) {
+        const nodeList = nodes.map(n => `${n.id}（${n.highlightType === 'primary' ? '主要' : '副次'}）`).join(', ');
+        parts.push(`ノード: ${nodeList}`);
+      }
+      if (edges.length > 0) {
+        const edgeList = edges.map(e => `${e.id}（${e.highlightType === 'primary' ? '主要' : '副次'}・${e.highlightMode === 'label-only' ? 'ラベルのみ' : '全体'}）`).join(', ');
+        parts.push(`エッジ: ${edgeList}`);
+      }
+
+      previewText.textContent = `このタスククリック時に ${parts.join(' / ')} がハイライトされます`;
+      previewText.style.fontStyle = 'normal';
+    }
+
+    // ========================================
+    // デバッグパネル
+    // ========================================
+
+    function toggleDebugPanel() {
+      const panel = document.getElementById('debug-panel');
+      panel.classList.toggle('show');
+    }
+
+    function updateDebugPanel(task) {
+      if (!task) return;
+
+      document.getElementById('debug-task-info').textContent = `${task.wbs} - ${task.taskName}`;
+
+      document.getElementById('debug-flowchart-links').textContent =
+        JSON.stringify(task.flowchartLinks, null, 2);
+
+      document.getElementById('debug-mermaid-ids').textContent = task.mermaidIds || '（なし）';
+
+      const highlightState = [];
+      task.flowchartLinks.nodes.forEach(n => {
+        highlightState.push(`• ${n.highlightType === 'primary' ? 'Primary' : 'Secondary'}: ${n.id} (ノード)`);
+      });
+      task.flowchartLinks.edges.forEach(e => {
+        highlightState.push(`• ${e.highlightType === 'primary' ? 'Primary' : 'Secondary'}: ${e.id} (エッジ・${e.highlightMode === 'label-only' ? 'ラベルのみ' : '全体'})`);
+      });
+
+      document.getElementById('debug-highlight-state').innerHTML =
+        highlightState.length > 0 ? highlightState.join('<br>') : 'なし';
+    }
+
+    // ========================================
+    // ステータスバー
+    // ========================================
+
+    function updateStatusBar(task) {
+      document.getElementById('task-count').textContent = mockTasks.length;
+
+      if (task) {
+        document.getElementById('selected-task').textContent = `${task.wbs} - ${task.taskName}`;
+
+        const highlights = [];
+        task.flowchartLinks.nodes.forEach(n => {
+          highlights.push(`${n.id}(${n.highlightType === 'primary' ? 'P' : 'S'})`);
+        });
+        task.flowchartLinks.edges.forEach(e => {
+          highlights.push(`${e.id}(${e.highlightType === 'primary' ? 'P' : 'S'})`);
+        });
+
+        document.getElementById('highlight-info').textContent =
+          highlights.length > 0 ? `ハイライト: ${highlights.join(', ')}` : 'ハイライト: なし';
+      } else {
+        document.getElementById('selected-task').textContent = 'なし';
+        document.getElementById('highlight-info').textContent = 'ハイライト: なし';
+      }
+    }
+
+    // ========================================
+    // 通知
+    // ========================================
+
+    function showNotification(message) {
+      const notification = document.createElement('div');
+      notification.className = 'notification';
+      notification.textContent = message;
+      document.body.appendChild(notification);
+
+      setTimeout(() => {
+        notification.remove();
+      }, 3000);
+    }
+  </script>
+
+</body>
+</html>

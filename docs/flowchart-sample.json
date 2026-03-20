@@ -1,0 +1,749 @@
+{
+  "flowchart": {
+    "metadata": {
+      "version": "1.0",
+      "created": "2026-03-20T10:00:00Z",
+      "modified": "2026-03-20T15:30:00Z",
+      "author": "ks-source",
+      "projectName": "サンプルプロジェクト",
+      "description": "Webアプリケーション開発のプロセスフロー"
+    },
+    "nodes": [
+      {
+        "id": "START",
+        "type": "start",
+        "label": "プロジェクト開始",
+        "position": {
+          "x": 300,
+          "y": 20
+        },
+        "size": {
+          "width": 160,
+          "height": 40
+        },
+        "linkedTasks": [],
+        "style": {
+          "fill": "#4CAF50",
+          "stroke": "#2E7D32",
+          "strokeWidth": 2,
+          "fontSize": 14
+        }
+      },
+      {
+        "id": "F_01",
+        "type": "process",
+        "label": "要件定義",
+        "position": {
+          "x": 280,
+          "y": 100
+        },
+        "size": {
+          "width": 200,
+          "height": 80
+        },
+        "linkedTasks": ["WBS1.1.0", "WBS1.1.1"],
+        "style": {
+          "fill": "auto",
+          "stroke": "#333",
+          "strokeWidth": 2,
+          "fontSize": 14
+        }
+      },
+      {
+        "id": "F_02",
+        "type": "decision",
+        "label": "要件\n承認OK?",
+        "position": {
+          "x": 280,
+          "y": 220
+        },
+        "size": {
+          "width": 200,
+          "height": 100
+        },
+        "linkedTasks": ["WBS1.2.0"],
+        "style": {
+          "fill": "auto",
+          "stroke": "#333",
+          "strokeWidth": 2,
+          "fontSize": 14
+        }
+      },
+      {
+        "id": "F_03",
+        "type": "process",
+        "label": "基本設計",
+        "position": {
+          "x": 280,
+          "y": 360
+        },
+        "size": {
+          "width": 200,
+          "height": 80
+        },
+        "linkedTasks": ["WBS1.3.0"],
+        "style": {
+          "fill": "auto",
+          "stroke": "#333",
+          "strokeWidth": 2,
+          "fontSize": 14
+        }
+      },
+      {
+        "id": "F_04",
+        "type": "process",
+        "label": "詳細設計",
+        "position": {
+          "x": 280,
+          "y": 480
+        },
+        "size": {
+          "width": 200,
+          "height": 80
+        },
+        "linkedTasks": ["WBS1.4.0"],
+        "style": {
+          "fill": "auto",
+          "stroke": "#333",
+          "strokeWidth": 2,
+          "fontSize": 14
+        }
+      },
+      {
+        "id": "F_05",
+        "type": "process",
+        "label": "実装",
+        "position": {
+          "x": 280,
+          "y": 600
+        },
+        "size": {
+          "width": 200,
+          "height": 80
+        },
+        "linkedTasks": ["WBS2.1.0", "WBS2.2.0", "WBS2.3.0"],
+        "style": {
+          "fill": "auto",
+          "stroke": "#333",
+          "strokeWidth": 2,
+          "fontSize": 14
+        }
+      },
+      {
+        "id": "F_06",
+        "type": "process",
+        "label": "単体テスト",
+        "position": {
+          "x": 80,
+          "y": 720
+        },
+        "size": {
+          "width": 180,
+          "height": 80
+        },
+        "linkedTasks": ["WBS3.1.0"],
+        "style": {
+          "fill": "auto",
+          "stroke": "#333",
+          "strokeWidth": 2,
+          "fontSize": 14
+        }
+      },
+      {
+        "id": "F_07",
+        "type": "process",
+        "label": "結合テスト",
+        "position": {
+          "x": 300,
+          "y": 720
+        },
+        "size": {
+          "width": 180,
+          "height": 80
+        },
+        "linkedTasks": ["WBS3.2.0"],
+        "style": {
+          "fill": "auto",
+          "stroke": "#333",
+          "strokeWidth": 2,
+          "fontSize": 14
+        }
+      },
+      {
+        "id": "F_08",
+        "type": "process",
+        "label": "システムテスト",
+        "position": {
+          "x": 520,
+          "y": 720
+        },
+        "size": {
+          "width": 180,
+          "height": 80
+        },
+        "linkedTasks": ["WBS3.3.0"],
+        "style": {
+          "fill": "auto",
+          "stroke": "#333",
+          "strokeWidth": 2,
+          "fontSize": 14
+        }
+      },
+      {
+        "id": "F_09",
+        "type": "decision",
+        "label": "テスト\n合格?",
+        "position": {
+          "x": 280,
+          "y": 840
+        },
+        "size": {
+          "width": 200,
+          "height": 100
+        },
+        "linkedTasks": ["WBS3.4.0"],
+        "style": {
+          "fill": "auto",
+          "stroke": "#333",
+          "strokeWidth": 2,
+          "fontSize": 14
+        }
+      },
+      {
+        "id": "F_10",
+        "type": "process",
+        "label": "デプロイ準備",
+        "position": {
+          "x": 280,
+          "y": 980
+        },
+        "size": {
+          "width": 200,
+          "height": 80
+        },
+        "linkedTasks": ["WBS4.1.0"],
+        "style": {
+          "fill": "auto",
+          "stroke": "#333",
+          "strokeWidth": 2,
+          "fontSize": 14
+        }
+      },
+      {
+        "id": "F_11",
+        "type": "process",
+        "label": "本番リリース",
+        "position": {
+          "x": 280,
+          "y": 1100
+        },
+        "size": {
+          "width": 200,
+          "height": 80
+        },
+        "linkedTasks": ["WBS4.2.0"],
+        "style": {
+          "fill": "auto",
+          "stroke": "#333",
+          "strokeWidth": 2,
+          "fontSize": 14
+        }
+      },
+      {
+        "id": "END",
+        "type": "end",
+        "label": "プロジェクト完了",
+        "position": {
+          "x": 300,
+          "y": 1220
+        },
+        "size": {
+          "width": 160,
+          "height": 40
+        },
+        "linkedTasks": [],
+        "style": {
+          "fill": "#f44336",
+          "stroke": "#c62828",
+          "strokeWidth": 2,
+          "fontSize": 14
+        }
+      },
+      {
+        "id": "F_12",
+        "type": "process",
+        "label": "不具合修正",
+        "position": {
+          "x": 560,
+          "y": 840
+        },
+        "size": {
+          "width": 180,
+          "height": 80
+        },
+        "linkedTasks": ["WBS3.5.0"],
+        "style": {
+          "fill": "auto",
+          "stroke": "#333",
+          "strokeWidth": 2,
+          "fontSize": 14
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "E_01",
+        "from": "START",
+        "to": "F_01",
+        "type": "arrow",
+        "label": "",
+        "style": {
+          "stroke": "#333",
+          "strokeWidth": 2,
+          "strokeDasharray": "none"
+        }
+      },
+      {
+        "id": "E_02",
+        "from": "F_01",
+        "to": "F_02",
+        "type": "arrow",
+        "label": "",
+        "style": {
+          "stroke": "#333",
+          "strokeWidth": 2,
+          "strokeDasharray": "none"
+        }
+      },
+      {
+        "id": "E_03",
+        "from": "F_02",
+        "to": "F_03",
+        "type": "arrow",
+        "label": "YES",
+        "style": {
+          "stroke": "#4CAF50",
+          "strokeWidth": 2,
+          "strokeDasharray": "none"
+        }
+      },
+      {
+        "id": "E_04",
+        "from": "F_02",
+        "to": "F_01",
+        "type": "arrow",
+        "label": "NO（差し戻し）",
+        "style": {
+          "stroke": "#f44336",
+          "strokeWidth": 2,
+          "strokeDasharray": "5,5"
+        }
+      },
+      {
+        "id": "E_05",
+        "from": "F_03",
+        "to": "F_04",
+        "type": "arrow",
+        "label": "",
+        "style": {
+          "stroke": "#333",
+          "strokeWidth": 2,
+          "strokeDasharray": "none"
+        }
+      },
+      {
+        "id": "E_06",
+        "from": "F_04",
+        "to": "F_05",
+        "type": "arrow",
+        "label": "",
+        "style": {
+          "stroke": "#333",
+          "strokeWidth": 2,
+          "strokeDasharray": "none"
+        }
+      },
+      {
+        "id": "E_07",
+        "from": "F_05",
+        "to": "F_06",
+        "type": "arrow",
+        "label": "",
+        "style": {
+          "stroke": "#333",
+          "strokeWidth": 2,
+          "strokeDasharray": "none"
+        }
+      },
+      {
+        "id": "E_08",
+        "from": "F_05",
+        "to": "F_07",
+        "type": "arrow",
+        "label": "",
+        "style": {
+          "stroke": "#333",
+          "strokeWidth": 2,
+          "strokeDasharray": "none"
+        }
+      },
+      {
+        "id": "E_09",
+        "from": "F_05",
+        "to": "F_08",
+        "type": "arrow",
+        "label": "",
+        "style": {
+          "stroke": "#333",
+          "strokeWidth": 2,
+          "strokeDasharray": "none"
+        }
+      },
+      {
+        "id": "E_10",
+        "from": "F_06",
+        "to": "F_09",
+        "type": "arrow",
+        "label": "",
+        "style": {
+          "stroke": "#333",
+          "strokeWidth": 2,
+          "strokeDasharray": "none"
+        }
+      },
+      {
+        "id": "E_11",
+        "from": "F_07",
+        "to": "F_09",
+        "type": "arrow",
+        "label": "",
+        "style": {
+          "stroke": "#333",
+          "strokeWidth": 2,
+          "strokeDasharray": "none"
+        }
+      },
+      {
+        "id": "E_12",
+        "from": "F_08",
+        "to": "F_09",
+        "type": "arrow",
+        "label": "",
+        "style": {
+          "stroke": "#333",
+          "strokeWidth": 2,
+          "strokeDasharray": "none"
+        }
+      },
+      {
+        "id": "E_13",
+        "from": "F_09",
+        "to": "F_10",
+        "type": "arrow",
+        "label": "合格",
+        "style": {
+          "stroke": "#4CAF50",
+          "strokeWidth": 2,
+          "strokeDasharray": "none"
+        }
+      },
+      {
+        "id": "E_14",
+        "from": "F_09",
+        "to": "F_12",
+        "type": "arrow",
+        "label": "不合格",
+        "style": {
+          "stroke": "#f44336",
+          "strokeWidth": 2,
+          "strokeDasharray": "5,5"
+        }
+      },
+      {
+        "id": "E_15",
+        "from": "F_12",
+        "to": "F_05",
+        "type": "arrow",
+        "label": "修正後再実装",
+        "style": {
+          "stroke": "#ff9800",
+          "strokeWidth": 2,
+          "strokeDasharray": "5,5"
+        }
+      },
+      {
+        "id": "E_16",
+        "from": "F_10",
+        "to": "F_11",
+        "type": "arrow",
+        "label": "",
+        "style": {
+          "stroke": "#333",
+          "strokeWidth": 2,
+          "strokeDasharray": "none"
+        }
+      },
+      {
+        "id": "E_17",
+        "from": "F_11",
+        "to": "END",
+        "type": "arrow",
+        "label": "",
+        "style": {
+          "stroke": "#333",
+          "strokeWidth": 2,
+          "strokeDasharray": "none"
+        }
+      }
+    ],
+    "canvas": {
+      "width": 800,
+      "height": 1300,
+      "backgroundColor": "#f8f9fa",
+      "gridSize": 20,
+      "showGrid": true
+    }
+  },
+  "tasks": [
+    {
+      "wbs": "WBS1.1.0",
+      "phase": "PH1",
+      "taskType": "Planning",
+      "taskName": "要件ヒアリング",
+      "mermaidIds": "F_01",
+      "primaryOwner": "山田太郎",
+      "supportOwner": "佐藤花子",
+      "durationBD": 3,
+      "startDate": "2026-03-23",
+      "finishDate": "2026-03-25",
+      "predecessors": "",
+      "verificationMethod": "議事録レビュー",
+      "passCriteria": "全ステークホルダー承認",
+      "status": "Completed"
+    },
+    {
+      "wbs": "WBS1.1.1",
+      "phase": "PH1",
+      "taskType": "Planning",
+      "taskName": "要件定義書作成",
+      "mermaidIds": "F_01",
+      "primaryOwner": "佐藤花子",
+      "supportOwner": "",
+      "durationBD": 5,
+      "startDate": "2026-03-26",
+      "finishDate": "2026-04-01",
+      "predecessors": "WBS1.1.0",
+      "verificationMethod": "ドキュメントレビュー",
+      "passCriteria": "PMレビュー合格",
+      "status": "Completed"
+    },
+    {
+      "wbs": "WBS1.2.0",
+      "phase": "PH1",
+      "taskType": "Review",
+      "taskName": "要件承認会議",
+      "mermaidIds": "F_02",
+      "primaryOwner": "鈴木一郎",
+      "supportOwner": "山田太郎",
+      "durationBD": 1,
+      "startDate": "2026-04-02",
+      "finishDate": "2026-04-02",
+      "predecessors": "WBS1.1.1",
+      "verificationMethod": "承認記録",
+      "passCriteria": "クライアント承認",
+      "status": "Completed"
+    },
+    {
+      "wbs": "WBS1.3.0",
+      "phase": "PH1",
+      "taskType": "Design",
+      "taskName": "基本設計書作成",
+      "mermaidIds": "F_03",
+      "primaryOwner": "田中次郎",
+      "supportOwner": "佐藤花子",
+      "durationBD": 7,
+      "startDate": "2026-04-03",
+      "finishDate": "2026-04-11",
+      "predecessors": "WBS1.2.0",
+      "verificationMethod": "設計レビュー",
+      "passCriteria": "アーキテクトレビュー合格",
+      "status": "In Progress"
+    },
+    {
+      "wbs": "WBS1.4.0",
+      "phase": "PH1",
+      "taskType": "Design",
+      "taskName": "詳細設計書作成",
+      "mermaidIds": "F_04",
+      "primaryOwner": "田中次郎",
+      "supportOwner": "",
+      "durationBD": 10,
+      "startDate": "2026-04-14",
+      "finishDate": "2026-04-25",
+      "predecessors": "WBS1.3.0",
+      "verificationMethod": "設計レビュー",
+      "passCriteria": "テックリードレビュー合格",
+      "status": "Not Started"
+    },
+    {
+      "wbs": "WBS2.1.0",
+      "phase": "PH2",
+      "taskType": "Development",
+      "taskName": "フロントエンド実装",
+      "mermaidIds": "F_05",
+      "primaryOwner": "高橋美咲",
+      "supportOwner": "山田太郎",
+      "durationBD": 15,
+      "startDate": "2026-04-28",
+      "finishDate": "2026-05-16",
+      "predecessors": "WBS1.4.0",
+      "verificationMethod": "コードレビュー",
+      "passCriteria": "コーディング規約準拠",
+      "status": "Not Started"
+    },
+    {
+      "wbs": "WBS2.2.0",
+      "phase": "PH2",
+      "taskType": "Development",
+      "taskName": "バックエンド実装",
+      "mermaidIds": "F_05",
+      "primaryOwner": "渡辺健太",
+      "supportOwner": "",
+      "durationBD": 15,
+      "startDate": "2026-04-28",
+      "finishDate": "2026-05-16",
+      "predecessors": "WBS1.4.0",
+      "verificationMethod": "コードレビュー",
+      "passCriteria": "コーディング規約準拠",
+      "status": "Not Started"
+    },
+    {
+      "wbs": "WBS2.3.0",
+      "phase": "PH2",
+      "taskType": "Development",
+      "taskName": "DB設計・実装",
+      "mermaidIds": "F_05",
+      "primaryOwner": "中村大輔",
+      "supportOwner": "",
+      "durationBD": 10,
+      "startDate": "2026-04-28",
+      "finishDate": "2026-05-09",
+      "predecessors": "WBS1.4.0",
+      "verificationMethod": "DB設計レビュー",
+      "passCriteria": "DBAレビュー合格",
+      "status": "Not Started"
+    },
+    {
+      "wbs": "WBS3.1.0",
+      "phase": "TEST",
+      "taskType": "Testing",
+      "taskName": "単体テスト実施",
+      "mermaidIds": "F_06",
+      "primaryOwner": "伊藤愛子",
+      "supportOwner": "",
+      "durationBD": 5,
+      "startDate": "2026-05-19",
+      "finishDate": "2026-05-23",
+      "predecessors": "WBS2.1.0,WBS2.2.0",
+      "verificationMethod": "テスト報告書",
+      "passCriteria": "カバレッジ80%以上",
+      "status": "Not Started"
+    },
+    {
+      "wbs": "WBS3.2.0",
+      "phase": "TEST",
+      "taskType": "Testing",
+      "taskName": "結合テスト実施",
+      "mermaidIds": "F_07",
+      "primaryOwner": "伊藤愛子",
+      "supportOwner": "佐藤花子",
+      "durationBD": 7,
+      "startDate": "2026-05-19",
+      "finishDate": "2026-05-27",
+      "predecessors": "WBS2.1.0,WBS2.2.0",
+      "verificationMethod": "テスト報告書",
+      "passCriteria": "全テストケース合格",
+      "status": "Not Started"
+    },
+    {
+      "wbs": "WBS3.3.0",
+      "phase": "TEST",
+      "taskType": "Testing",
+      "taskName": "システムテスト実施",
+      "mermaidIds": "F_08",
+      "primaryOwner": "加藤雄介",
+      "supportOwner": "",
+      "durationBD": 10,
+      "startDate": "2026-05-19",
+      "finishDate": "2026-05-30",
+      "predecessors": "WBS2.1.0,WBS2.2.0,WBS2.3.0",
+      "verificationMethod": "テスト報告書",
+      "passCriteria": "全シナリオ合格",
+      "status": "Not Started"
+    },
+    {
+      "wbs": "WBS3.4.0",
+      "phase": "TEST",
+      "taskType": "Review",
+      "taskName": "テスト結果レビュー",
+      "mermaidIds": "F_09",
+      "primaryOwner": "鈴木一郎",
+      "supportOwner": "",
+      "durationBD": 1,
+      "startDate": "2026-06-02",
+      "finishDate": "2026-06-02",
+      "predecessors": "WBS3.1.0,WBS3.2.0,WBS3.3.0",
+      "verificationMethod": "レビュー記録",
+      "passCriteria": "品質基準達成",
+      "status": "Not Started"
+    },
+    {
+      "wbs": "WBS3.5.0",
+      "phase": "TEST",
+      "taskType": "Bug Fix",
+      "taskName": "不具合修正",
+      "mermaidIds": "F_12",
+      "primaryOwner": "渡辺健太",
+      "supportOwner": "高橋美咲",
+      "durationBD": 5,
+      "startDate": "",
+      "finishDate": "",
+      "predecessors": "WBS3.4.0",
+      "verificationMethod": "修正確認テスト",
+      "passCriteria": "再テスト合格",
+      "status": "Not Started"
+    },
+    {
+      "wbs": "WBS4.1.0",
+      "phase": "RELEASE",
+      "taskType": "Deployment",
+      "taskName": "デプロイ準備",
+      "mermaidIds": "F_10",
+      "primaryOwner": "小林浩二",
+      "supportOwner": "",
+      "durationBD": 3,
+      "startDate": "2026-06-03",
+      "finishDate": "2026-06-05",
+      "predecessors": "WBS3.4.0",
+      "verificationMethod": "デプロイ手順書確認",
+      "passCriteria": "手順書承認",
+      "status": "Not Started"
+    },
+    {
+      "wbs": "WBS4.2.0",
+      "phase": "RELEASE",
+      "taskType": "Deployment",
+      "taskName": "本番リリース",
+      "mermaidIds": "F_11",
+      "primaryOwner": "小林浩二",
+      "supportOwner": "鈴木一郎",
+      "durationBD": 1,
+      "startDate": "2026-06-06",
+      "finishDate": "2026-06-06",
+      "predecessors": "WBS4.1.0",
+      "verificationMethod": "リリース確認",
+      "passCriteria": "本番稼働確認",
+      "status": "Not Started"
+    }
+  ]
+}
