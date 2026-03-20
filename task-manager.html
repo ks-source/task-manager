@@ -1,0 +1,2569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Task Manager - WBS Visualizer v2.3.0</title>
+  <meta name="description" content="A lightweight, browser-based Work Breakdown Structure (WBS) visualization and management tool">
+  <meta name="keywords" content="task manager, WBS, project management, task tracking">
+  <meta name="author" content="ks-source">
+
+  <style>
+    /* ==========================================
+     * CSS Variables
+     * ========================================== */
+    :root {
+      --color-primary: #007bff;
+      --color-success: #28a745;
+      --color-warning: #ffc107;
+      --color-danger: #dc3545;
+      --color-info: #17a2b8;
+      --color-gray-light: #f8f9fa;
+      --color-gray: #6c757d;
+      --color-gray-dark: #343a40;
+      --color-border: #dee2e6;
+
+      --status-completed: #28a745;
+      --status-in-progress: #ffc107;
+      --status-not-started: #6c757d;
+      --status-on-hold: #fd7e14;
+      --status-postponed: #e83e8c;
+      --status-cancelled: #dc3545;
+      --status-unknown: #17a2b8;
+    }
+
+    /* ==========================================
+     * Base Styles
+     * ========================================== */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--color-gray-dark);
+      background-color: var(--color-gray-light);
+    }
+
+    /* ==========================================
+     * Header / Menu Bar
+     * ========================================== */
+    .header {
+      background-color: white;
+      border-bottom: 1px solid var(--color-border);
+      padding: 0.5rem 1.5rem;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: var(--color-primary);
+      margin: 0;
+    }
+
+    .header-nav {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .icon-button {
+      width: 36px;
+      height: 36px;
+      padding: 0.5rem;
+      background-color: white;
+      border: 1px solid var(--color-border);
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-gray);
+    }
+
+    .icon-button:hover {
+      background-color: var(--color-gray-light);
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+    }
+
+    .icon-button.active {
+      background-color: var(--color-primary);
+      color: white;
+      border-color: var(--color-primary);
+    }
+
+    .icon-button svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    /* ==========================================
+     * Footer / File Status Bar
+     * ========================================== */
+    .footer {
+      background-color: white;
+      border-top: 1px solid var(--color-border);
+      padding: 0.5rem 1.5rem;
+      font-size: 0.75rem;
+      color: var(--color-gray);
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      box-shadow: 0 -1px 2px rgba(0,0,0,0.05);
+    }
+
+    .footer svg {
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0;
+    }
+
+    .footer .status-indicator {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .footer .status-indicator.saved {
+      color: var(--color-success);
+    }
+
+    .footer .status-indicator.unsaved {
+      color: var(--color-warning);
+    }
+
+    /* ==========================================
+     * Main Container
+     * ========================================== */
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 2rem;
+      padding-bottom: 4rem; /* Space for fixed footer */
+    }
+
+    /* ==========================================
+     * Dashboard
+     * ========================================== */
+    .dashboard {
+      display: grid;
+      gap: 2rem;
+    }
+
+    .card {
+      background-color: white;
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      padding: 1.5rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .card-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      color: var(--color-gray-dark);
+    }
+
+    /* ==========================================
+     * Progress Summary
+     * ========================================== */
+    .progress-summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1rem;
+    }
+
+    .progress-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.875rem;
+      color: var(--color-gray);
+    }
+
+    .progress-bar-container {
+      width: 100%;
+      height: 24px;
+      background-color: var(--color-gray-light);
+      border-radius: 12px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background-color: var(--color-primary);
+      transition: width 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .progress-bar.success {
+      background-color: var(--color-success);
+    }
+
+    /* ==========================================
+     * Status Legend
+     * ========================================== */
+    .status-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.25rem 0.75rem;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    /* Status colors */
+    .status-completed { background-color: #d4edda; color: #155724; }
+    .status-completed .status-dot { background-color: var(--status-completed); }
+
+    .status-in-progress { background-color: #fff3cd; color: #856404; }
+    .status-in-progress .status-dot { background-color: var(--status-in-progress); }
+
+    .status-not-started { background-color: #e2e3e5; color: #383d41; }
+    .status-not-started .status-dot { background-color: var(--status-not-started); }
+
+    .status-on-hold { background-color: #ffe5d0; color: #8a4a0e; }
+    .status-on-hold .status-dot { background-color: var(--status-on-hold); }
+
+    .status-postponed { background-color: #f8d7da; color: #721c24; }
+    .status-postponed .status-dot { background-color: var(--status-postponed); }
+
+    /* ==========================================
+     * Task Table
+     * ========================================== */
+    .task-table-container {
+      overflow-x: auto;
+    }
+
+    .task-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+    }
+
+    .task-table th {
+      background-color: var(--color-gray-light);
+      padding: 0.75rem;
+      text-align: left;
+      font-weight: 600;
+      border-bottom: 2px solid var(--color-border);
+      position: sticky;
+      top: 0;
+    }
+
+    .task-table td {
+      padding: 0.75rem;
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .task-table tr:hover {
+      background-color: #f8f9fa;
+      cursor: pointer;
+    }
+
+    .task-wbs-no {
+      font-weight: 600;
+      color: var(--color-primary);
+    }
+
+    .task-phase {
+      display: inline-block;
+      padding: 0.25rem 0.5rem;
+      background-color: var(--color-gray-light);
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+
+    /* ==========================================
+     * Modal (Task Detail)
+     * ========================================== */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background-color: white;
+      border-radius: 8px;
+      width: 90%;
+      max-width: 800px;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+
+    .modal-header {
+      padding: 0.75rem 1.25rem;
+      border-bottom: 1px solid var(--color-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: white;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      border-radius: 8px 8px 0 0;
+    }
+
+    .modal-title {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 1.25rem;
+      cursor: pointer;
+      color: var(--color-gray);
+      padding: 0;
+      width: 1.75rem;
+      height: 1.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      transition: background-color 0.2s;
+    }
+
+    .modal-close:hover {
+      background-color: var(--color-gray-light);
+    }
+
+    .modal-body {
+      padding: 1.5rem;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .modal-section {
+      margin-bottom: 2rem;
+    }
+
+    .modal-section-title {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid var(--color-border);
+    }
+
+    /* ==========================================
+     * Status Buttons
+     * ========================================== */
+    .status-buttons {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 0.5rem;
+    }
+
+    .status-button {
+      padding: 0.75rem;
+      border: 2px solid var(--color-border);
+      border-radius: 4px;
+      background-color: white;
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.2s;
+      text-align: center;
+    }
+
+    .status-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+
+    .status-button.active {
+      border-width: 3px;
+    }
+
+    .status-button.btn-completed { border-color: var(--status-completed); }
+    .status-button.btn-completed.active { background-color: #d4edda; }
+
+    .status-button.btn-in-progress { border-color: var(--status-in-progress); }
+    .status-button.btn-in-progress.active { background-color: #fff3cd; }
+
+    .status-button.btn-not-started { border-color: var(--status-not-started); }
+    .status-button.btn-not-started.active { background-color: #e2e3e5; }
+
+    /* ==========================================
+     * Priority Buttons
+     * ========================================== */
+    .priority-buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.75rem;
+    }
+
+    .priority-button {
+      padding: 0.75rem 1rem;
+      border: 2px solid var(--color-border);
+      border-radius: 4px;
+      background-color: white;
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.2s;
+      text-align: center;
+    }
+
+    .priority-button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .priority-button.active {
+      font-weight: 700;
+      color: white;
+    }
+
+    .priority-button.btn-critical {
+      border-color: #dc3545;
+      color: #dc3545;
+    }
+    .priority-button.btn-critical.active {
+      background-color: #dc3545;
+    }
+
+    .priority-button.btn-high {
+      border-color: #fd7e14;
+      color: #fd7e14;
+    }
+    .priority-button.btn-high.active {
+      background-color: #fd7e14;
+    }
+
+    .priority-button.btn-medium {
+      border-color: #ffc107;
+      color: #856404;
+    }
+    .priority-button.btn-medium.active {
+      background-color: #ffc107;
+      color: #856404;
+    }
+
+    .priority-button.btn-low {
+      border-color: #28a745;
+      color: #28a745;
+    }
+    .priority-button.btn-low.active {
+      background-color: #28a745;
+    }
+
+    /* Priority Badge Styles */
+    .priority-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.25rem 0.5rem;
+      border-radius: 3px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .priority-critical {
+      background-color: #f8d7da;
+      color: #721c24;
+      border: 1px solid #dc3545;
+    }
+
+    .priority-high {
+      background-color: #ffe5d0;
+      color: #8a4b0f;
+      border: 1px solid #fd7e14;
+    }
+
+    .priority-medium {
+      background-color: #fff3cd;
+      color: #856404;
+      border: 1px solid #ffc107;
+    }
+
+    .priority-low {
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #28a745;
+    }
+
+    /* ==========================================
+     * Date Edit Section
+     * ========================================== */
+    .date-edit-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .date-field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .date-label {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--color-gray-dark);
+    }
+
+    .date-input {
+      padding: 0.5rem 0.75rem;
+      border: 1px solid var(--color-border);
+      border-radius: 4px;
+      font-size: 0.875rem;
+      transition: border-color 0.2s;
+    }
+
+    .date-input:focus {
+      outline: none;
+      border-color: var(--color-primary);
+    }
+
+    /* ==========================================
+     * Comment Section
+     * ========================================== */
+    .comment-textarea {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid var(--color-border);
+      border-radius: 4px;
+      font-family: inherit;
+      font-size: 0.875rem;
+      resize: vertical;
+      transition: border-color 0.2s;
+    }
+
+    .comment-textarea:focus {
+      outline: none;
+      border-color: var(--color-primary);
+    }
+
+    .comment-item {
+      background-color: var(--color-gray-light);
+      border-left: 3px solid var(--color-primary);
+      padding: 0.75rem;
+      margin-bottom: 0.75rem;
+      border-radius: 4px;
+    }
+
+    .comment-item.system {
+      border-left-color: var(--color-info);
+    }
+
+    .comment-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+
+    /* ==========================================
+     * Task Action Menu (⋮ button and dropdown)
+     * ========================================== */
+    .task-action-cell {
+      position: relative;
+      text-align: center;
+    }
+
+    .task-action-btn {
+      background: none;
+      border: none;
+      font-size: 1.25rem;
+      color: var(--color-gray);
+      cursor: pointer;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      transition: all 0.2s;
+      line-height: 1;
+    }
+
+    .task-action-btn:hover {
+      background-color: var(--color-gray-light);
+      color: var(--color-primary);
+    }
+
+    .task-action-menu {
+      display: none;
+      position: absolute;
+      right: 0;
+      top: 100%;
+      background-color: white;
+      border: 1px solid var(--color-border);
+      border-radius: 4px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      z-index: 1000;
+      min-width: 180px;
+      margin-top: 0.25rem;
+    }
+
+    .task-action-menu.active {
+      display: block;
+    }
+
+    .task-action-menu.upward {
+      top: auto;
+      bottom: 100%;
+      margin-top: 0;
+      margin-bottom: 0.25rem;
+    }
+
+    .task-action-menu-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1rem;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+      cursor: pointer;
+      font-size: 0.875rem;
+      color: var(--color-text);
+      transition: background-color 0.2s;
+    }
+
+    .task-action-menu-item:hover {
+      background-color: var(--color-gray-light);
+    }
+
+    .task-action-menu-item.danger {
+      color: var(--color-danger);
+    }
+
+    .task-action-menu-item.danger:hover {
+      background-color: #fee;
+    }
+
+    .task-action-menu-divider {
+      height: 1px;
+      background-color: var(--color-border);
+      margin: 0.25rem 0;
+    }
+
+    /* ==========================================
+     * Move Dialog Task List
+     * ========================================== */
+    .move-task-item {
+      display: flex;
+      align-items: center;
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--color-border);
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .move-task-item:hover {
+      background-color: var(--color-gray-light);
+    }
+
+    .move-task-item input[type="radio"] {
+      margin-right: 0.75rem;
+      cursor: pointer;
+    }
+
+    .move-task-item-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .move-task-item-title {
+      font-weight: 500;
+      color: var(--color-text);
+    }
+
+    .move-task-item-meta {
+      font-size: 0.75rem;
+      color: var(--color-gray);
+    }
+
+    .comment-type {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--color-primary);
+    }
+
+    .comment-timestamp {
+      font-size: 0.75rem;
+      color: var(--color-gray);
+    }
+
+    .comment-content {
+      font-size: 0.875rem;
+      line-height: 1.5;
+      color: var(--color-gray-dark);
+    }
+
+    .btn-primary {
+      padding: 0.5rem 1.5rem;
+      background-color: var(--color-primary);
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: background-color 0.2s;
+    }
+
+    .btn-primary:hover {
+      background-color: #0056b3;
+    }
+
+    .btn-primary:active {
+      background-color: #004085;
+    }
+
+    .btn-secondary {
+      padding: 0.5rem 1rem;
+      background-color: white;
+      color: var(--color-gray-dark);
+      border: 1px solid var(--color-border);
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .btn-secondary:hover {
+      background-color: var(--color-gray-light);
+      border-color: var(--color-gray);
+    }
+
+    /* ==========================================
+     * Filter Bar
+     * ========================================== */
+    .filter-bar {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .search-input {
+      flex: 1;
+      min-width: 200px;
+      padding: 0.5rem 0.75rem;
+      border: 1px solid var(--color-border);
+      border-radius: 4px;
+      font-size: 0.875rem;
+      transition: border-color 0.2s;
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: var(--color-primary);
+    }
+
+    .filter-select {
+      padding: 0.5rem 0.75rem;
+      border: 1px solid var(--color-border);
+      border-radius: 4px;
+      font-size: 0.875rem;
+      background-color: white;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+
+    .filter-select:focus {
+      outline: none;
+      border-color: var(--color-primary);
+    }
+
+    /* ==========================================
+     * Utility Classes
+     * ========================================== */
+    .text-muted {
+      color: var(--color-gray);
+      font-size: 0.875rem;
+    }
+
+    .mt-1 { margin-top: 0.5rem; }
+    .mt-2 { margin-top: 1rem; }
+    .mb-1 { margin-bottom: 0.5rem; }
+    .mb-2 { margin-bottom: 1rem; }
+
+    /* ==========================================
+     * Responsive Design
+     * ========================================== */
+    @media (max-width: 768px) {
+      .container {
+        padding: 1rem;
+      }
+
+      .header {
+        padding: 1rem;
+      }
+
+      .progress-summary {
+        grid-template-columns: 1fr;
+      }
+
+      .status-buttons {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- ==========================================
+   * Header / Menu Bar
+   * ========================================== -->
+  <header class="header">
+    <h1 class="header-title">Task Manager v2.3.0</h1>
+    <nav class="header-nav">
+      <button class="icon-button active" onclick="showDashboard()" title="ダッシュボード">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+          <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+          <rect x="14" y="14" width="7" height="7" rx="1"></rect>
+          <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+        </svg>
+      </button>
+      <button class="icon-button" onclick="showExport()" title="エクスポート">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 3v6"></path>
+          <path d="M21 3h-6"></path>
+          <path d="M21 3l-7 7"></path>
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+        </svg>
+      </button>
+      <button class="icon-button" onclick="saveToFile()" title="ファイルに保存">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <path d="M14 2v6h6"></path>
+          <path d="M12 18v-6"></path>
+          <path d="M9 15l3 3 3-3"></path>
+        </svg>
+      </button>
+      <button class="icon-button" onclick="loadFromFile()" title="ファイルから開く">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+          <path d="M12 16v-6"></path>
+          <path d="M9 13l3-3 3 3"></path>
+        </svg>
+      </button>
+    </nav>
+  </header>
+
+  <!-- ==========================================
+   * Main Container
+   * ========================================== -->
+  <div class="container">
+    <!-- Dashboard -->
+    <div class="dashboard" id="dashboard">
+      <!-- Progress Summary Card -->
+      <div class="card">
+        <h2 class="card-title">プロジェクト進捗サマリー</h2>
+        <div class="progress-summary">
+          <div class="progress-item">
+            <div class="progress-label">
+              <span>全体進捗</span>
+              <span id="overall-progress-text">0% (0/73)</span>
+            </div>
+            <div class="progress-bar-container">
+              <div class="progress-bar" id="overall-progress-bar" style="width: 0%">0%</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-2">
+          <h3 style="font-size: 1rem; margin-bottom: 0.5rem;">フェーズ別進捗</h3>
+          <div id="phase-progress-container"></div>
+        </div>
+
+        <div class="status-legend mt-2">
+          <div class="status-badge status-completed">
+            <span class="status-dot"></span>
+            <span>完了: <strong id="count-completed">0</strong>件</span>
+          </div>
+          <div class="status-badge status-in-progress">
+            <span class="status-dot"></span>
+            <span>進行中: <strong id="count-in-progress">0</strong>件</span>
+          </div>
+          <div class="status-badge status-not-started">
+            <span class="status-dot"></span>
+            <span>未着手: <strong id="count-not-started">73</strong>件</span>
+          </div>
+          <div class="status-badge status-on-hold">
+            <span class="status-dot"></span>
+            <span>保留: <strong id="count-on-hold">0</strong>件</span>
+          </div>
+          <div class="status-badge status-postponed">
+            <span class="status-dot"></span>
+            <span>延期: <strong id="count-postponed">0</strong>件</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Task List Card -->
+      <div class="card">
+        <h2 class="card-title">タスク一覧</h2>
+
+        <!-- Search and Filter Bar -->
+        <div class="filter-bar">
+          <input type="text" id="search-input" class="search-input" placeholder="タスク名、WBS番号で検索...">
+          <select id="phase-filter" class="filter-select" onchange="applyFilters()">
+            <option value="">全フェーズ</option>
+            <option value="WBS0">WBS0</option>
+            <option value="WBS1">WBS1</option>
+            <option value="PH1">PH1</option>
+            <option value="PH2">PH2</option>
+            <option value="PH3">PH3</option>
+            <option value="TEST">TEST</option>
+            <option value="RELEASE">RELEASE</option>
+          </select>
+          <select id="status-filter" class="filter-select" onchange="applyFilters()">
+            <option value="">全ステータス</option>
+            <option value="未着手">未着手</option>
+            <option value="進行中">進行中</option>
+            <option value="完了">完了</option>
+            <option value="保留">保留</option>
+            <option value="延期">延期</option>
+            <option value="中止">中止</option>
+            <option value="不明">不明</option>
+          </select>
+          <select id="priority-filter" class="filter-select" onchange="applyFilters()">
+            <option value="">全優先度</option>
+            <option value="最高">最高</option>
+            <option value="高">高</option>
+            <option value="中">中</option>
+            <option value="低">低</option>
+          </select>
+          <button class="btn-secondary" onclick="clearFilters()">フィルタクリア</button>
+          <button class="btn-primary" onclick="openCreateTaskDialog()" style="margin-left: auto;">➕ 新規タスク作成</button>
+        </div>
+
+        <div class="task-table-container">
+          <table class="task-table">
+            <thead>
+              <tr>
+                <th>WBS No</th>
+                <th>優先度</th>
+                <th>フェーズ</th>
+                <th>タスク名</th>
+                <th>担当</th>
+                <th>期限</th>
+                <th>ステータス</th>
+                <th style="width: 60px;">操作</th>
+              </tr>
+            </thead>
+            <tbody id="task-table-body">
+              <!-- Tasks will be rendered here by JavaScript -->
+            </tbody>
+          </table>
+        </div>
+        <p class="text-muted mt-1" id="filter-result-count"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+   * Task Detail Modal
+   * ========================================== -->
+  <div class="modal" id="task-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="modal-title">タスク詳細</h2>
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <!-- Status Change Section -->
+        <div class="modal-section">
+          <h3 class="modal-section-title">ステータス変更</h3>
+          <p class="text-muted mb-1">現在: <strong id="current-status">未着手</strong></p>
+          <div class="status-buttons">
+            <button class="status-button btn-not-started" onclick="changeStatus('未着手')">未着手</button>
+            <button class="status-button btn-in-progress" onclick="changeStatus('進行中')">進行中</button>
+            <button class="status-button btn-completed" onclick="changeStatus('完了')">完了</button>
+            <button class="status-button btn-on-hold" onclick="changeStatus('保留')">保留</button>
+            <button class="status-button btn-postponed" onclick="changeStatus('延期')">延期</button>
+            <button class="status-button" onclick="changeStatus('中止')">中止</button>
+            <button class="status-button" onclick="changeStatus('不明')">不明</button>
+          </div>
+        </div>
+
+        <!-- Priority Change Section -->
+        <div class="modal-section">
+          <h3 class="modal-section-title">優先度変更</h3>
+          <p class="text-muted mb-1">現在: <strong id="current-priority">中</strong></p>
+          <div class="priority-buttons">
+            <button class="priority-button btn-critical" onclick="changePriority('最高')">最高</button>
+            <button class="priority-button btn-high" onclick="changePriority('高')">高</button>
+            <button class="priority-button btn-medium" onclick="changePriority('中')">中</button>
+            <button class="priority-button btn-low" onclick="changePriority('低')">低</button>
+          </div>
+        </div>
+
+        <!-- Date Edit Section -->
+        <div class="modal-section">
+          <h3 class="modal-section-title">期間編集</h3>
+          <div class="date-edit-container">
+            <div class="date-field">
+              <label for="edit-start-date" class="date-label">開始日:</label>
+              <input type="date" id="edit-start-date" class="date-input" onchange="updateDate('start')">
+            </div>
+            <div class="date-field">
+              <label for="edit-finish-date" class="date-label">終了日:</label>
+              <input type="date" id="edit-finish-date" class="date-input" onchange="updateDate('finish')">
+            </div>
+          </div>
+        </div>
+
+        <!-- Task Information -->
+        <div class="modal-section">
+          <h3 class="modal-section-title">タスク情報</h3>
+          <div id="task-details">
+            <!-- Task details will be rendered here -->
+          </div>
+        </div>
+
+        <!-- Add Comment Section -->
+        <div class="modal-section">
+          <h3 class="modal-section-title">コメント追加</h3>
+          <textarea id="comment-input" class="comment-textarea" placeholder="コメントを入力してください..." rows="3"></textarea>
+          <button class="btn-primary mt-1" onclick="addComment()">コメントを追加</button>
+        </div>
+
+        <!-- Comment History -->
+        <div class="modal-section">
+          <h3 class="modal-section-title">コメント履歴</h3>
+          <div id="comment-history">
+            <!-- Comment history will be rendered here -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+   * Task Move Dialog
+   * ========================================== -->
+  <div class="modal" id="move-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="move-dialog-title">📌 タスク移動先の指定</h2>
+        <button class="modal-close" onclick="closeMoveDialog()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="text-muted mb-1">
+          移動対象: <strong id="move-task-info"></strong>
+        </p>
+        <p class="mb-1">以下のタスクの直後に移動:</p>
+
+        <!-- Search Box -->
+        <div class="mb-1">
+          <input type="text" id="move-search-input" class="comment-textarea" placeholder="🔍 WBS番号またはタスク名で検索" style="padding: 0.5rem; margin-bottom: 0.5rem;">
+        </div>
+
+        <!-- Task List -->
+        <div style="max-height: 400px; overflow-y: auto; border: 1px solid var(--color-border); border-radius: 4px;">
+          <div id="move-task-list">
+            <!-- Task radio buttons will be rendered here -->
+          </div>
+        </div>
+
+        <div class="mt-1" style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+          <button class="btn-secondary" onclick="closeMoveDialog()">キャンセル</button>
+          <button class="btn-primary" onclick="executeMoveTask()">移動する</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+   * Create New Task Dialog
+   * ========================================== -->
+  <div class="modal" id="create-task-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">➕ 新規タスク作成</h2>
+        <button class="modal-close" onclick="closeCreateTaskDialog()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <!-- Basic Information (Required) -->
+        <div class="modal-section">
+          <h3 class="modal-section-title">基本情報（必須）</h3>
+
+          <div class="mb-1">
+            <label for="new-wbs-no" class="date-label">WBS番号:</label>
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+              <input type="text" id="new-wbs-no" class="date-input" placeholder="例: PH1.1.1" style="flex: 1;">
+              <button class="btn-secondary" onclick="generateWBSNumber()" style="white-space: nowrap;">自動生成</button>
+            </div>
+            <p class="text-muted" style="font-size: 0.75rem; margin-top: 0.25rem;">※既存番号と重複不可</p>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;" class="mb-1">
+            <div>
+              <label for="new-phase" class="date-label">フェーズ:</label>
+              <select id="new-phase" class="date-input" style="width: 100%;">
+                <option value="">選択してください</option>
+                <option value="WBS0">WBS0</option>
+                <option value="WBS1">WBS1</option>
+                <option value="PH1">PH1</option>
+                <option value="PH2">PH2</option>
+                <option value="PH3">PH3</option>
+                <option value="TEST">TEST</option>
+                <option value="RELEASE">RELEASE</option>
+              </select>
+            </div>
+            <div>
+              <label for="new-task-type" class="date-label">タスク種別:</label>
+              <input type="text" id="new-task-type" class="date-input" placeholder="例: 実装" style="width: 100%;">
+            </div>
+          </div>
+
+          <div class="mb-1">
+            <label for="new-task-name" class="date-label">タスク名:</label>
+            <input type="text" id="new-task-name" class="date-input" placeholder="タスク名を入力..." style="width: 100%;">
+          </div>
+
+          <div class="mb-1">
+            <label for="new-primary-owner" class="date-label">主担当:</label>
+            <select id="new-primary-owner" class="date-input" style="width: 100%;">
+              <option value="">選択してください</option>
+              <option value="PM">PM</option>
+              <option value="ENG">ENG</option>
+              <option value="QA1">QA1</option>
+              <option value="QA2">QA2</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Schedule (Required) -->
+        <div class="modal-section">
+          <h3 class="modal-section-title">スケジュール（必須）</h3>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
+            <div>
+              <label for="new-duration" class="date-label">工数(BD):</label>
+              <input type="number" id="new-duration" class="date-input" min="0.25" step="0.25" value="1" style="width: 100%;">
+            </div>
+            <div>
+              <label for="new-start-date" class="date-label">開始日:</label>
+              <input type="date" id="new-start-date" class="date-input" style="width: 100%;">
+            </div>
+            <div>
+              <label for="new-finish-date" class="date-label">終了日:</label>
+              <input type="date" id="new-finish-date" class="date-input" style="width: 100%;">
+            </div>
+          </div>
+        </div>
+
+        <!-- Insert Position (Required) -->
+        <div class="modal-section">
+          <h3 class="modal-section-title">挿入位置（必須）</h3>
+
+          <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+              <input type="radio" name="insert-position" value="after" checked>
+              指定タスクの直後に挿入
+            </label>
+            <div id="insert-after-container" style="margin-left: 1.5rem;">
+              <input type="text" id="insert-search" class="date-input" placeholder="🔍 WBS番号またはタスク名で検索" style="width: 100%; margin-bottom: 0.5rem;">
+              <div id="insert-task-list" style="max-height: 200px; overflow-y: auto; border: 1px solid var(--color-border); border-radius: 4px;">
+                <!-- Task list will be rendered here -->
+              </div>
+            </div>
+
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+              <input type="radio" name="insert-position" value="last">
+              末尾に追加
+            </label>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div style="display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1.5rem;">
+          <button class="btn-secondary" onclick="closeCreateTaskDialog()">キャンセル</button>
+          <button class="btn-primary" onclick="executeCreateTask()">💾 作成して保存</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+   * Initial Data (JSON)
+   * ========================================== -->
+  <script type="application/json" id="initial-wbs-data">
+{
+  "meta": {
+    "version": "2.3.0",
+    "project_name": "New Project",
+    "project_start": "",
+    "project_end": "",
+    "total_tasks": 0,
+    "last_updated": "",
+    "description": "Import your WBS CSV file or create tasks manually to get started"
+  },
+  "tasks": []
+}
+  </script>
+
+  <!-- ==========================================
+   * Application Logic (JavaScript)
+   * ========================================== -->
+  <script>
+    // ==========================================
+    // Global State
+    // ==========================================
+    let projectData = null;
+    let currentTask = null;
+    let isDirty = false;
+    let currentFileHandle = null;
+    let currentFileName = '(新規ファイル)';
+
+    // Status mapping (Japanese to English keys)
+    const STATUS_MAP = {
+      '未着手': 'not_started',
+      '進行中': 'in_progress',
+      '完了': 'completed',
+      '保留': 'on_hold',
+      '延期': 'postponed',
+      '中止': 'cancelled',
+      '不明': 'unknown'
+    };
+
+    // ==========================================
+    // Initialization
+    // ==========================================
+    document.addEventListener('DOMContentLoaded', init);
+
+    function init() {
+      console.log('WBS Visualizer initializing...');
+      loadInitialData();
+      loadFromLocalStorage();
+      renderDashboard();
+      setupAutoSave();
+      setupSearchListener();
+    }
+
+    function setupSearchListener() {
+      const searchInput = document.getElementById('search-input');
+      if (searchInput) {
+        // Real-time search with debounce
+        let searchTimeout;
+        searchInput.addEventListener('input', () => {
+          clearTimeout(searchTimeout);
+          searchTimeout = setTimeout(() => {
+            applyFilters();
+          }, 300);
+        });
+      }
+    }
+
+    // ==========================================
+    // Data Management
+    // ==========================================
+    function loadInitialData() {
+      const dataElement = document.getElementById('initial-wbs-data');
+      if (dataElement) {
+        try {
+          projectData = JSON.parse(dataElement.textContent);
+
+          // Initialize priority field with default value if not exists
+          // Initialize display_order field for task positioning
+          if (projectData && projectData.tasks) {
+            projectData.tasks.forEach((task, index) => {
+              if (!task.priority) {
+                task.priority = '中';
+              }
+              if (task.display_order === undefined) {
+                task.display_order = index + 1;
+              }
+              if (task.deleted === undefined) {
+                task.deleted = false;
+              }
+              if (task.deleted_at === undefined) {
+                task.deleted_at = null;
+              }
+            });
+          }
+
+          console.log('Initial data loaded:', projectData);
+        } catch (error) {
+          console.error('Error parsing initial data:', error);
+          projectData = {
+            meta: {},
+            tasks: []
+          };
+        }
+      }
+    }
+
+    function loadFromLocalStorage() {
+      const saved = localStorage.getItem('task_manager_v2_project_data');
+      if (saved) {
+        try {
+          const savedData = JSON.parse(saved);
+          if (confirm('ローカルストレージに保存されたデータが見つかりました。読み込みますか？')) {
+            projectData = savedData;
+            console.log('Loaded from localStorage');
+          }
+        } catch (error) {
+          console.error('Error loading from localStorage:', error);
+        }
+      }
+    }
+
+    function saveToLocalStorage() {
+      try {
+        localStorage.setItem('task_manager_v2_project_data', JSON.stringify(projectData));
+        console.log('Saved to localStorage');
+        isDirty = false;
+        updateFileStatus();
+      } catch (error) {
+        console.error('Error saving to localStorage:', error);
+      }
+    }
+
+    function setupAutoSave() {
+      // Auto-save every 30 seconds if dirty
+      setInterval(() => {
+        if (isDirty) {
+          saveToLocalStorage();
+        }
+      }, 30000);
+
+      // Save on page unload
+      window.addEventListener('beforeunload', (e) => {
+        if (isDirty) {
+          saveToLocalStorage();
+          e.preventDefault();
+          e.returnValue = '未保存の変更があります';
+          return e.returnValue;
+        }
+      });
+    }
+
+    function markDirty() {
+      isDirty = true;
+      updateFileStatus();
+    }
+
+    function updateFileStatus() {
+      const now = new Date().toLocaleString('ja-JP');
+      const fileNameEl = document.getElementById('current-file-name');
+      const saveTimeEl = document.getElementById('last-save-time');
+      const statusEl = document.getElementById('save-status');
+
+      if (fileNameEl) fileNameEl.textContent = currentFileName;
+      if (saveTimeEl) saveTimeEl.textContent = now;
+
+      if (statusEl) {
+        if (isDirty) {
+          statusEl.className = 'status-indicator unsaved';
+          statusEl.innerHTML = '<span>● 未保存の変更あり</span>';
+        } else {
+          statusEl.className = 'status-indicator saved';
+          statusEl.innerHTML = '<span>✓ 保存済み</span>';
+        }
+      }
+    }
+
+    // ==========================================
+    // UI Rendering
+    // ==========================================
+    function renderDashboard() {
+      if (!projectData || !projectData.tasks) {
+        console.error('No project data available');
+        return;
+      }
+
+      calculateStatistics();
+      renderProgressSummary();
+      renderTaskTable();
+    }
+
+    function calculateStatistics() {
+      const stats = {
+        total: projectData.tasks.length,
+        completed: 0,
+        in_progress: 0,
+        not_started: 0,
+        on_hold: 0,
+        postponed: 0,
+        cancelled: 0,
+        unknown: 0,
+        by_phase: {}
+      };
+
+      projectData.tasks.forEach(task => {
+        const statusKey = STATUS_MAP[task.status] || 'unknown';
+        stats[statusKey]++;
+
+        if (!stats.by_phase[task.phase]) {
+          stats.by_phase[task.phase] = {
+            total: 0,
+            completed: 0
+          };
+        }
+        stats.by_phase[task.phase].total++;
+        if (task.status === '完了') {
+          stats.by_phase[task.phase].completed++;
+        }
+      });
+
+      projectData.statistics = stats;
+    }
+
+    function renderProgressSummary() {
+      const stats = projectData.statistics;
+
+      // Overall progress
+      const overallPercent = Math.round((stats.completed / stats.total) * 100);
+      document.getElementById('overall-progress-text').textContent =
+        `${overallPercent}% (${stats.completed}/${stats.total})`;
+      document.getElementById('overall-progress-bar').style.width = overallPercent + '%';
+      document.getElementById('overall-progress-bar').textContent = overallPercent + '%';
+
+      // Status counts
+      document.getElementById('count-completed').textContent = stats.completed;
+      document.getElementById('count-in-progress').textContent = stats.in_progress;
+      document.getElementById('count-not-started').textContent = stats.not_started;
+      document.getElementById('count-on-hold').textContent = stats.on_hold;
+      document.getElementById('count-postponed').textContent = stats.postponed;
+
+      // Phase progress
+      const phaseContainer = document.getElementById('phase-progress-container');
+      phaseContainer.innerHTML = '';
+
+      Object.keys(stats.by_phase).forEach(phase => {
+        const phaseData = stats.by_phase[phase];
+        const percent = Math.round((phaseData.completed / phaseData.total) * 100);
+
+        const progressHtml = `
+          <div class="progress-item mt-1">
+            <div class="progress-label">
+              <span>${phase}</span>
+              <span>${percent}% (${phaseData.completed}/${phaseData.total})</span>
+            </div>
+            <div class="progress-bar-container">
+              <div class="progress-bar ${percent === 100 ? 'success' : ''}" style="width: ${percent}%">
+                ${percent}%
+              </div>
+            </div>
+          </div>
+        `;
+        phaseContainer.innerHTML += progressHtml;
+      });
+    }
+
+    function renderTaskTable() {
+      const tbody = document.getElementById('task-table-body');
+      tbody.innerHTML = '';
+
+      // Get filtered tasks
+      const filteredTasks = getFilteredTasks();
+
+      filteredTasks.forEach(task => {
+        const statusClass = 'status-' + (STATUS_MAP[task.status] || 'unknown');
+        const priority = task.priority || '中';
+        const priorityClass = 'priority-' + {
+          '最高': 'critical',
+          '高': 'high',
+          '中': 'medium',
+          '低': 'low'
+        }[priority];
+        const row = `
+          <tr>
+            <td class="task-wbs-no" onclick="openTaskDetail('${task.wbs_no}')">${task.wbs_no}</td>
+            <td onclick="openTaskDetail('${task.wbs_no}')"><span class="priority-badge ${priorityClass}">${priority}</span></td>
+            <td onclick="openTaskDetail('${task.wbs_no}')"><span class="task-phase">${task.phase}</span></td>
+            <td onclick="openTaskDetail('${task.wbs_no}')">${task.task_name}</td>
+            <td onclick="openTaskDetail('${task.wbs_no}')">${task.primary_owner}</td>
+            <td onclick="openTaskDetail('${task.wbs_no}')">${task.finish_date}</td>
+            <td onclick="openTaskDetail('${task.wbs_no}')"><span class="status-badge ${statusClass}">
+              <span class="status-dot"></span>
+              ${task.status}
+            </span></td>
+            <td class="task-action-cell">
+              <button class="task-action-btn" onclick="toggleTaskActionMenu(event, '${task.wbs_no}')">⋮</button>
+              <div class="task-action-menu" id="action-menu-${task.wbs_no}">
+                <button class="task-action-menu-item" onclick="openTaskDetail('${task.wbs_no}')">📝 詳細を開く</button>
+                <div class="task-action-menu-divider"></div>
+                <button class="task-action-menu-item" onclick="openMoveDialog('${task.wbs_no}')">📌 指定位置へ移動...</button>
+                <button class="task-action-menu-item" onclick="moveTaskToPosition('${task.wbs_no}', 'first')">↑ 先頭へ移動</button>
+                <button class="task-action-menu-item" onclick="moveTaskByStep('${task.wbs_no}', -1)">⬆ 1つ上へ</button>
+                <button class="task-action-menu-item" onclick="moveTaskByStep('${task.wbs_no}', 1)">⬇ 1つ下へ</button>
+                <button class="task-action-menu-item" onclick="moveTaskToPosition('${task.wbs_no}', 'last')">↓ 末尾へ移動</button>
+                <div class="task-action-menu-divider"></div>
+                <button class="task-action-menu-item danger" onclick="deleteTask('${task.wbs_no}')">🗑️ 削除</button>
+              </div>
+            </td>
+          </tr>
+        `;
+        tbody.innerHTML += row;
+      });
+
+      // Update result count
+      const resultCount = document.getElementById('filter-result-count');
+      if (filteredTasks.length < projectData.tasks.length) {
+        resultCount.textContent = `表示: ${filteredTasks.length}件 / 全${projectData.tasks.length}件`;
+      } else {
+        resultCount.textContent = `全${projectData.tasks.length}件を表示中`;
+      }
+    }
+
+    function getFilteredTasks() {
+      if (!projectData || !projectData.tasks) return [];
+
+      const searchQuery = document.getElementById('search-input').value.toLowerCase();
+      const phaseFilter = document.getElementById('phase-filter').value;
+      const statusFilter = document.getElementById('status-filter').value;
+      const priorityFilter = document.getElementById('priority-filter').value;
+
+      return projectData.tasks
+        .filter(task => {
+          // Skip deleted tasks
+          if (task.deleted) return false;
+
+          // Search filter (task name or WBS number)
+          const matchesSearch = !searchQuery ||
+            task.task_name.toLowerCase().includes(searchQuery) ||
+            task.wbs_no.toLowerCase().includes(searchQuery);
+
+          // Phase filter
+          const matchesPhase = !phaseFilter || task.phase === phaseFilter;
+
+          // Status filter
+          const matchesStatus = !statusFilter || task.status === statusFilter;
+
+          // Priority filter
+          const taskPriority = task.priority || '中';
+          const matchesPriority = !priorityFilter || taskPriority === priorityFilter;
+
+          return matchesSearch && matchesPhase && matchesStatus && matchesPriority;
+        })
+        .sort((a, b) => {
+          // Sort by display_order
+          const orderA = a.display_order !== undefined ? a.display_order : 999999;
+          const orderB = b.display_order !== undefined ? b.display_order : 999999;
+          return orderA - orderB;
+        });
+    }
+
+    function applyFilters() {
+      renderTaskTable();
+    }
+
+    function clearFilters() {
+      document.getElementById('search-input').value = '';
+      document.getElementById('phase-filter').value = '';
+      document.getElementById('status-filter').value = '';
+      document.getElementById('priority-filter').value = '';
+      renderTaskTable();
+    }
+
+    // ==========================================
+    // Task Detail Modal
+    // ==========================================
+    function openTaskDetail(wbsNo) {
+      currentTask = projectData.tasks.find(t => t.wbs_no === wbsNo);
+      if (!currentTask) return;
+
+      // Initialize priority if not exists
+      if (!currentTask.priority) {
+        currentTask.priority = '中';
+      }
+
+      document.getElementById('modal-title').textContent =
+        `タスク詳細: ${currentTask.wbs_no} ${currentTask.task_name}`;
+      document.getElementById('current-status').textContent = currentTask.status;
+      document.getElementById('current-priority').textContent = currentTask.priority;
+
+      // Set date input values
+      const startDate = convertToISODate(currentTask.start_date);
+      const finishDate = convertToISODate(currentTask.finish_date);
+      document.getElementById('edit-start-date').value = startDate;
+      document.getElementById('edit-finish-date').value = finishDate;
+
+      // Render task details
+      renderTaskDetails();
+
+      // Update button states
+      updateStatusButtonStates();
+      updatePriorityButtonStates();
+
+      // Render comment history
+      renderCommentHistory();
+
+      // Clear comment input
+      document.getElementById('comment-input').value = '';
+
+      // Show modal
+      document.getElementById('task-modal').classList.add('active');
+    }
+
+    function renderTaskDetails() {
+      if (!currentTask) return;
+
+      const detailsHtml = `
+        <p><strong>フェーズ:</strong> ${currentTask.phase}</p>
+        <p><strong>種別:</strong> ${currentTask.task_type}</p>
+        <p><strong>担当:</strong> ${currentTask.primary_owner} (支援: ${currentTask.support_owner})</p>
+        <p><strong>工数:</strong> ${currentTask.duration_bd} BD</p>
+        <p><strong>期間:</strong> ${currentTask.start_date} ~ ${currentTask.finish_date}</p>
+        <p><strong>前提タスク:</strong> ${currentTask.predecessors || 'なし'}</p>
+        <hr style="margin: 1rem 0;">
+        <p><strong>検証方法:</strong><br>${currentTask.verification_method}</p>
+        <p><strong>合格基準:</strong><br>${currentTask.pass_criteria}</p>
+      `;
+      document.getElementById('task-details').innerHTML = detailsHtml;
+    }
+
+    function convertToISODate(dateStr) {
+      if (!dateStr) return '';
+      // Convert "2026/3/23" to "2026-03-23"
+      const parts = dateStr.split('/');
+      if (parts.length === 3) {
+        const year = parts[0];
+        const month = parts[1].padStart(2, '0');
+        const day = parts[2].padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      }
+      return '';
+    }
+
+    function closeModal() {
+      document.getElementById('task-modal').classList.remove('active');
+      currentTask = null;
+    }
+
+    function addComment() {
+      if (!currentTask) return;
+
+      const commentInput = document.getElementById('comment-input');
+      const content = commentInput.value.trim();
+
+      if (!content) {
+        alert('コメントを入力してください');
+        return;
+      }
+
+      // Initialize comments array if not exists
+      if (!currentTask.comments) {
+        currentTask.comments = [];
+      }
+
+      // Add new comment
+      currentTask.comments.push({
+        timestamp: new Date().toISOString(),
+        type: 'user_comment',
+        content: content
+      });
+
+      // Mark as dirty
+      markDirty();
+
+      // Clear input
+      commentInput.value = '';
+
+      // Re-render comment history
+      renderCommentHistory();
+
+      console.log('Comment added:', content);
+    }
+
+    function renderCommentHistory() {
+      if (!currentTask) return;
+
+      const historyContainer = document.getElementById('comment-history');
+
+      if (!currentTask.comments || currentTask.comments.length === 0) {
+        historyContainer.innerHTML = '<p class="text-muted">コメントはまだありません</p>';
+        return;
+      }
+
+      // Sort comments by timestamp (newest first)
+      const sortedComments = [...currentTask.comments].sort((a, b) =>
+        new Date(b.timestamp) - new Date(a.timestamp)
+      );
+
+      // Render comments
+      const commentsHtml = sortedComments.map(comment => {
+        const date = new Date(comment.timestamp);
+        const formattedDate = date.toLocaleString('ja-JP');
+        const typeLabel = comment.type === 'user_comment' ? 'ユーザーコメント' :
+                          comment.type === 'status_change' ? 'ステータス変更' :
+                          'システム';
+        const cssClass = comment.type === 'user_comment' ? '' : 'system';
+
+        return `
+          <div class="comment-item ${cssClass}">
+            <div class="comment-header">
+              <span class="comment-type">${typeLabel}</span>
+              <span class="comment-timestamp">${formattedDate}</span>
+            </div>
+            <div class="comment-content">${escapeHtml(comment.content)}</div>
+          </div>
+        `;
+      }).join('');
+
+      historyContainer.innerHTML = commentsHtml;
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function updateStatusButtonStates() {
+      const buttons = document.querySelectorAll('.status-button');
+      buttons.forEach(btn => {
+        btn.classList.remove('active');
+      });
+
+      const currentStatus = currentTask.status;
+      buttons.forEach(btn => {
+        if (btn.textContent.trim() === currentStatus) {
+          btn.classList.add('active');
+        }
+      });
+    }
+
+    function updatePriorityButtonStates() {
+      const buttons = document.querySelectorAll('.priority-button');
+      buttons.forEach(btn => {
+        btn.classList.remove('active');
+      });
+
+      const currentPriority = currentTask.priority || '中';
+      buttons.forEach(btn => {
+        if (btn.textContent.trim() === currentPriority) {
+          btn.classList.add('active');
+        }
+      });
+    }
+
+    function changeStatus(newStatus) {
+      if (!currentTask) return;
+
+      const oldStatus = currentTask.status;
+      currentTask.status = newStatus;
+
+      // Add comment
+      if (!currentTask.comments) {
+        currentTask.comments = [];
+      }
+      currentTask.comments.push({
+        timestamp: new Date().toISOString(),
+        type: 'status_change',
+        content: `ステータス変更: ${oldStatus} → ${newStatus}`
+      });
+
+      markDirty();
+      updateStatusButtonStates();
+      document.getElementById('current-status').textContent = newStatus;
+      renderDashboard();
+
+      console.log(`Status changed: ${currentTask.wbs_no} ${oldStatus} → ${newStatus}`);
+    }
+
+    function changePriority(newPriority) {
+      if (!currentTask) return;
+
+      const oldPriority = currentTask.priority || '中';
+      currentTask.priority = newPriority;
+
+      // Add comment
+      if (!currentTask.comments) {
+        currentTask.comments = [];
+      }
+      currentTask.comments.push({
+        timestamp: new Date().toISOString(),
+        type: 'priority_change',
+        content: `優先度変更: ${oldPriority} → ${newPriority}`
+      });
+
+      markDirty();
+      updatePriorityButtonStates();
+      document.getElementById('current-priority').textContent = newPriority;
+      renderDashboard();
+
+      console.log(`Priority changed: ${currentTask.wbs_no} ${oldPriority} → ${newPriority}`);
+    }
+
+    function updateDate(dateType) {
+      if (!currentTask) return;
+
+      const inputId = dateType === 'start' ? 'edit-start-date' : 'edit-finish-date';
+      const inputEl = document.getElementById(inputId);
+      const newDate = inputEl.value;
+
+      if (!newDate) return;
+
+      // Convert YYYY-MM-DD to YYYY/M/D format
+      const formattedDate = newDate.replace(/-/g, '/').replace(/\/0(\d)/g, '/$1');
+
+      if (dateType === 'start') {
+        const oldDate = currentTask.start_date;
+        currentTask.start_date = formattedDate;
+
+        // Add comment
+        if (!currentTask.comments) {
+          currentTask.comments = [];
+        }
+        currentTask.comments.push({
+          timestamp: new Date().toISOString(),
+          type: 'date_change',
+          content: `開始日変更: ${oldDate} → ${formattedDate}`
+        });
+      } else {
+        const oldDate = currentTask.finish_date;
+        currentTask.finish_date = formattedDate;
+
+        // Add comment
+        if (!currentTask.comments) {
+          currentTask.comments = [];
+        }
+        currentTask.comments.push({
+          timestamp: new Date().toISOString(),
+          type: 'date_change',
+          content: `終了日変更: ${oldDate} → ${formattedDate}`
+        });
+      }
+
+      markDirty();
+      renderTaskDetails();
+      renderCommentHistory();
+
+      console.log(`Date changed: ${currentTask.wbs_no} ${dateType} → ${formattedDate}`);
+    }
+
+    // ==========================================
+    // File Operations
+    // ==========================================
+    async function saveToFile() {
+      try {
+        // File System Access APIのサポート確認
+        if (!('showSaveFilePicker' in window)) {
+          alert('お使いのブラウザはFile System Access APIをサポートしていません。\nMicrosoft Edge 90以降をご利用ください。\n\n現在はLocalStorageに保存されています。');
+          saveToLocalStorage();
+          return;
+        }
+
+        // ファイルハンドルがない場合、新規保存ダイアログ表示
+        if (!currentFileHandle) {
+          const options = {
+            suggestedName: `task-manager-${new Date().toISOString().split('T')[0]}.json`,
+            types: [
+              {
+                description: 'WBS プロジェクトデータ (JSON)',
+                accept: { 'application/json': ['.json'] }
+              }
+            ]
+          };
+          currentFileHandle = await window.showSaveFilePicker(options);
+        }
+
+        // ファイルに書き込み
+        const writable = await currentFileHandle.createWritable();
+        const jsonData = JSON.stringify(projectData, null, 2);
+        await writable.write(jsonData);
+        await writable.close();
+
+        // ファイル名を更新
+        currentFileName = currentFileHandle.name;
+        isDirty = false;
+        updateFileStatus();
+
+        console.log('Saved to file:', currentFileName);
+        alert(`ファイル保存完了: ${currentFileName}`);
+      } catch (error) {
+        if (error.name === 'AbortError') {
+          console.log('Save cancelled by user');
+        } else {
+          console.error('Error saving file:', error);
+          alert(`ファイル保存エラー: ${error.message}\n\nLocalStorageに保存します。`);
+          saveToLocalStorage();
+        }
+      }
+    }
+
+    async function loadFromFile() {
+      try {
+        // File System Access APIのサポート確認
+        if (!('showOpenFilePicker' in window)) {
+          alert('お使いのブラウザはFile System Access APIをサポートしていません。\nMicrosoft Edge 90以降をご利用ください。');
+          return;
+        }
+
+        // ファイル選択ダイアログ表示
+        const [fileHandle] = await window.showOpenFilePicker({
+          types: [
+            {
+              description: 'WBS プロジェクトデータ (JSON)',
+              accept: { 'application/json': ['.json'] }
+            }
+          ],
+          multiple: false
+        });
+
+        // ファイル読み込み
+        const file = await fileHandle.getFile();
+        const text = await file.text();
+        const data = JSON.parse(text);
+
+        // データ検証
+        if (!data.meta || !data.tasks || !Array.isArray(data.tasks)) {
+          throw new Error('無効なWBSデータ形式です');
+        }
+
+        // データを適用
+        projectData = data;
+        currentFileHandle = fileHandle;
+        currentFileName = fileHandle.name;
+        isDirty = false;
+
+        // UI更新
+        renderDashboard();
+        updateFileStatus();
+
+        console.log('Loaded from file:', currentFileName);
+        alert(`ファイル読み込み完了: ${currentFileName}\nタスク数: ${data.tasks.length}`);
+      } catch (error) {
+        if (error.name === 'AbortError') {
+          console.log('Open cancelled by user');
+        } else {
+          console.error('Error loading file:', error);
+          alert(`ファイル読み込みエラー: ${error.message}`);
+        }
+      }
+    }
+
+    function showDashboard() {
+      // ダッシュボードは常に表示されているため、スクロールするだけ
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    async function showExport() {
+      if (!projectData || !projectData.tasks) {
+        alert('エクスポートするデータがありません');
+        return;
+      }
+
+      const exportOptions = `
+WBSデータをエクスポートします。
+形式を選択してください:
+
+1: JSON形式（完全データ）
+2: CSV形式（Excel互換）
+
+番号を入力してください:`;
+
+      const choice = prompt(exportOptions);
+
+      if (choice === '1') {
+        exportJSON();
+      } else if (choice === '2') {
+        exportCSV();
+      } else if (choice !== null) {
+        alert('無効な選択です');
+      }
+    }
+
+    function exportJSON() {
+      try {
+        const jsonData = JSON.stringify(projectData, null, 2);
+        const blob = new Blob([jsonData], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `task-manager-export-${new Date().toISOString().split('T')[0]}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        alert('JSON形式でエクスポートしました');
+      } catch (error) {
+        console.error('Error exporting JSON:', error);
+        alert(`JSONエクスポートエラー: ${error.message}`);
+      }
+    }
+
+    function exportCSV() {
+      try {
+        // BOM付きUTF-8（Excel互換）
+        const BOM = '\uFEFF';
+
+        // CSVヘッダー
+        const headers = [
+          'WBS_No', 'Priority', 'Phase', 'Task_Type', 'Task_Name', 'Mermaid_IDs',
+          'Primary_Owner', 'Support_Owner', 'Duration_BD', 'Start_Date',
+          'Finish_Date', 'Predecessors', 'Verification_Method',
+          'Pass_Criteria', 'Status', 'Comment_Count'
+        ];
+
+        // CSVデータ行
+        const rows = projectData.tasks.map(task => [
+          task.wbs_no,
+          task.priority || '中',
+          task.phase,
+          task.task_type,
+          escapeCSV(task.task_name),
+          escapeCSV(task.mermaid_ids),
+          task.primary_owner,
+          escapeCSV(task.support_owner),
+          task.duration_bd,
+          task.start_date,
+          task.finish_date,
+          escapeCSV(task.predecessors),
+          escapeCSV(task.verification_method),
+          escapeCSV(task.pass_criteria),
+          task.status,
+          task.comments ? task.comments.length : 0
+        ]);
+
+        // CSV生成
+        const csv = BOM + [headers, ...rows]
+          .map(row => row.join(','))
+          .join('\n');
+
+        // ダウンロード
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `task-manager-export-${new Date().toISOString().split('T')[0]}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+        alert('CSV形式でエクスポートしました\n（Excel互換BOM付きUTF-8）');
+      } catch (error) {
+        console.error('Error exporting CSV:', error);
+        alert(`CSVエクスポートエラー: ${error.message}`);
+      }
+    }
+
+    function escapeCSV(value) {
+      if (value === null || value === undefined) return '';
+      const str = String(value);
+      // カンマ、改行、ダブルクォートが含まれる場合はダブルクォートで囲む
+      if (str.includes(',') || str.includes('\n') || str.includes('"')) {
+        return '"' + str.replace(/"/g, '""') + '"';
+      }
+      return str;
+    }
+
+    // ==========================================
+    // Task Action Menu Functions
+    // ==========================================
+    function toggleTaskActionMenu(event, wbsNo) {
+      event.stopPropagation(); // Prevent triggering row click
+
+      const menu = document.getElementById(`action-menu-${wbsNo}`);
+      const allMenus = document.querySelectorAll('.task-action-menu');
+
+      // Close all other menus
+      allMenus.forEach(m => {
+        if (m.id !== `action-menu-${wbsNo}`) {
+          m.classList.remove('active');
+        }
+      });
+
+      // Toggle current menu
+      const wasActive = menu.classList.contains('active');
+      menu.classList.toggle('active');
+
+      // If opening, check if menu would overflow bottom of screen
+      if (!wasActive && menu.classList.contains('active')) {
+        const menuRect = menu.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
+
+        // If menu extends beyond viewport, show it upward
+        if (menuRect.bottom > viewportHeight - 20) {
+          menu.classList.add('upward');
+        } else {
+          menu.classList.remove('upward');
+        }
+      }
+    }
+
+    // Close menus when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.task-action-cell')) {
+        document.querySelectorAll('.task-action-menu').forEach(menu => {
+          menu.classList.remove('active');
+        });
+      }
+    });
+
+    // ==========================================
+    // Task Movement Functions
+    // ==========================================
+    function moveTaskToPosition(wbsNo, position) {
+      const task = projectData.tasks.find(t => t.wbs_no === wbsNo);
+      if (!task) return;
+
+      const sortedTasks = projectData.tasks
+        .filter(t => !t.deleted)
+        .sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
+
+      if (position === 'first') {
+        task.display_order = sortedTasks[0].display_order - 1;
+      } else if (position === 'last') {
+        task.display_order = sortedTasks[sortedTasks.length - 1].display_order + 1;
+      }
+
+      normalizeDisplayOrder();
+      markDirty();
+      renderDashboard();
+      console.log(`Task ${wbsNo} moved to ${position}`);
+    }
+
+    function moveTaskByStep(wbsNo, step) {
+      const sortedTasks = projectData.tasks
+        .filter(t => !t.deleted)
+        .sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
+
+      const currentIndex = sortedTasks.findIndex(t => t.wbs_no === wbsNo);
+      if (currentIndex === -1) return;
+
+      const newIndex = currentIndex + step;
+      if (newIndex < 0 || newIndex >= sortedTasks.length) {
+        alert(step < 0 ? 'すでに先頭です' : 'すでに末尾です');
+        return;
+      }
+
+      // Swap display_order
+      const currentTask = sortedTasks[currentIndex];
+      const targetTask = sortedTasks[newIndex];
+      const tempOrder = currentTask.display_order;
+      currentTask.display_order = targetTask.display_order;
+      targetTask.display_order = tempOrder;
+
+      markDirty();
+      renderDashboard();
+      console.log(`Task ${wbsNo} moved ${step > 0 ? 'down' : 'up'}`);
+    }
+
+    function normalizeDisplayOrder() {
+      // Re-number display_order to 1, 2, 3, ... for all non-deleted tasks
+      const sortedTasks = projectData.tasks
+        .filter(t => !t.deleted)
+        .sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
+
+      sortedTasks.forEach((task, index) => {
+        task.display_order = index + 1;
+      });
+    }
+
+    let moveSourceTask = null;
+
+    function openMoveDialog(wbsNo) {
+      moveSourceTask = projectData.tasks.find(t => t.wbs_no === wbsNo);
+      if (!moveSourceTask) return;
+
+      // Set dialog title
+      document.getElementById('move-task-info').textContent =
+        `${moveSourceTask.wbs_no} "${moveSourceTask.task_name}"`;
+
+      // Render task list
+      renderMoveTaskList();
+
+      // Setup search listener
+      const searchInput = document.getElementById('move-search-input');
+      searchInput.value = '';
+      searchInput.addEventListener('input', renderMoveTaskList);
+
+      // Show dialog
+      document.getElementById('move-dialog').classList.add('active');
+    }
+
+    function closeMoveDialog() {
+      document.getElementById('move-dialog').classList.remove('active');
+      moveSourceTask = null;
+    }
+
+    function renderMoveTaskList() {
+      const container = document.getElementById('move-task-list');
+      const searchQuery = document.getElementById('move-search-input').value.toLowerCase();
+
+      // Get all non-deleted tasks except the source task, sorted by display_order
+      const tasks = projectData.tasks
+        .filter(t => !t.deleted && t.wbs_no !== moveSourceTask.wbs_no)
+        .filter(t => {
+          if (!searchQuery) return true;
+          return t.wbs_no.toLowerCase().includes(searchQuery) ||
+                 t.task_name.toLowerCase().includes(searchQuery);
+        })
+        .sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
+
+      container.innerHTML = '';
+
+      tasks.forEach((task, index) => {
+        const itemHtml = `
+          <label class="move-task-item">
+            <input type="radio" name="move-target" value="${task.wbs_no}" ${index === 0 ? 'checked' : ''}>
+            <div class="move-task-item-content">
+              <div class="move-task-item-title">${task.wbs_no}: ${task.task_name}</div>
+              <div class="move-task-item-meta">${task.phase} | ${task.primary_owner} | ${task.finish_date}</div>
+            </div>
+          </label>
+        `;
+        container.innerHTML += itemHtml;
+      });
+
+      if (tasks.length === 0) {
+        container.innerHTML = '<p class="text-muted" style="padding: 1rem; text-align: center;">該当するタスクがありません</p>';
+      }
+    }
+
+    function executeMoveTask() {
+      if (!moveSourceTask) return;
+
+      const selectedRadio = document.querySelector('input[name="move-target"]:checked');
+      if (!selectedRadio) {
+        alert('移動先を選択してください');
+        return;
+      }
+
+      const targetWbsNo = selectedRadio.value;
+      const targetTask = projectData.tasks.find(t => t.wbs_no === targetWbsNo);
+      if (!targetTask) return;
+
+      // Move source task after target task
+      moveSourceTask.display_order = targetTask.display_order + 0.5;
+
+      // Normalize display orders
+      normalizeDisplayOrder();
+
+      // Add comment
+      if (!moveSourceTask.comments) {
+        moveSourceTask.comments = [];
+      }
+      moveSourceTask.comments.push({
+        timestamp: new Date().toISOString(),
+        type: 'task_move',
+        content: `タスク位置移動: ${targetTask.wbs_no}の直後に移動`
+      });
+
+      markDirty();
+      renderDashboard();
+      closeMoveDialog();
+
+      console.log(`Task ${moveSourceTask.wbs_no} moved after ${targetWbsNo}`);
+    }
+
+    function deleteTask(wbsNo) {
+      // TODO: Implement delete functionality in Phase 2.3.0
+      alert('削除機能はPhase 2.3.0で実装されます');
+    }
+
+    // ==========================================
+    // Create New Task Functions
+    // ==========================================
+    function openCreateTaskDialog() {
+      // Reset form
+      document.getElementById('new-wbs-no').value = '';
+      document.getElementById('new-phase').value = '';
+      document.getElementById('new-task-type').value = '';
+      document.getElementById('new-task-name').value = '';
+      document.getElementById('new-primary-owner').value = '';
+      document.getElementById('new-duration').value = '1';
+      document.getElementById('new-start-date').value = '';
+      document.getElementById('new-finish-date').value = '';
+      document.querySelector('input[name="insert-position"][value="after"]').checked = true;
+
+      // Render insert task list
+      renderInsertTaskList();
+
+      // Setup search listener
+      const searchInput = document.getElementById('insert-search');
+      searchInput.value = '';
+      searchInput.addEventListener('input', renderInsertTaskList);
+
+      // Show dialog
+      document.getElementById('create-task-dialog').classList.add('active');
+    }
+
+    function closeCreateTaskDialog() {
+      document.getElementById('create-task-dialog').classList.remove('active');
+    }
+
+    function generateWBSNumber() {
+      const phase = document.getElementById('new-phase').value;
+      if (!phase) {
+        alert('フェーズを先に選択してください');
+        return;
+      }
+
+      // Find all tasks in the same phase
+      const phaseTasks = projectData.tasks.filter(t => t.phase === phase && !t.deleted);
+
+      // Extract numeric parts and find max
+      let maxNumber = 0;
+      phaseTasks.forEach(t => {
+        // Try to extract number from WBS_No (e.g., "PH1.2.3" -> 2.3)
+        const parts = t.wbs_no.split('.');
+        if (parts.length > 1) {
+          const lastNum = parseFloat(parts[parts.length - 1]);
+          if (!isNaN(lastNum) && lastNum > maxNumber) {
+            maxNumber = lastNum;
+          }
+        }
+      });
+
+      // Generate new number
+      const newNumber = Math.floor(maxNumber) + 1;
+      const generatedWbsNo = `${phase}.${newNumber}.1`;
+
+      document.getElementById('new-wbs-no').value = generatedWbsNo;
+      console.log(`Generated WBS Number: ${generatedWbsNo}`);
+    }
+
+    function renderInsertTaskList() {
+      const container = document.getElementById('insert-task-list');
+      const searchQuery = document.getElementById('insert-search').value.toLowerCase();
+
+      // Get all non-deleted tasks, sorted by display_order
+      const tasks = projectData.tasks
+        .filter(t => !t.deleted)
+        .filter(t => {
+          if (!searchQuery) return true;
+          return t.wbs_no.toLowerCase().includes(searchQuery) ||
+                 t.task_name.toLowerCase().includes(searchQuery);
+        })
+        .sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
+
+      container.innerHTML = '';
+
+      tasks.forEach((task, index) => {
+        const itemHtml = `
+          <label class="move-task-item">
+            <input type="radio" name="insert-target" value="${task.wbs_no}" ${index === tasks.length - 1 ? 'checked' : ''}>
+            <div class="move-task-item-content">
+              <div class="move-task-item-title">${task.wbs_no}: ${task.task_name}</div>
+              <div class="move-task-item-meta">${task.phase} | ${task.primary_owner}</div>
+            </div>
+          </label>
+        `;
+        container.innerHTML += itemHtml;
+      });
+
+      if (tasks.length === 0) {
+        container.innerHTML = '<p class="text-muted" style="padding: 1rem; text-align: center;">該当するタスクがありません</p>';
+      }
+    }
+
+    function executeCreateTask() {
+      // Validate required fields
+      const wbsNo = document.getElementById('new-wbs-no').value.trim();
+      const phase = document.getElementById('new-phase').value;
+      const taskType = document.getElementById('new-task-type').value.trim();
+      const taskName = document.getElementById('new-task-name').value.trim();
+      const primaryOwner = document.getElementById('new-primary-owner').value;
+      const duration = parseFloat(document.getElementById('new-duration').value);
+      const startDate = document.getElementById('new-start-date').value;
+      const finishDate = document.getElementById('new-finish-date').value;
+
+      // Validation
+      if (!wbsNo) {
+        alert('WBS番号を入力してください');
+        return;
+      }
+
+      // Check for duplicate WBS number
+      if (projectData.tasks.some(t => t.wbs_no === wbsNo)) {
+        alert(`WBS番号 "${wbsNo}" は既に存在します。別の番号を指定してください。`);
+        return;
+      }
+
+      if (!phase) {
+        alert('フェーズを選択してください');
+        return;
+      }
+
+      if (!taskName) {
+        alert('タスク名を入力してください');
+        return;
+      }
+
+      if (!primaryOwner) {
+        alert('主担当を選択してください');
+        return;
+      }
+
+      if (!startDate || !finishDate) {
+        alert('開始日と終了日を入力してください');
+        return;
+      }
+
+      // Determine insert position
+      const insertMode = document.querySelector('input[name="insert-position"]:checked').value;
+      let displayOrder;
+
+      if (insertMode === 'last') {
+        // Insert at end
+        const sortedTasks = projectData.tasks
+          .filter(t => !t.deleted)
+          .sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
+        displayOrder = sortedTasks.length > 0
+          ? sortedTasks[sortedTasks.length - 1].display_order + 1
+          : 1;
+      } else {
+        // Insert after selected task
+        const selectedRadio = document.querySelector('input[name="insert-target"]:checked');
+        if (!selectedRadio) {
+          alert('挿入位置を選択してください');
+          return;
+        }
+        const targetTask = projectData.tasks.find(t => t.wbs_no === selectedRadio.value);
+        displayOrder = targetTask ? targetTask.display_order + 0.5 : 1;
+      }
+
+      // Create new task object
+      const newTask = {
+        wbs_no: wbsNo,
+        phase: phase,
+        task_type: taskType || '-',
+        task_name: taskName,
+        mermaid_ids: '',
+        primary_owner: primaryOwner,
+        support_owner: '',
+        duration_bd: duration,
+        start_date: formatDateToJP(startDate),
+        finish_date: formatDateToJP(finishDate),
+        predecessors: '',
+        verification_method: '',
+        pass_criteria: '',
+        status: '未着手',
+        priority: '中',
+        display_order: displayOrder,
+        deleted: false,
+        deleted_at: null,
+        comments: [{
+          timestamp: new Date().toISOString(),
+          type: 'task_created',
+          content: `新規タスクが作成されました`
+        }]
+      };
+
+      // Add to project data
+      projectData.tasks.push(newTask);
+
+      // Normalize display orders
+      normalizeDisplayOrder();
+
+      // Mark dirty and re-render
+      markDirty();
+      renderDashboard();
+      closeCreateTaskDialog();
+
+      alert(`タスク "${wbsNo}: ${taskName}" が作成されました`);
+      console.log('New task created:', newTask);
+    }
+
+    function formatDateToJP(isoDate) {
+      // Convert "2026-03-25" to "2026/3/25"
+      if (!isoDate) return '';
+      const parts = isoDate.split('-');
+      if (parts.length === 3) {
+        return `${parts[0]}/${parseInt(parts[1])}/${parseInt(parts[2])}`;
+      }
+      return isoDate;
+    }
+
+    // ==========================================
+    // Event Listeners
+    // ==========================================
+
+    // Close modals when clicking outside
+    document.getElementById('task-modal').addEventListener('click', (e) => {
+      if (e.target.id === 'task-modal') {
+        closeModal();
+      }
+    });
+
+    document.getElementById('move-dialog').addEventListener('click', (e) => {
+      if (e.target.id === 'move-dialog') {
+        closeMoveDialog();
+      }
+    });
+
+    document.getElementById('create-task-dialog').addEventListener('click', (e) => {
+      if (e.target.id === 'create-task-dialog') {
+        closeCreateTaskDialog();
+      }
+    });
+  </script>
+
+  <!-- ==========================================
+   * Footer
+   * ========================================== -->
+  <footer class="footer" id="footer">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+      <path d="M14 2v6h6"></path>
+    </svg>
+    <span id="current-file-name">(新規ファイル)</span>
+    <span>|</span>
+    <span>最終保存: <span id="last-save-time">未保存</span></span>
+    <div class="status-indicator unsaved" id="save-status">
+      <span>● 未保存の変更あり</span>
+    </div>
+  </footer>
+</body>
+</html>
