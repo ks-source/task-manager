@@ -5,6 +5,56 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.8.2] - 2026-03-20
+
+### Fixed
+- **Gantt Chart Display Issues**: Fixed multiple visual problems in gantt chart window
+  - Fixed row height mismatch between task list (left) and timeline (right)
+  - Fixed task bar text visibility issue (white text on white background)
+  - Fixed task bar text overflow when positioned at right edge
+
+### Changed
+- **Task Row Height**: Unified task row height to 60px for both task list and timeline
+  - Added `height: 60px` to `.task-row`
+  - Added `overflow: hidden` to prevent content overflow
+  - Added flexbox centering for better vertical alignment
+  - Task names now use ellipsis (`...`) when too long
+
+- **Task Bar Width**: Guaranteed minimum task bar width
+  - Changed `duration` calculation to `Math.max(3, ...)` for 3% minimum width
+  - Changed `startOffset` calculation to `Math.max(0, ...)` to prevent negative values
+  - Prevents task bars from becoming invisible
+
+- **Task Bar Text Display**: Adaptive text display based on bar width
+  - **15% or wider**: Display full task name
+  - **5-15% width**: Display WBS number only
+  - **Less than 5%**: No text (tooltip only)
+  - Improved tooltip format: `WBS: Task Name\nDate Range`
+
+### Technical
+- Modified `.task-row` CSS (lines 3416-3427):
+  - Added `height: 60px`
+  - Added `display: flex`, `flex-direction: column`, `justify-content: center`
+  - Added `overflow: hidden`
+
+- Modified `.task-wbs` and `.task-name` CSS (lines 3429-3445):
+  - Added `overflow: hidden`
+  - Added `text-overflow: ellipsis`
+  - Added `white-space: nowrap`
+
+- Modified task bar rendering logic (lines 3685-3726):
+  - Added minimum width guarantee (3%)
+  - Added adaptive text display based on bar width
+  - Enhanced tooltip with WBS number and line breaks
+
+### UI/UX
+- Task list and timeline rows now perfectly aligned
+- Task bars are always visible (minimum 3% width)
+- Task bar text adapts to available space
+- Long task names show ellipsis instead of wrapping
+- Improved tooltip readability with structured format
+- No text overflow at timeline right edge
+
 ## [2.8.1] - 2026-03-20
 
 ### Fixed
@@ -451,6 +501,7 @@ For bug reports, feature requests, or questions:
 
 ---
 
+[2.8.2]: https://github.com/ks-source/task-manager/compare/v2.8.1...v2.8.2
 [2.8.1]: https://github.com/ks-source/task-manager/compare/v2.8.0...v2.8.1
 [2.8.0]: https://github.com/ks-source/task-manager/compare/v2.7.1...v2.8.0
 [2.7.1]: https://github.com/ks-source/task-manager/compare/v2.7.0...v2.7.1
