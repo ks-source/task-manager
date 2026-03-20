@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.0] - 2026-03-20
+
+### Added
+- **CSV Import Functionality**: Import WBS tasks from CSV files
+  - Complete data replacement mode (existing data is fully replaced)
+  - CSV parser with RFC 4180 compliance (handles quoted fields, escaped quotes)
+  - Data validation with required field checking (WBS_No, Phase, Task_Name)
+  - Error handling with partial success support (skip invalid rows, continue processing)
+  - Detailed error reporting (shows first 5 errors with row numbers)
+  - Confirmation dialogs for unsaved changes and data replacement
+- New CSV import button in header menu with table+upload icon
+- Support for all CSV columns from sample format (14 columns total)
+
+### Changed
+- Version updated from v2.3.0 to v2.4.0
+- File handle cleared after CSV import (imported data treated as new file)
+- Import triggers automatic save to LocalStorage and UI refresh
+
+### Technical
+- Added `importFromCSV()` function (~80 lines)
+- Added `parseCSV(text)` function with row-by-row validation
+- Added `parseCSVLine(line)` function with proper quote handling
+- CSV import integrated into existing file menu workflow
+- Maintains single-file architecture with no external dependencies
+
 ## [2.3.0] - 2026-03-20
 
 ### Added

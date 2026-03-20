@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Task Manager - WBS Visualizer v2.3.0</title>
+  <title>Task Manager - WBS Visualizer v2.4.0</title>
   <meta name="description" content="A lightweight, browser-based Work Breakdown Structure (WBS) visualization and management tool">
   <meta name="keywords" content="task manager, WBS, project management, task tracking">
   <meta name="author" content="ks-source">
@@ -873,7 +873,7 @@
    * Header / Menu Bar
    * ========================================== -->
   <header class="header">
-    <h1 class="header-title">Task Manager v2.3.0</h1>
+    <h1 class="header-title">Task Manager v2.4.0</h1>
     <nav class="header-nav">
       <button class="icon-button active" onclick="showDashboard()" title="ダッシュボード">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -904,6 +904,17 @@
           <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
           <path d="M12 16v-6"></path>
           <path d="M9 13l3-3 3 3"></path>
+        </svg>
+      </button>
+      <button class="icon-button" onclick="importFromCSV()" title="CSVインポート">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="3" y1="9" x2="21" y2="9"></line>
+          <line x1="3" y1="15" x2="21" y2="15"></line>
+          <line x1="9" y1="3" x2="9" y2="21"></line>
+          <line x1="15" y1="3" x2="15" y2="21"></line>
+          <path d="M12 7v10"></path>
+          <path d="M8 11l4-4 4 4"></path>
         </svg>
       </button>
     </nav>
@@ -1252,7 +1263,7 @@
   <script type="application/json" id="initial-wbs-data">
 {
   "meta": {
-    "version": "2.3.0",
+    "version": "2.4.0",
     "project_name": "New Project",
     "project_start": "",
     "project_end": "",
@@ -2525,6 +2536,193 @@ WBSデータをエクスポートします。
         return `${parts[0]}/${parseInt(parts[1])}/${parseInt(parts[2])}`;
       }
       return isoDate;
+    }
+
+    // ==========================================
+    // CSV Import
+    // ==========================================
+
+    async function importFromCSV() {
+      try {
+        // Check for unsaved changes
+        if (hasUnsavedChanges) {
+          if (!confirm('未保存の変更があります。CSVをインポートすると現在のデータは完全に置き換えられます。\n\n続行しますか？')) {
+            return;
+          }
+        } else {
+          if (!confirm('CSVファイルをインポートします。現在のデータは完全に置き換えられます。\n\nこの操作は元に戻せません。続行しますか？')) {
+            return;
+          }
+        }
+
+        // Create file input element
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = '.csv';
+        fileInput.onchange = async (e) => {
+          const file = e.target.files[0];
+          if (!file) return;
+
+          try {
+            const text = await file.text();
+            const result = parseCSV(text);
+
+            if (result.errors.length > 0) {
+              const errorMsg = `CSVインポート中にエラーが発生しました：\n\n` +
+                `成功: ${result.tasks.length}件\n` +
+                `エラー: ${result.errors.length}件\n\n` +
+                `エラー詳細:\n${result.errors.slice(0, 5).join('\n')}` +
+                (result.errors.length > 5 ? `\n...他${result.errors.length - 5}件` : '');
+
+              if (result.tasks.length === 0) {
+                alert(errorMsg + '\n\nインポート可能なタスクがありません。');
+                return;
+              }
+
+              if (!confirm(errorMsg + '\n\n正常に読み込まれたタスクのみをインポートしますか？')) {
+                return;
+              }
+            }
+
+            // Replace all project data
+            projectData.tasks = result.tasks;
+            projectData.meta.total_tasks = result.tasks.length;
+            projectData.meta.last_updated = new Date().toISOString();
+
+            // Initialize additional fields
+            projectData.tasks.forEach((task, index) => {
+              if (!task.priority) task.priority = '中';
+              if (task.display_order === undefined) task.display_order = index + 1;
+              if (task.deleted === undefined) task.deleted = false;
+              if (task.deleted_at === undefined) task.deleted_at = null;
+              if (!task.comments) task.comments = [];
+            });
+
+            // Clear current file handle (imported data is new file)
+            currentFileHandle = null;
+            currentFileName = '(新規ファイル)';
+            document.getElementById('current-file-name').textContent = currentFileName;
+
+            // Save and refresh
+            saveToLocalStorage();
+            renderDashboard();
+            renderTaskTable();
+            markUnsaved();
+
+            alert(`CSVインポート完了\n\nタスク数: ${result.tasks.length}件` +
+              (result.errors.length > 0 ? `\nエラー: ${result.errors.length}件（スキップされました）` : ''));
+
+          } catch (error) {
+            alert(`CSVインポートエラー: ${error.message}`);
+          }
+        };
+
+        fileInput.click();
+      } catch (error) {
+        alert(`CSVインポートエラー: ${error.message}`);
+      }
+    }
+
+    function parseCSV(text) {
+      const lines = text.split(/\r?\n/).filter(line => line.trim());
+      if (lines.length === 0) {
+        throw new Error('CSVファイルが空です');
+      }
+
+      const headers = parseCSVLine(lines[0]);
+      const tasks = [];
+      const errors = [];
+
+      // Validate required columns
+      const requiredColumns = ['WBS_No', 'Phase', 'Task_Name'];
+      const missingColumns = requiredColumns.filter(col => !headers.includes(col));
+      if (missingColumns.length > 0) {
+        throw new Error(`必須列が見つかりません: ${missingColumns.join(', ')}`);
+      }
+
+      // Parse each data row
+      for (let i = 1; i < lines.length; i++) {
+        try {
+          const values = parseCSVLine(lines[i]);
+          if (values.length === 0 || values.every(v => !v.trim())) {
+            continue; // Skip empty lines
+          }
+
+          if (values.length !== headers.length) {
+            errors.push(`行${i + 1}: 列数が一致しません（期待: ${headers.length}、実際: ${values.length}）`);
+            continue;
+          }
+
+          const task = {};
+          headers.forEach((header, index) => {
+            task[header.toLowerCase().replace(/_/g, '_')] = values[index].trim();
+          });
+
+          // Validate required fields
+          if (!task.wbs_no || !task.phase || !task.task_name) {
+            errors.push(`行${i + 1}: 必須フィールド（WBS_No, Phase, Task_Name）が不足しています`);
+            continue;
+          }
+
+          // Normalize field names to match internal schema
+          const normalizedTask = {
+            wbs_no: task.wbs_no,
+            phase: task.phase,
+            task_type: task.task_type || '',
+            task_name: task.task_name,
+            mermaid_ids: task.mermaid_ids || '',
+            primary_owner: task.primary_owner || '',
+            support_owner: task.support_owner || '',
+            duration_bd: task.duration_bd || '',
+            start_date: task.start_date || '',
+            finish_date: task.finish_date || '',
+            predecessors: task.predecessors || '',
+            verification_method: task.verification_method || '',
+            pass_criteria: task.pass_criteria || '',
+            status: task.status || '未着手',
+            priority: '中',
+            display_order: tasks.length + 1,
+            deleted: false,
+            deleted_at: null,
+            comments: []
+          };
+
+          tasks.push(normalizedTask);
+
+        } catch (error) {
+          errors.push(`行${i + 1}: ${error.message}`);
+        }
+      }
+
+      return { tasks, errors };
+    }
+
+    function parseCSVLine(line) {
+      const result = [];
+      let current = '';
+      let inQuotes = false;
+
+      for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        const nextChar = line[i + 1];
+
+        if (char === '"') {
+          if (inQuotes && nextChar === '"') {
+            current += '"';
+            i++; // Skip next quote
+          } else {
+            inQuotes = !inQuotes;
+          }
+        } else if (char === ',' && !inQuotes) {
+          result.push(current);
+          current = '';
+        } else {
+          current += char;
+        }
+      }
+
+      result.push(current);
+      return result;
     }
 
     // ==========================================
