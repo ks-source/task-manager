@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.0] - 2026-03-20
+
+### Added
+- **Unified Import Dialog**: Single import button with JSON/CSV format selection
+  - Users can now choose between JSON (project file) or CSV (task list) import
+  - Improved user experience with clear format descriptions
+
+### Changed
+- **Import Button Redesign**: Updated import button icon using docs/ui/import.svg
+  - New cleaner import icon design (arrow into document)
+  - Changed button title from "CSVインポート" to "インポート"
+- **Removed "Open from File" Button**: Integrated into new unified import button
+  - Consolidated two buttons (Open from File + CSV Import) into one
+  - Reduced header menu clutter
+
+### Technical
+- Added `showImportDialog()` function for format selection
+- Import button now calls `showImportDialog()` instead of direct function calls
+- Maintained backward compatibility with existing import functions
+
 ## [2.4.1] - 2026-03-20
 
 ### Fixed
@@ -205,6 +225,7 @@ For bug reports, feature requests, or questions:
 
 ---
 
+[2.5.0]: https://github.com/ks-source/task-manager/compare/v2.4.1...v2.5.0
 [2.4.1]: https://github.com/ks-source/task-manager/compare/v2.4.0...v2.4.1
 [2.4.0]: https://github.com/ks-source/task-manager/compare/v2.3.0...v2.4.0
 [2.3.0]: https://github.com/ks-source/task-manager/compare/v2.2.0...v2.3.0

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Task Manager - WBS Visualizer v2.4.1</title>
+  <title>Task Manager - WBS Visualizer v2.5.0</title>
   <meta name="description" content="A lightweight, browser-based Work Breakdown Structure (WBS) visualization and management tool">
   <meta name="keywords" content="task manager, WBS, project management, task tracking">
   <meta name="author" content="ks-source">
@@ -873,7 +873,7 @@
    * Header / Menu Bar
    * ========================================== -->
   <header class="header">
-    <h1 class="header-title">Task Manager v2.4.1</h1>
+    <h1 class="header-title">Task Manager v2.5.0</h1>
     <nav class="header-nav">
       <button class="icon-button active" onclick="showDashboard()" title="ダッシュボード">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -899,22 +899,12 @@
           <path d="M9 15l3 3 3-3"></path>
         </svg>
       </button>
-      <button class="icon-button" onclick="loadFromFile()" title="ファイルから開く">
+      <button class="icon-button" onclick="showImportDialog()" title="インポート">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-          <path d="M12 16v-6"></path>
-          <path d="M9 13l3-3 3 3"></path>
-        </svg>
-      </button>
-      <button class="icon-button" onclick="importFromCSV()" title="CSVインポート">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-          <line x1="3" y1="9" x2="21" y2="9"></line>
-          <line x1="3" y1="15" x2="21" y2="15"></line>
-          <line x1="9" y1="3" x2="9" y2="21"></line>
-          <line x1="15" y1="3" x2="15" y2="21"></line>
-          <path d="M12 7v10"></path>
-          <path d="M8 11l4-4 4 4"></path>
+          <path d="M14 3v7"></path>
+          <path d="M14 10h7"></path>
+          <path d="M21 3l-7 7"></path>
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
         </svg>
       </button>
     </nav>
@@ -1263,7 +1253,7 @@
   <script type="application/json" id="initial-wbs-data">
 {
   "meta": {
-    "version": "2.4.1",
+    "version": "2.5.0",
     "project_name": "New Project",
     "project_start": "",
     "project_end": "",
@@ -2536,6 +2526,34 @@ WBSデータをエクスポートします。
         return `${parts[0]}/${parseInt(parts[1])}/${parseInt(parts[2])}`;
       }
       return isoDate;
+    }
+
+    // ==========================================
+    // Import (JSON/CSV)
+    // ==========================================
+
+    function showImportDialog() {
+      const choice = prompt(
+        'インポートするファイルの種類を選択してください:\n\n' +
+        '1: JSON形式 (タスクマネージャープロジェクトファイル)\n' +
+        '2: CSV形式 (WBSタスクリスト)\n\n' +
+        '数字を入力してください (1 または 2):',
+        '1'
+      );
+
+      if (choice === null) {
+        return; // User cancelled
+      }
+
+      const trimmedChoice = choice.trim();
+
+      if (trimmedChoice === '1') {
+        loadFromFile(); // JSON import
+      } else if (trimmedChoice === '2') {
+        importFromCSV(); // CSV import
+      } else {
+        alert('無効な選択です。1 (JSON) または 2 (CSV) を入力してください。');
+      }
     }
 
     // ==========================================
