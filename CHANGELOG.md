@@ -5,6 +5,69 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.8.0] - 2026-03-20
+
+### Added
+- **Gantt Chart Visualization**: Separate window display for project timeline
+  - New "ガントチャート" button in header navigation
+  - Opens in independent browser window (not tab) for side-by-side view
+  - Timeline display with task bars showing start/finish dates
+  - Status-based color coding (completed: green, in-progress: blue, not-started: gray, on-hold: orange, cancelled: red)
+  - View mode switching: Day/Week/Month units
+  - Responsive design with automatic layout adjustments
+  - Real-time data synchronization from main window (5-second auto-refresh)
+  - Manual refresh button for on-demand updates
+  - Today indicator line
+  - Task information tooltips on hover
+
+### Features
+- **Gantt Chart Display**:
+  - Left column: Task list (WBS number, phase, task name)
+  - Right column: Timeline with horizontal task bars
+  - Color-coded task bars by status
+  - Scrollable timeline for long projects
+  - Sticky headers for easy navigation
+
+- **Responsive Timeline**:
+  - Large screens (1200px+): Daily view (day-by-day columns)
+  - Medium screens (800-1199px): Weekly view (week-by-week columns)
+  - Small screens (800px-): Monthly view (month-by-month columns)
+  - Automatic grid adjustment based on screen width
+  - Horizontal and vertical scrolling support
+
+- **Data Synchronization**:
+  - Automatic sync every 5 seconds via `window.opener`
+  - Manual refresh button in gantt window
+  - Real-time updates when tasks are modified in main window
+  - Handles main window closure gracefully
+
+### Technical
+- Added `openGanttChart()` function in main window
+- Added `generateGanttHTML()` function to create standalone gantt HTML
+- Uses `window.open()` with custom dimensions (1400x800, resizable)
+- Gantt window contains fully embedded HTML/CSS/JavaScript (no external dependencies)
+- CSS Grid layout for task list and timeline columns
+- Flexbox for timeline cells and responsive controls
+- JavaScript-based timeline generation (day/week/month modes)
+- Task filtering: Only displays tasks with both start_date and finish_date
+- Date range auto-calculation with 3-day padding
+- Position calculation using percentage-based offsets
+
+### UI/UX
+- Clean, professional design matching main application
+- Navy color scheme consistent with v2.7.1
+- Legend showing status colors
+- Hover effects on task bars for enhanced visibility
+- Empty state handling (message when no tasks have dates)
+- Responsive button layout in controls
+- Window title shows project name
+
+### Constraints
+- **No External Libraries**: Pure HTML/CSS/JavaScript only
+- **Single File Architecture**: All gantt code embedded in main HTML
+- **Edge Standard APIs**: Uses only `window.open()`, basic DOM manipulation
+- **Security Compliant**: No CDN, no external resources, offline-capable
+
 ## [2.7.1] - 2026-03-20
 
 ### Changed
@@ -376,6 +439,7 @@ For bug reports, feature requests, or questions:
 
 ---
 
+[2.8.0]: https://github.com/ks-source/task-manager/compare/v2.7.1...v2.8.0
 [2.7.1]: https://github.com/ks-source/task-manager/compare/v2.7.0...v2.7.1
 [2.7.0]: https://github.com/ks-source/task-manager/compare/v2.6.1...v2.7.0
 [2.6.1]: https://github.com/ks-source/task-manager/compare/v2.6.0...v2.6.1

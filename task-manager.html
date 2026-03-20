@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Task Manager - WBS Visualizer v2.7.1</title>
+  <title>Task Manager - WBS Visualizer v2.8.0</title>
   <meta name="description" content="A lightweight, browser-based Work Breakdown Structure (WBS) visualization and management tool">
   <meta name="keywords" content="task manager, WBS, project management, task tracking">
   <meta name="author" content="ks-source">
@@ -873,7 +873,7 @@
    * Header / Menu Bar
    * ========================================== -->
   <header class="header">
-    <h1 class="header-title">Task Manager v2.7.1</h1>
+    <h1 class="header-title">Task Manager v2.8.0</h1>
     <nav class="header-nav">
       <button class="icon-button active" onclick="showDashboard()" title="ダッシュボード">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -904,6 +904,14 @@
           <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
           <polyline points="17 21 17 13 7 13 7 21"></polyline>
           <polyline points="7 3 7 8 15 8"></polyline>
+        </svg>
+      </button>
+      <button class="icon-button" onclick="openGanttChart()" title="ガントチャート">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="9" y1="3" x2="9" y2="21"></line>
+          <line x1="3" y1="9" x2="21" y2="9"></line>
+          <line x1="3" y1="15" x2="21" y2="15"></line>
         </svg>
       </button>
     </nav>
@@ -1332,7 +1340,7 @@
   <script type="application/json" id="initial-wbs-data">
 {
   "meta": {
-    "version": "2.7.1",
+    "version": "2.8.0",
     "project_name": "New Project",
     "project_start": "",
     "project_end": "",
@@ -2438,7 +2446,7 @@ tasksセクションのみ20個のタスクで埋めてください。**
 \`\`\`json
 {
   "meta": {
-    "version": "2.7.1",
+    "version": "2.8.0",
     "project_name": "[プロジェクト名をここに入力]",
     "project_start": "2026/3/20",
     "project_end": "2026/6/30",
@@ -3225,6 +3233,577 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
 
       result.push(current);
       return result;
+    }
+
+    // ==========================================
+    // Gantt Chart
+    // ==========================================
+
+    function openGanttChart() {
+      if (!projectData || !projectData.tasks || projectData.tasks.length === 0) {
+        alert('ガントチャートを表示するタスクがありません');
+        return;
+      }
+
+      // Open new window
+      const ganttWindow = window.open('', 'gantt-chart', 'width=1400,height=800,resizable=yes,scrollbars=yes');
+
+      if (!ganttWindow) {
+        alert('ポップアップがブロックされました。ブラウザの設定を確認してください。');
+        return;
+      }
+
+      // Generate and write HTML
+      ganttWindow.document.write(generateGanttHTML());
+      ganttWindow.document.close();
+    }
+
+    function generateGanttHTML() {
+      // Filter tasks with valid dates
+      const tasksWithDates = projectData.tasks.filter(task =>
+        task.start_date && task.finish_date
+      );
+
+      if (tasksWithDates.length === 0) {
+        return `
+          <!DOCTYPE html>
+          <html lang="ja">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>ガントチャート - ${projectData.meta.project_name}</title>
+            <style>
+              body {
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                padding: 2rem;
+                text-align: center;
+              }
+            </style>
+          </head>
+          <body>
+            <h1>ガントチャート</h1>
+            <p>開始日・終了日が設定されているタスクがありません。</p>
+            <p>タスクに日付を設定してから再度お試しください。</p>
+          </body>
+          </html>
+        `;
+      }
+
+      // Calculate date range
+      const startDates = tasksWithDates.map(t => new Date(t.start_date));
+      const finishDates = tasksWithDates.map(t => new Date(t.finish_date));
+      const minDate = new Date(Math.min(...startDates));
+      const maxDate = new Date(Math.max(...finishDates));
+
+      // Add padding
+      minDate.setDate(minDate.getDate() - 3);
+      maxDate.setDate(maxDate.getDate() + 3);
+
+      const dayCount = Math.ceil((maxDate - minDate) / (1000 * 60 * 60 * 24));
+
+      return `
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ガントチャート - ${projectData.meta.project_name}</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: #f5f5f5;
+      overflow-x: auto;
+    }
+
+    .header {
+      background-color: white;
+      border-bottom: 2px solid #e0e0e0;
+      padding: 1rem 1.5rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header h1 {
+      font-size: 1.5rem;
+      color: #2c3e50;
+    }
+
+    .controls {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .view-mode-btn {
+      padding: 0.5rem 1rem;
+      border: 1px solid #ddd;
+      background: white;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+
+    .view-mode-btn.active {
+      background: #2c3e50;
+      color: white;
+      border-color: #2c3e50;
+    }
+
+    .view-mode-btn:hover:not(.active) {
+      background: #f0f0f0;
+    }
+
+    .refresh-btn {
+      padding: 0.5rem 1rem;
+      background: #3498db;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+
+    .refresh-btn:hover {
+      background: #2980b9;
+    }
+
+    .gantt-container {
+      background-color: white;
+      margin: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      overflow-x: auto;
+    }
+
+    .gantt-scroll {
+      overflow-x: auto;
+      overflow-y: visible;
+    }
+
+    .gantt-table {
+      display: grid;
+      grid-template-columns: 250px 1fr;
+      min-width: 800px;
+    }
+
+    .task-list {
+      border-right: 2px solid #e0e0e0;
+      background: #fafafa;
+    }
+
+    .task-list-header {
+      padding: 1rem;
+      background: #2c3e50;
+      color: white;
+      font-weight: 600;
+      border-bottom: 1px solid #e0e0e0;
+      position: sticky;
+      left: 0;
+      z-index: 10;
+    }
+
+    .task-row {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid #e0e0e0;
+      background: white;
+      position: sticky;
+      left: 0;
+    }
+
+    .task-wbs {
+      font-size: 0.75rem;
+      color: #7f8c8d;
+      margin-bottom: 0.25rem;
+    }
+
+    .task-name {
+      font-size: 0.9rem;
+      color: #2c3e50;
+      font-weight: 500;
+    }
+
+    .timeline {
+      position: relative;
+    }
+
+    .timeline-header {
+      background: #2c3e50;
+      color: white;
+      border-bottom: 1px solid #e0e0e0;
+      position: sticky;
+      top: 0;
+      z-index: 9;
+    }
+
+    .timeline-grid {
+      display: flex;
+    }
+
+    .timeline-cell {
+      flex: 1;
+      padding: 0.5rem;
+      text-align: center;
+      font-size: 0.75rem;
+      border-right: 1px solid rgba(255,255,255,0.1);
+      min-width: 40px;
+    }
+
+    .timeline-row {
+      position: relative;
+      height: 60px;
+      border-bottom: 1px solid #e0e0e0;
+      background: white;
+    }
+
+    .timeline-bg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+    }
+
+    .timeline-bg-cell {
+      flex: 1;
+      border-right: 1px solid #f0f0f0;
+      min-width: 40px;
+    }
+
+    .timeline-bg-cell.today {
+      background: rgba(52, 152, 219, 0.05);
+      border-right: 2px solid #3498db;
+    }
+
+    .task-bar {
+      position: absolute;
+      height: 30px;
+      top: 50%;
+      transform: translateY(-50%);
+      border-radius: 4px;
+      color: white;
+      font-size: 0.75rem;
+      display: flex;
+      align-items: center;
+      padding: 0 0.5rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .task-bar:hover {
+      transform: translateY(-50%) scale(1.02);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      z-index: 10;
+    }
+
+    .task-bar.completed { background: #27ae60; }
+    .task-bar.in-progress { background: #3498db; }
+    .task-bar.not-started { background: #95a5a6; }
+    .task-bar.on-hold { background: #f39c12; }
+    .task-bar.cancelled { background: #e74c3c; }
+
+    .legend {
+      padding: 1rem 1.5rem;
+      background: white;
+      margin: 0 1rem 1rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .legend-title {
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: #2c3e50;
+    }
+
+    .legend-items {
+      display: flex;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+    }
+
+    .legend-color {
+      width: 20px;
+      height: 20px;
+      border-radius: 3px;
+    }
+
+    @media (max-width: 1200px) {
+      .gantt-table {
+        grid-template-columns: 200px 1fr;
+      }
+      .task-list-header, .task-row {
+        padding: 0.5rem;
+      }
+      .task-name {
+        font-size: 0.85rem;
+      }
+    }
+
+    @media (max-width: 800px) {
+      .gantt-table {
+        grid-template-columns: 150px 1fr;
+      }
+      .header h1 {
+        font-size: 1.2rem;
+      }
+      .controls {
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: stretch;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>📊 ガントチャート - ${projectData.meta.project_name}</h1>
+    <div class="controls">
+      <div>
+        <button class="view-mode-btn active" onclick="changeViewMode('day')" id="btn-day">日</button>
+        <button class="view-mode-btn" onclick="changeViewMode('week')" id="btn-week">週</button>
+        <button class="view-mode-btn" onclick="changeViewMode('month')" id="btn-month">月</button>
+      </div>
+      <button class="refresh-btn" onclick="refreshData()">🔄 更新</button>
+    </div>
+  </div>
+
+  <div class="legend">
+    <div class="legend-title">ステータス</div>
+    <div class="legend-items">
+      <div class="legend-item">
+        <div class="legend-color" style="background: #27ae60;"></div>
+        <span>完了</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background: #3498db;"></div>
+        <span>進行中</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background: #95a5a6;"></div>
+        <span>未着手</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background: #f39c12;"></div>
+        <span>保留</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background: #e74c3c;"></div>
+        <span>中止</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="gantt-container">
+    <div class="gantt-scroll">
+      <div class="gantt-table" id="gantt-table">
+        <!-- Will be populated by JavaScript -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentViewMode = 'day';
+    const projectData = ${JSON.stringify(projectData)};
+    const minDate = new Date('${minDate.toISOString().split('T')[0]}');
+    const maxDate = new Date('${maxDate.toISOString().split('T')[0]}');
+
+    function renderGantt() {
+      const tasksWithDates = projectData.tasks.filter(task =>
+        task.start_date && task.finish_date
+      );
+
+      const ganttTable = document.getElementById('gantt-table');
+
+      // Generate timeline
+      const { cells, cellWidth } = generateTimeline(currentViewMode);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      // Task list column
+      let taskListHTML = '<div class="task-list">';
+      taskListHTML += '<div class="task-list-header">タスク</div>';
+
+      tasksWithDates.forEach(task => {
+        taskListHTML += \`
+          <div class="task-row">
+            <div class="task-wbs">\${task.wbs_no} | \${task.phase}</div>
+            <div class="task-name">\${task.task_name}</div>
+          </div>
+        \`;
+      });
+      taskListHTML += '</div>';
+
+      // Timeline column
+      let timelineHTML = '<div class="timeline">';
+
+      // Timeline header
+      timelineHTML += '<div class="timeline-header"><div class="timeline-grid">';
+      cells.forEach(cell => {
+        timelineHTML += \`<div class="timeline-cell" style="min-width: \${cellWidth}px;">\${cell.label}</div>\`;
+      });
+      timelineHTML += '</div></div>';
+
+      // Timeline rows
+      tasksWithDates.forEach(task => {
+        const taskStart = new Date(task.start_date);
+        const taskFinish = new Date(task.finish_date);
+
+        const startOffset = (taskStart - minDate) / (maxDate - minDate) * 100;
+        const duration = (taskFinish - taskStart) / (maxDate - minDate) * 100;
+
+        const statusClass = getStatusClass(task.status);
+
+        timelineHTML += '<div class="timeline-row">';
+
+        // Background grid
+        timelineHTML += '<div class="timeline-bg">';
+        cells.forEach(cell => {
+          const isToday = cell.date &&
+            cell.date.getFullYear() === today.getFullYear() &&
+            cell.date.getMonth() === today.getMonth() &&
+            cell.date.getDate() === today.getDate();
+          timelineHTML += \`<div class="timeline-bg-cell \${isToday ? 'today' : ''}" style="min-width: \${cellWidth}px;"></div>\`;
+        });
+        timelineHTML += '</div>';
+
+        // Task bar
+        timelineHTML += \`
+          <div class="task-bar \${statusClass}"
+               style="left: \${startOffset}%; width: \${duration}%;"
+               title="\${task.task_name} (\${task.start_date} ~ \${task.finish_date})">
+            \${task.task_name}
+          </div>
+        \`;
+
+        timelineHTML += '</div>';
+      });
+
+      timelineHTML += '</div>';
+
+      ganttTable.innerHTML = taskListHTML + timelineHTML;
+    }
+
+    function generateTimeline(mode) {
+      const cells = [];
+      const totalDays = Math.ceil((maxDate - minDate) / (1000 * 60 * 60 * 24));
+
+      if (mode === 'day') {
+        let current = new Date(minDate);
+        while (current <= maxDate) {
+          cells.push({
+            label: \`\${current.getMonth() + 1}/\${current.getDate()}\`,
+            date: new Date(current)
+          });
+          current.setDate(current.getDate() + 1);
+        }
+        return { cells, cellWidth: 50 };
+      } else if (mode === 'week') {
+        let current = new Date(minDate);
+        let weekNum = 1;
+        while (current <= maxDate) {
+          const weekStart = new Date(current);
+          const weekEnd = new Date(current);
+          weekEnd.setDate(weekEnd.getDate() + 6);
+
+          cells.push({
+            label: \`W\${weekNum} (\${weekStart.getMonth() + 1}/\${weekStart.getDate()})\`,
+            date: weekStart
+          });
+          current.setDate(current.getDate() + 7);
+          weekNum++;
+        }
+        return { cells, cellWidth: 80 };
+      } else { // month
+        let current = new Date(minDate);
+        const seen = new Set();
+        while (current <= maxDate) {
+          const key = \`\${current.getFullYear()}-\${current.getMonth()}\`;
+          if (!seen.has(key)) {
+            seen.add(key);
+            cells.push({
+              label: \`\${current.getFullYear()}/\${current.getMonth() + 1}\`,
+              date: new Date(current)
+            });
+          }
+          current.setMonth(current.getMonth() + 1);
+        }
+        return { cells, cellWidth: 100 };
+      }
+    }
+
+    function getStatusClass(status) {
+      const map = {
+        '完了': 'completed',
+        '進行中': 'in-progress',
+        '未着手': 'not-started',
+        '保留': 'on-hold',
+        '延期': 'on-hold',
+        '中止': 'cancelled'
+      };
+      return map[status] || 'not-started';
+    }
+
+    function changeViewMode(mode) {
+      currentViewMode = mode;
+
+      // Update button states
+      document.querySelectorAll('.view-mode-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      document.getElementById('btn-' + mode).classList.add('active');
+
+      renderGantt();
+    }
+
+    function refreshData() {
+      if (window.opener && !window.opener.closed && window.opener.projectData) {
+        const newData = window.opener.projectData;
+        Object.assign(projectData, newData);
+        renderGantt();
+        alert('データを更新しました');
+      } else {
+        alert('メインウィンドウが閉じられているため、データを更新できません');
+      }
+    }
+
+    // Auto-refresh every 5 seconds
+    setInterval(() => {
+      if (window.opener && !window.opener.closed && window.opener.projectData) {
+        const newData = window.opener.projectData;
+        Object.assign(projectData, newData);
+        renderGantt();
+      }
+    }, 5000);
+
+    // Initial render
+    renderGantt();
+  </script>
+</body>
+</html>
+      `;
     }
 
     // ==========================================
