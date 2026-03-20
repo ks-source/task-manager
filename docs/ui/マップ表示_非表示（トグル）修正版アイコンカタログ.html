@@ -1,0 +1,143 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Map Toggle Icons Catalog</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .icon-card:hover .icon-preview {
+            transform: scale(1.1);
+            color: #10b981; /* emerald-500 */
+        }
+        .icon-preview {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen p-8 font-sans text-slate-800">
+    <div class="max-w-5xl mx-auto">
+        <header class="mb-10 text-center">
+            <h1 class="text-3xl font-bold mb-3 text-slate-900">マップ表示・非表示（トグル）アイコン</h1>
+            <p class="text-slate-500">中央の折り目線が外枠からはみ出ないように座標を精密に修正しました。</p>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="icon-grid">
+            <!-- Icons will be injected here by JavaScript -->
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-slate-800 text-white px-6 py-3 rounded-lg shadow-lg opacity-0 transition-opacity duration-300 pointer-events-none z-50">
+        コピーしました！
+    </div>
+
+    <script>
+        // SVG Icon Data
+        const icons = [
+            {
+                name: 'マップ表示 (Show Map)',
+                description: '折りたたまれた地図。中央の2本の線のY座標を内側に1px縮め、roundキャップが枠内に美しく収まるよう修正しました。',
+                svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21 3 6"></polygon>
+  <!-- 縦線を枠の内側に収めるため、座標を調整 -->
+  <line x1="9" y1="4" x2="9" y2="17"></line>
+  <line x1="15" y1="7" x2="15" y2="20"></line>
+</svg>`
+            },
+            {
+                name: 'マップ非表示 (Hide Map)',
+                description: 'マップ表示アイコンに斜線を重ねたデザイン。「マップを閉じる」「リストビューに戻る」際のアクションに。',
+                svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21 3 6"></polygon>
+  <line x1="9" y1="4" x2="9" y2="17"></line>
+  <line x1="15" y1="7" x2="15" y2="20"></line>
+  <line x1="2" y1="2" x2="22" y2="22"></line>
+</svg>`
+            },
+            {
+                name: 'マップ＆リスト (Split View)',
+                description: '地図のピンとリストを組み合わせたデザイン。「地図とリストを半分ずつ表示する」モードの切り替えに最適です。',
+                svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"></path>
+  <path d="M9 11v10"></path>
+  <path d="M15 7h6"></path>
+  <path d="M15 12h6"></path>
+  <path d="M15 17h6"></path>
+</svg>`
+            }
+        ];
+
+        const grid = document.getElementById('icon-grid');
+        const toast = document.getElementById('toast');
+        let toastTimeout;
+
+        function showToast(message) {
+            toast.textContent = message;
+            toast.classList.remove('opacity-0');
+            toast.classList.add('opacity-100');
+            
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('opacity-100');
+                toast.classList.add('opacity-0');
+            }, 2000);
+        }
+
+        function copyToClipboard(text, name) {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast(`「${name}」のSVGをコピーしました！`);
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+                showToast('コピーに失敗しました');
+            });
+        }
+
+        // Render Icons
+        icons.forEach(icon => {
+            const card = document.createElement('div');
+            card.className = 'icon-card bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col items-center justify-between cursor-pointer hover:shadow-md hover:border-emerald-200 transition-all group';
+            card.onclick = () => copyToClipboard(icon.svg, icon.name);
+
+            card.innerHTML = `
+                <div class="icon-preview text-slate-700 w-16 h-16 mb-4">
+                    ${icon.svg}
+                </div>
+                <div class="text-center w-full">
+                    <h2 class="text-lg font-semibold text-slate-800 mb-1">${icon.name}</h2>
+                    <p class="text-xs text-slate-400 mb-4 h-12">${icon.description}</p>
+                </div>
+                <button class="w-full py-2 bg-slate-100 group-hover:bg-emerald-50 group-hover:text-emerald-700 text-slate-600 text-sm font-medium rounded-lg transition-colors border border-slate-200 group-hover:border-emerald-200">
+                    コードをコピー
+                </button>
+            `;
+            grid.appendChild(card);
+        });
+    </script>
+<script>window.parent.postMessage({ action: "ready" }, "*"); 
+ 
+window.console = new Proxy(console, {
+  get(target, prop) {
+    if (['log', 'warn', 'error'].includes(prop)) {
+      return new Proxy(target[prop], {
+        apply(fn, thisArg, args) {
+          fn.apply(thisArg, args);
+          window.parent.postMessage({ action: 'console', 
+            type: prop, 
+            args: args.map((arg) => {
+              try {
+                return JSON.stringify(arg).replace(/^["']|["']$/g, '');
+              } catch (e) {
+                return arg;
+              }
+            }) 
+          }, '*');
+        }
+      });
+    }
+    return target[prop];
+  }
+});
+</script></body>
+</html>

@@ -1,0 +1,170 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System & View Control Icons</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .icon-card:hover .icon-preview,
+        .icon-card:hover .btn-preview {
+            color: #475569; /* slate-600 */
+            border-color: #475569;
+        }
+        .icon-card:hover .btn-preview-solid {
+            background-color: #475569;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(71, 85, 105, 0.3);
+        }
+        .transition-all {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen p-8 font-sans text-slate-800">
+    <div class="max-w-5xl mx-auto">
+        <header class="mb-10 text-center">
+            <h1 class="text-3xl font-bold mb-3 text-slate-900">システムコントロール＆ビュー操作 アイコン</h1>
+            <p class="text-slate-500">汎用的でオーソドックスなメタファーを用いた、すっきりと洗練されたデザインです。</p>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="icon-grid">
+            <!-- Icons will be injected here by JavaScript -->
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-slate-900 text-white px-6 py-3 rounded-lg shadow-lg opacity-0 transition-opacity duration-300 pointer-events-none z-50">
+        コピーしました！
+    </div>
+
+    <script>
+        // SVG Icon Data
+        const icons = [
+            {
+                name: '設定 (Settings)',
+                description: '最も標準的な「歯車」のアイコン。システム全体や表示に関する設定メニューを開くボタンに最適です。',
+                btnText: '設定を開く',
+                svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <circle cx="12" cy="12" r="3"></circle>
+  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+</svg>`
+            },
+            {
+                name: 'パネル表示/非表示 (Toggle Panel)',
+                description: '左側にサイドバーを持つウィンドウのメタファー。情報パネルやメニューの開閉（トグル）を直感的に伝えます。',
+                btnText: 'パネルを切り替え',
+                svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+  <line x1="9" y1="3" x2="9" y2="21"></line>
+</svg>`
+            },
+            {
+                name: 'マップ表示/非表示 (Toggle Map)',
+                description: '三つ折りにされた地図のオーソドックスな表現。マップビューへの切り替えや、オーバーレイ表示のトグルに。',
+                btnText: 'マップを表示',
+                svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"></polygon>
+  <line x1="9" y1="3" x2="9" y2="21"></line>
+  <line x1="15" y1="3" x2="15" y2="21"></line>
+</svg>`
+            },
+            {
+                name: 'エッジ追加 (Add Edge)',
+                description: '2つのノード（点）を線で結び、右下に「＋」を配置。ネットワーク図やグラフデータでの関係性（エッジ）追加に。',
+                btnText: 'エッジを追加',
+                svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <circle cx="6" cy="18" r="3"></circle>
+  <circle cx="18" cy="6" r="3"></circle>
+  <path d="M8.1 15.9L15.9 8.1"></path>
+  <path d="M19 14v6"></path>
+  <path d="M16 17h6"></path>
+</svg>`
+            }
+        ];
+
+        const grid = document.getElementById('icon-grid');
+        const toast = document.getElementById('toast');
+        let toastTimeout;
+
+        function showToast(message) {
+            toast.textContent = message;
+            toast.classList.remove('opacity-0');
+            toast.classList.add('opacity-100');
+            
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('opacity-100');
+                toast.classList.add('opacity-0');
+            }, 2000);
+        }
+
+        function copyToClipboard(text, name) {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast(`「${name}」のSVGをコピーしました！`);
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+                showToast('コピーに失敗しました');
+            });
+        }
+
+        // Render Icons
+        icons.forEach(icon => {
+            const card = document.createElement('div');
+            card.className = 'icon-card bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col items-center justify-between cursor-pointer hover:shadow-md hover:border-slate-400 transition-all group';
+            card.onclick = () => copyToClipboard(icon.svg, icon.name);
+
+            card.innerHTML = `
+                <div class="icon-preview text-slate-700 w-16 h-16 mb-4 transition-all">
+                    ${icon.svg}
+                </div>
+                <div class="text-center w-full mb-6">
+                    <h2 class="text-lg font-semibold text-slate-800 mb-2">${icon.name}</h2>
+                    <p class="text-xs text-slate-500 h-12 leading-relaxed">${icon.description}</p>
+                </div>
+                
+                <!-- ボタンUIのプレビュー -->
+                <div class="w-full space-y-3 mb-6 p-4 bg-slate-50 rounded-lg border border-slate-100">
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider text-left mb-2">ボタン実装プレビュー</p>
+                    
+                    <!-- Solid Button -->
+                    <div class="btn-preview-solid bg-slate-800 text-white flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg font-medium text-sm transition-all w-full">
+                        <div class="w-4 h-4">${icon.svg}</div>
+                        ${icon.btnText}
+                    </div>
+                </div>
+
+                <button class="w-full py-2 bg-slate-100 group-hover:bg-slate-100 group-hover:text-slate-800 text-slate-600 text-sm font-medium rounded-lg transition-colors border border-slate-200 group-hover:border-slate-300">
+                    SVGコードをコピー
+                </button>
+            `;
+            grid.appendChild(card);
+        });
+    </script>
+<script>window.parent.postMessage({ action: "ready" }, "*"); 
+ 
+window.console = new Proxy(console, {
+  get(target, prop) {
+    if (['log', 'warn', 'error'].includes(prop)) {
+      return new Proxy(target[prop], {
+        apply(fn, thisArg, args) {
+          fn.apply(thisArg, args);
+          window.parent.postMessage({ action: 'console', 
+            type: prop, 
+            args: args.map((arg) => {
+              try {
+                return JSON.stringify(arg).replace(/^["']|["']$/g, '');
+              } catch (e) {
+                return arg;
+              }
+            }) 
+          }, '*');
+        }
+      });
+    }
+    return target[prop];
+  }
+});
+</script></body>
+</html>
