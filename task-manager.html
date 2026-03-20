@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Task Manager - WBS Visualizer v2.4.0</title>
+  <title>Task Manager - WBS Visualizer v2.4.1</title>
   <meta name="description" content="A lightweight, browser-based Work Breakdown Structure (WBS) visualization and management tool">
   <meta name="keywords" content="task manager, WBS, project management, task tracking">
   <meta name="author" content="ks-source">
@@ -873,7 +873,7 @@
    * Header / Menu Bar
    * ========================================== -->
   <header class="header">
-    <h1 class="header-title">Task Manager v2.4.0</h1>
+    <h1 class="header-title">Task Manager v2.4.1</h1>
     <nav class="header-nav">
       <button class="icon-button active" onclick="showDashboard()" title="ダッシュボード">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1263,7 +1263,7 @@
   <script type="application/json" id="initial-wbs-data">
 {
   "meta": {
-    "version": "2.4.0",
+    "version": "2.4.1",
     "project_name": "New Project",
     "project_start": "",
     "project_end": "",
@@ -2545,7 +2545,7 @@ WBSデータをエクスポートします。
     async function importFromCSV() {
       try {
         // Check for unsaved changes
-        if (hasUnsavedChanges) {
+        if (isDirty) {
           if (!confirm('未保存の変更があります。CSVをインポートすると現在のデータは完全に置き換えられます。\n\n続行しますか？')) {
             return;
           }
@@ -2607,7 +2607,7 @@ WBSデータをエクスポートします。
             saveToLocalStorage();
             renderDashboard();
             renderTaskTable();
-            markUnsaved();
+            markDirty();
 
             alert(`CSVインポート完了\n\nタスク数: ${result.tasks.length}件` +
               (result.errors.length > 0 ? `\nエラー: ${result.errors.length}件（スキップされました）` : ''));
