@@ -5,6 +5,60 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.8.8] - 2026-03-20
+
+### Fixed
+- **CRITICAL: Timeline Header Horizontal Scroll**: Fixed timeline date headers to scroll horizontally with timeline content
+  - v2.8.7 incorrectly made date headers completely fixed, breaking fundamental gantt chart functionality
+  - Reverted HTML structure back to single `.gantt-table` container (from separated header/body)
+  - Timeline header now `position: sticky; top: 0` ONLY (no left) - sticks vertically but scrolls horizontally
+  - Task list header now `position: sticky; left: 0; top: 0; z-index: 20` - fixed to top-left corner
+  - Task rows `position: sticky; left: 0; z-index: 10` - fixed to left, scrolls vertically
+  - Timeline header placed back INSIDE `.timeline` div so it scrolls with timeline content
+  - Date headers now properly synchronized with timeline horizontal scrolling
+
+### Changed
+- **HTML Structure**: Reverted to simpler grid-based layout (lines 3653-3659)
+  - Removed `.gantt-header-row` and `.gantt-body` containers from v2.8.7
+  - Restored single `.gantt-table` container with grid layout
+  - Timeline header moved back inside timeline column for horizontal scroll sync
+
+- **CSS Structure**: Fixed sticky positioning for proper scrolling behavior
+  - `.gantt-container` (lines 3383-3390): Removed flexbox, restored `overflow-y: auto`
+  - `.gantt-scroll` (lines 3392-3395): `overflow-x: auto; overflow-y: visible`
+  - `.gantt-table` (lines 3397-3401): Restored grid layout `250px auto`
+  - `.task-list-header` (lines 3408-3421): `position: sticky; left: 0; top: 0; z-index: 20`
+  - `.task-row` (lines 3423-3435): `position: sticky; left: 0; z-index: 10`
+  - `.timeline-header` (lines 3459-3467): `position: sticky; top: 0; z-index: 15` (NO left property)
+
+- **JavaScript**: Reverted to single-container population
+  - `renderGantt()` (lines 3668-3779): Populates single `ganttTable` container
+  - Timeline header generated inside timeline column (lines 3703-3708)
+  - Fixed `ganttTable.innerHTML` assignment (line 3779)
+
+- **Media Queries**: Updated for restored structure
+  - Changed `.gantt-header-row, .gantt-body` back to `.gantt-table` (lines 3588, 3600)
+
+### Technical
+- **Z-index Layering**: Proper stacking for overlapping sticky elements
+  - Task list header: z-index 20 (highest - top-left corner)
+  - Timeline header: z-index 15 (sticks to top, scrolls horizontally)
+  - Task rows: z-index 10 (sticks to left, scrolls vertically)
+  - Task name labels: z-index 7 (above task bars)
+  - Task bars: z-index 5
+
+- **Sticky Positioning Strategy**:
+  - Task list header: Both `left: 0` and `top: 0` keeps it in top-left corner
+  - Timeline header: Only `top: 0` allows horizontal scroll while sticking to top
+  - Grid layout ensures proper alignment between sticky header and scrolling content
+
+### UI/UX
+- **Restored Gantt Chart Functionality**: Date headers now correctly move with timeline
+- **Improved Navigation**: Task list header always visible in top-left corner
+- **Proper Synchronization**: Timeline dates scroll horizontally with task bars
+- **Maintains Vertical Sticky**: Both headers stick to top during vertical scroll
+- **All Task Labels Display**: Task name labels appear above all task bars (not just one)
+
 ## [2.8.7] - 2026-03-20
 
 ### Fixed
