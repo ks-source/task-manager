@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Task Manager - WBS Visualizer v2.8.2</title>
+  <title>Task Manager - WBS Visualizer v2.8.3</title>
   <meta name="description" content="A lightweight, browser-based Work Breakdown Structure (WBS) visualization and management tool">
   <meta name="keywords" content="task manager, WBS, project management, task tracking">
   <meta name="author" content="ks-source">
@@ -873,7 +873,7 @@
    * Header / Menu Bar
    * ========================================== -->
   <header class="header">
-    <h1 class="header-title">Task Manager v2.8.2</h1>
+    <h1 class="header-title">Task Manager v2.8.3</h1>
     <nav class="header-nav">
       <button class="icon-button active" onclick="showDashboard()" title="ダッシュボード">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1340,7 +1340,7 @@
   <script type="application/json" id="initial-wbs-data">
 {
   "meta": {
-    "version": "2.8.2",
+    "version": "2.8.3",
     "project_name": "New Project",
     "project_start": "",
     "project_end": "",
@@ -2446,7 +2446,7 @@ tasksセクションのみ20個のタスクで埋めてください。**
 \`\`\`json
 {
   "meta": {
-    "version": "2.8.2",
+    "version": "2.8.3",
     "project_name": "[プロジェクト名をここに入力]",
     "project_start": "2026/3/20",
     "project_end": "2026/6/30",
@@ -3403,7 +3403,7 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
     }
 
     .task-list-header {
-      padding: 1rem;
+      padding: 0 1rem;
       background: #2c3e50;
       color: white;
       font-weight: 600;
@@ -3411,6 +3411,10 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
       position: sticky;
       left: 0;
       z-index: 10;
+      height: 50px;
+      min-height: 50px;
+      display: flex;
+      align-items: center;
     }
 
     .task-row {
@@ -3455,6 +3459,8 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
       position: sticky;
       top: 0;
       z-index: 9;
+      height: 50px;
+      min-height: 50px;
     }
 
     .timeline-grid {
@@ -3463,11 +3469,15 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
 
     .timeline-cell {
       flex: 1;
-      padding: 0.5rem;
+      padding: 0 0.5rem;
       text-align: center;
       font-size: 0.75rem;
       border-right: 1px solid rgba(255,255,255,0.1);
       min-width: 40px;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .timeline-row {
@@ -3658,8 +3668,19 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
       taskListHTML += '<div class="task-list-header">タスク</div>';
 
       tasksWithDates.forEach(task => {
+        const tooltipText = \`WBS: \${task.wbs_no}
+Phase: \${task.phase}
+Type: \${task.task_type || 'N/A'}
+Task: \${task.task_name}
+Duration: \${task.duration_bd || 'N/A'} BD
+Period: \${task.start_date} ~ \${task.finish_date}
+Owner: \${task.primary_owner || 'N/A'}
+Support: \${task.support_owner || 'N/A'}
+Status: \${task.status}
+Predecessors: \${task.predecessors || 'N/A'}\`;
+
         taskListHTML += \`
-          <div class="task-row">
+          <div class="task-row" title="\${tooltipText}" onclick="openTaskInMainWindow('\${task.wbs_no}')" style="cursor: pointer;">
             <div class="task-wbs">\${task.wbs_no} | \${task.phase}</div>
             <div class="task-name">\${task.task_name}</div>
           </div>
@@ -3714,10 +3735,22 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
         timelineHTML += '</div>';
 
         // Task bar
+        const barTooltipText = \`WBS: \${task.wbs_no}
+Phase: \${task.phase}
+Type: \${task.task_type || 'N/A'}
+Task: \${task.task_name}
+Duration: \${task.duration_bd || 'N/A'} BD
+Period: \${task.start_date} ~ \${task.finish_date}
+Owner: \${task.primary_owner || 'N/A'}
+Support: \${task.support_owner || 'N/A'}
+Status: \${task.status}
+Predecessors: \${task.predecessors || 'N/A'}\`;
+
         timelineHTML += \`
           <div class="task-bar \${statusClass}"
-               style="left: \${startOffset}%; width: \${duration}%;"
-               title="\${task.wbs_no}: \${task.task_name}&#10;\${task.start_date} ~ \${task.finish_date}">
+               style="left: \${startOffset}%; width: \${duration}%; cursor: pointer;"
+               title="\${barTooltipText}"
+               onclick="openTaskInMainWindow('\${task.wbs_no}')">
             \${displayText}
           </div>
         \`;
@@ -3810,6 +3843,15 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
         alert('データを更新しました');
       } else {
         alert('メインウィンドウが閉じられているため、データを更新できません');
+      }
+    }
+
+    function openTaskInMainWindow(wbsNo) {
+      if (window.opener && !window.opener.closed) {
+        window.opener.openTaskDetail(wbsNo);
+        window.opener.focus();
+      } else {
+        alert('メインウィンドウが閉じられているため、タスク詳細を開けません');
       }
     }
 

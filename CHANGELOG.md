@@ -5,6 +5,65 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.8.3] - 2026-03-20
+
+### Fixed
+- **Gantt Chart Header Alignment**: Fixed header height mismatch between task list and timeline
+  - Unified `.task-list-header` to 50px with horizontal padding only
+  - Unified `.timeline-header` to 50px fixed height
+  - Unified `.timeline-cell` to 50px with flexbox centering
+  - Headers now perfectly align vertically
+
+### Added
+- **Comprehensive Tooltips**: Enhanced hover information for gantt chart elements
+  - Added detailed tooltips to task rows showing: WBS, Phase, Type, Task Name, Duration, Period, Owners, Status, Predecessors
+  - Enhanced task bar tooltips with same comprehensive information
+  - Tooltips now provide complete task context on hover
+
+- **Click Integration**: Added click-to-view functionality between gantt and main window
+  - Click on task row in gantt window to open task detail in main window
+  - Click on task bar in gantt window to open task detail in main window
+  - Main window automatically brought to front when task is opened
+  - Added `openTaskInMainWindow(wbsNo)` function to handle window communication
+
+### Changed
+- **Task List Header CSS** (lines 3405-3418):
+  - Changed `padding: 1rem` to `padding: 0 1rem` (horizontal only)
+  - Added `height: 50px` and `min-height: 50px`
+  - Added `display: flex` and `align-items: center` for vertical centering
+
+- **Timeline Header CSS** (lines 3455-3464):
+  - Added `height: 50px` and `min-height: 50px`
+
+- **Timeline Cell CSS** (lines 3470-3481):
+  - Changed `padding: 0.5rem` to `padding: 0 0.5rem` (horizontal only)
+  - Added `height: 50px`
+  - Added `display: flex`, `align-items: center`, `justify-content: center`
+
+### Technical
+- Modified task row generation (lines 3670-3688):
+  - Added multi-line tooltip with complete task information
+  - Added `onclick` handler calling `openTaskInMainWindow()`
+  - Added `cursor: pointer` style
+
+- Modified task bar generation (lines 3737-3756):
+  - Replaced simple tooltip with comprehensive multi-line tooltip
+  - Added `onclick` handler calling `openTaskInMainWindow()`
+  - Added `cursor: pointer` style
+
+- Added `openTaskInMainWindow()` function (lines 3849-3856):
+  - Checks if main window is still open
+  - Calls `window.opener.openTaskDetail(wbsNo)`
+  - Brings main window to front with `window.opener.focus()`
+  - Shows error if main window is closed
+
+### UI/UX
+- Headers now perfectly aligned across task list and timeline
+- Hover over any task row or bar to see complete task details
+- Click anywhere on task row or bar to jump to task detail in main window
+- Seamless navigation between gantt chart and task management
+- Improved user workflow for reviewing and editing tasks
+
 ## [2.8.2] - 2026-03-20
 
 ### Fixed
