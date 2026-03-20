@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Task Manager - WBS Visualizer v2.6.0</title>
+  <title>Task Manager - WBS Visualizer v2.6.1</title>
   <meta name="description" content="A lightweight, browser-based Work Breakdown Structure (WBS) visualization and management tool">
   <meta name="keywords" content="task manager, WBS, project management, task tracking">
   <meta name="author" content="ks-source">
@@ -873,7 +873,7 @@
    * Header / Menu Bar
    * ========================================== -->
   <header class="header">
-    <h1 class="header-title">Task Manager v2.6.0</h1>
+    <h1 class="header-title">Task Manager v2.6.1</h1>
     <nav class="header-nav">
       <button class="icon-button active" onclick="showDashboard()" title="ダッシュボード">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -891,20 +891,19 @@
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
         </svg>
       </button>
-      <button class="icon-button" onclick="saveToFile()" title="ファイルに保存">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-          <path d="M14 2v6h6"></path>
-          <path d="M12 18v-6"></path>
-          <path d="M9 15l3 3 3-3"></path>
-        </svg>
-      </button>
       <button class="icon-button" onclick="showImportDialog()" title="インポート">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M14 3v7"></path>
           <path d="M14 10h7"></path>
           <path d="M21 3l-7 7"></path>
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+        </svg>
+      </button>
+      <button class="icon-button" onclick="saveToFile()" title="保存">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+          <polyline points="17 21 17 13 7 13 7 21"></polyline>
+          <polyline points="7 3 7 8 15 8"></polyline>
         </svg>
       </button>
     </nav>
@@ -995,7 +994,7 @@
             <option value="低">低</option>
           </select>
           <button class="btn-secondary" onclick="clearFilters()">フィルタクリア</button>
-          <button class="btn-primary" onclick="openCreateTaskDialog()" style="margin-left: auto;">➕ 新規タスク作成</button>
+          <button class="btn-primary" onclick="openCreateTaskDialog()" style="margin-left: auto; color: white;">➕ 新規タスク作成</button>
         </div>
 
         <div class="task-table-container">
@@ -1253,7 +1252,7 @@
   <script type="application/json" id="initial-wbs-data">
 {
   "meta": {
-    "version": "2.6.0",
+    "version": "2.6.1",
     "project_name": "New Project",
     "project_start": "",
     "project_end": "",

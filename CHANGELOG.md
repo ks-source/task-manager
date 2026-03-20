@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.6.1] - 2026-03-20
+
+### Changed
+- **Save Button Redesign**: Updated save button icon to clarify save/overwrite functionality
+  - Changed from download icon to floppy disk icon
+  - Indicates initial save dialog and subsequent overwrite behavior
+  - Title changed from "ファイルに保存" to "保存" for brevity
+- **Button Layout Improvement**: Reorganized header navigation buttons
+  - Moved Save button to rightmost position (was 3rd)
+  - Moved Import button to 3rd position (was rightmost)
+  - New order: Dashboard → Export → Import → Save
+
+### Fixed
+- **New Task Button Visibility**: Fixed ➕ emoji color in "New Task Creation" button
+  - Changed emoji color to white for better visibility
+  - Previously appeared in red/default color on blue background (difficult to read)
+
 ## [2.6.0] - 2026-03-20
 
 ### Added
@@ -271,6 +288,7 @@ For bug reports, feature requests, or questions:
 
 ---
 
+[2.6.1]: https://github.com/ks-source/task-manager/compare/v2.6.0...v2.6.1
 [2.6.0]: https://github.com/ks-source/task-manager/compare/v2.5.0...v2.6.0
 [2.5.0]: https://github.com/ks-source/task-manager/compare/v2.4.1...v2.5.0
 [2.4.1]: https://github.com/ks-source/task-manager/compare/v2.4.0...v2.4.1
