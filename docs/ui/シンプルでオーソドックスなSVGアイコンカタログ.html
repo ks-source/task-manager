@@ -1,0 +1,160 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SVG Icon Catalog</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .icon-card:hover .icon-preview {
+            transform: scale(1.1);
+            color: #3b82f6; /* blue-500 */
+        }
+        .icon-preview {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen p-8 font-sans text-slate-800">
+    <div class="max-w-5xl mx-auto">
+        <header class="mb-10 text-center">
+            <h1 class="text-3xl font-bold mb-3 text-slate-900">基本機能アイコンセット</h1>
+            <p class="text-slate-500">クリックするとSVGのソースコードをクリップボードにコピーできます。</p>
+        </header>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="icon-grid">
+            <!-- Icons will be injected here by JavaScript -->
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-slate-800 text-white px-6 py-3 rounded-lg shadow-lg opacity-0 transition-opacity duration-300 pointer-events-none z-50">
+        コピーしました！
+    </div>
+
+    <script>
+        // SVG Icon Data
+        const icons = [
+            {
+                name: 'ダッシュボード',
+                description: '画面分割やレイアウトを示すグリッド',
+                svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+  <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+  <rect x="14" y="14" width="7" height="7" rx="1"></rect>
+  <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+</svg>`
+            },
+            {
+                name: 'エクスポート',
+                description: '外に向かうアクションを示す四角形と矢印',
+                svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M21 3v6"></path>
+  <path d="M21 3h-6"></path>
+  <path d="M21 3l-7 7"></path>
+  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+</svg>`
+            },
+            {
+                name: 'ファイルに保存',
+                description: 'ドキュメントと下向き矢印（ダウンロード/保存）',
+                svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+  <path d="M14 2v6h6"></path>
+  <path d="M12 18v-6"></path>
+  <path d="M9 15l3 3 3-3"></path>
+</svg>`
+            },
+            {
+                name: 'ファイルから開く',
+                description: 'フォルダと上向き矢印（アップロード/開く）',
+                svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+  <path d="M12 16v-6"></path>
+  <path d="M9 13l3-3 3 3"></path>
+</svg>`
+            },
+            {
+                name: '保存表示',
+                description: '伝統的なフロッピーディスク（保存状態）',
+                svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+  <polyline points="17 21 17 13 7 13 7 21"></polyline>
+  <polyline points="7 3 7 8 15 8"></polyline>
+</svg>`
+            }
+        ];
+
+        const grid = document.getElementById('icon-grid');
+        const toast = document.getElementById('toast');
+        let toastTimeout;
+
+        function showToast(message) {
+            toast.textContent = message;
+            toast.classList.remove('opacity-0');
+            toast.classList.add('opacity-100');
+            
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('opacity-100');
+                toast.classList.add('opacity-0');
+            }, 2000);
+        }
+
+        function copyToClipboard(text, name) {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast(`「${name}」のSVGをコピーしました！`);
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+                showToast('コピーに失敗しました');
+            });
+        }
+
+        // Render Icons
+        icons.forEach(icon => {
+            const card = document.createElement('div');
+            card.className = 'icon-card bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col items-center justify-between cursor-pointer hover:shadow-md transition-shadow group';
+            card.onclick = () => copyToClipboard(icon.svg, icon.name);
+
+            card.innerHTML = `
+                <div class="icon-preview text-slate-700 w-16 h-16 mb-4">
+                    ${icon.svg}
+                </div>
+                <div class="text-center w-full">
+                    <h2 class="text-lg font-semibold text-slate-800 mb-1">${icon.name}</h2>
+                    <p class="text-xs text-slate-400 mb-4">${icon.description}</p>
+                </div>
+                <button class="w-full py-2 bg-slate-100 group-hover:bg-blue-50 group-hover:text-blue-600 text-slate-600 text-sm font-medium rounded-lg transition-colors border border-slate-200 group-hover:border-blue-200">
+                    コードをコピー
+                </button>
+            `;
+            grid.appendChild(card);
+        });
+    </script>
+<script>window.parent.postMessage({ action: "ready" }, "*"); 
+ 
+window.console = new Proxy(console, {
+  get(target, prop) {
+    if (['log', 'warn', 'error'].includes(prop)) {
+      return new Proxy(target[prop], {
+        apply(fn, thisArg, args) {
+          fn.apply(thisArg, args);
+          window.parent.postMessage({ action: 'console', 
+            type: prop, 
+            args: args.map((arg) => {
+              try {
+                return JSON.stringify(arg).replace(/^["']|["']$/g, '');
+              } catch (e) {
+                return arg;
+              }
+            }) 
+          }, '*');
+        }
+      });
+    }
+    return target[prop];
+  }
+});
+</script></body>
+</html>

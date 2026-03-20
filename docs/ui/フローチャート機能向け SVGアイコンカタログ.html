@@ -1,0 +1,145 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flowchart Icons Catalog</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .icon-card:hover .icon-preview {
+            transform: scale(1.1);
+            color: #4f46e5; /* indigo-600 */
+        }
+        .icon-preview {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen p-8 font-sans text-slate-800">
+    <div class="max-w-5xl mx-auto">
+        <header class="mb-10 text-center">
+            <h1 class="text-3xl font-bold mb-3 text-slate-900">フローチャート機能向け アイコンセット</h1>
+            <p class="text-slate-500">クリックするとSVGのソースコードをクリップボードにコピーできます。</p>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="icon-grid">
+            <!-- Icons will be injected here by JavaScript -->
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-slate-800 text-white px-6 py-3 rounded-lg shadow-lg opacity-0 transition-opacity duration-300 pointer-events-none z-50">
+        コピーしました！
+    </div>
+
+    <script>
+        // SVG Icon Data
+        const icons = [
+            {
+                name: 'ブランチ（分岐）',
+                description: '1つのノードから2つのノードへ分岐するツリー構造。ワークフローの作成や条件分岐を伴う処理に。',
+                svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <rect x="3" y="9" width="6" height="6" rx="1"></rect>
+  <rect x="15" y="3" width="6" height="6" rx="1"></rect>
+  <rect x="15" y="15" width="6" height="6" rx="1"></rect>
+  <path d="M9 12h2a2 2 0 0 0 2-2V6h2"></path>
+  <path d="M9 12h2a2 2 0 0 1 2 2v4h2"></path>
+</svg>`
+            },
+            {
+                name: 'ディシジョン（判定）',
+                description: '伝統的なフローチャートの「ひし形（条件判定）」を含んだ構成。厳密なシステム図やロジック設計に。',
+                svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <rect x="9" y="3" width="6" height="6" rx="1"></rect>
+  <polygon points="12 13 16 17 12 21 8 17"></polygon>
+  <path d="M12 9v4"></path>
+  <path d="M10 11l2 2 2-2"></path>
+  <path d="M16 17h5"></path>
+  <path d="M18 15l3 2-3 2"></path>
+</svg>`
+            },
+            {
+                name: 'プロセス（シーケンス）',
+                description: 'ステップが次へと進んでいくシンプルなパイプライン構造。ユーザーの手続きフローや自動化処理などに。',
+                svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <rect x="3" y="4" width="6" height="6" rx="1"></rect>
+  <rect x="15" y="14" width="6" height="6" rx="1"></rect>
+  <path d="M6 10v4a2 2 0 0 0 2 2h7"></path>
+  <path d="M11 12l4 4-4 4"></path>
+</svg>`
+            }
+        ];
+
+        const grid = document.getElementById('icon-grid');
+        const toast = document.getElementById('toast');
+        let toastTimeout;
+
+        function showToast(message) {
+            toast.textContent = message;
+            toast.classList.remove('opacity-0');
+            toast.classList.add('opacity-100');
+            
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('opacity-100');
+                toast.classList.add('opacity-0');
+            }, 2000);
+        }
+
+        function copyToClipboard(text, name) {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast(`「${name}」のSVGをコピーしました！`);
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+                showToast('コピーに失敗しました');
+            });
+        }
+
+        // Render Icons
+        icons.forEach(icon => {
+            const card = document.createElement('div');
+            card.className = 'icon-card bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col items-center justify-between cursor-pointer hover:shadow-md hover:border-indigo-200 transition-all group';
+            card.onclick = () => copyToClipboard(icon.svg, icon.name);
+
+            card.innerHTML = `
+                <div class="icon-preview text-slate-700 w-16 h-16 mb-4">
+                    ${icon.svg}
+                </div>
+                <div class="text-center w-full">
+                    <h2 class="text-lg font-semibold text-slate-800 mb-1">${icon.name}</h2>
+                    <p class="text-xs text-slate-400 mb-4 h-12">${icon.description}</p>
+                </div>
+                <button class="w-full py-2 bg-slate-100 group-hover:bg-indigo-50 group-hover:text-indigo-600 text-slate-600 text-sm font-medium rounded-lg transition-colors border border-slate-200 group-hover:border-indigo-200">
+                    コードをコピー
+                </button>
+            `;
+            grid.appendChild(card);
+        });
+    </script>
+<script>window.parent.postMessage({ action: "ready" }, "*"); 
+ 
+window.console = new Proxy(console, {
+  get(target, prop) {
+    if (['log', 'warn', 'error'].includes(prop)) {
+      return new Proxy(target[prop], {
+        apply(fn, thisArg, args) {
+          fn.apply(thisArg, args);
+          window.parent.postMessage({ action: 'console', 
+            type: prop, 
+            args: args.map((arg) => {
+              try {
+                return JSON.stringify(arg).replace(/^["']|["']$/g, '');
+              } catch (e) {
+                return arg;
+              }
+            }) 
+          }, '*');
+        }
+      });
+    }
+    return target[prop];
+  }
+});
+</script></body>
+</html>

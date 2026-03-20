@@ -1,0 +1,143 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Template Icons Catalog</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .icon-card:hover .icon-preview {
+            transform: scale(1.1);
+            color: #8b5cf6; /* violet-500 (AIっぽさを出す紫) */
+        }
+        .icon-preview {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen p-8 font-sans text-slate-800">
+    <div class="max-w-5xl mx-auto">
+        <header class="mb-10 text-center">
+            <h1 class="text-3xl font-bold mb-3 text-slate-900">AIテンプレート向け アイコンセット</h1>
+            <p class="text-slate-500">クリックするとSVGのソースコードをクリップボードにコピーできます。</p>
+        </header>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="icon-grid">
+            <!-- Icons will be injected here by JavaScript -->
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-slate-800 text-white px-6 py-3 rounded-lg shadow-lg opacity-0 transition-opacity duration-300 pointer-events-none z-50">
+        コピーしました！
+    </div>
+
+    <script>
+        // SVG Icon Data
+        const icons = [
+            {
+                name: '案1：AIプロンプトDL',
+                description: 'ドキュメント＋下向き矢印＋キラキラ(AI)。直感性を重視した標準的なデザイン。',
+                svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M20 12v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8"></path>
+  <path d="M12 10v6"></path>
+  <path d="M9 13l3 3 3-3"></path>
+  <path d="M19 2l1 3 3 1-3 1-1 3-1-3-3-1 3-1z"></path>
+</svg>`
+            },
+            {
+                name: '案2：構造化AIテンプレート',
+                description: '波括弧 { } ＋キラキラ(AI)。JSONやCSVなど厳密な構造を持つファイル向け。',
+                svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M20 12v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8"></path>
+  <path d="M10 9a2 2 0 0 0-2 2v.5c0 .8-.7 1.5-1.5 1.5.8 0 1.5.7 1.5 1.5v.5a2 2 0 0 0 2 2"></path>
+  <path d="M14 9a2 2 0 0 1 2 2v.5c0 .8.7 1.5 1.5 1.5-.8 0-1.5.7-1.5 1.5v.5a2 2 0 0 1-2 2"></path>
+  <path d="M19 2l1 3 3 1-3 1-1 3-1-3-3-1 3-1z"></path>
+</svg>`
+            },
+            {
+                name: '案3：厳格なAIフォーマット',
+                description: 'クリップボード＋下向き矢印＋キラキラ(AI)。システム的な制約やルールの強調。',
+                svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+  <rect x="8" y="2" width="8" height="4" rx="1"></rect>
+  <path d="M12 11v6"></path>
+  <path d="M9 14l3 3 3-3"></path>
+  <path d="M21 0l1 3 3 1-3 1-1 3-1-3-3-1 3-1z"></path>
+</svg>`
+            }
+        ];
+
+        const grid = document.getElementById('icon-grid');
+        const toast = document.getElementById('toast');
+        let toastTimeout;
+
+        function showToast(message) {
+            toast.textContent = message;
+            toast.classList.remove('opacity-0');
+            toast.classList.add('opacity-100');
+            
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('opacity-100');
+                toast.classList.add('opacity-0');
+            }, 2000);
+        }
+
+        function copyToClipboard(text, name) {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast(`「${name}」のSVGをコピーしました！`);
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+                showToast('コピーに失敗しました');
+            });
+        }
+
+        // Render Icons
+        icons.forEach(icon => {
+            const card = document.createElement('div');
+            card.className = 'icon-card bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col items-center justify-between cursor-pointer hover:shadow-md hover:border-violet-200 transition-all group';
+            card.onclick = () => copyToClipboard(icon.svg, icon.name);
+
+            card.innerHTML = `
+                <div class="icon-preview text-slate-700 w-16 h-16 mb-4">
+                    ${icon.svg}
+                </div>
+                <div class="text-center w-full">
+                    <h2 class="text-lg font-semibold text-slate-800 mb-1">${icon.name}</h2>
+                    <p class="text-xs text-slate-400 mb-4 h-12">${icon.description}</p>
+                </div>
+                <button class="w-full py-2 bg-slate-100 group-hover:bg-violet-50 group-hover:text-violet-600 text-slate-600 text-sm font-medium rounded-lg transition-colors border border-slate-200 group-hover:border-violet-200">
+                    コードをコピー
+                </button>
+            `;
+            grid.appendChild(card);
+        });
+    </script>
+<script>window.parent.postMessage({ action: "ready" }, "*"); 
+ 
+window.console = new Proxy(console, {
+  get(target, prop) {
+    if (['log', 'warn', 'error'].includes(prop)) {
+      return new Proxy(target[prop], {
+        apply(fn, thisArg, args) {
+          fn.apply(thisArg, args);
+          window.parent.postMessage({ action: 'console', 
+            type: prop, 
+            args: args.map((arg) => {
+              try {
+                return JSON.stringify(arg).replace(/^["']|["']$/g, '');
+              } catch (e) {
+                return arg;
+              }
+            }) 
+          }, '*');
+        }
+      });
+    }
+    return target[prop];
+  }
+});
+</script></body>
+</html>

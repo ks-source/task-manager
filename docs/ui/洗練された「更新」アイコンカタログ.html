@@ -1,0 +1,163 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update & Refresh Icons Catalog</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .icon-card:hover .icon-preview,
+        .icon-card:hover .btn-preview {
+            color: #2563eb; /* blue-600 */
+            border-color: #2563eb;
+        }
+        .icon-card:hover .btn-preview-solid {
+            background-color: #2563eb;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);
+        }
+        .transition-all {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen p-8 font-sans text-slate-800">
+    <div class="max-w-6xl mx-auto">
+        <header class="mb-10 text-center">
+            <h1 class="text-3xl font-bold mb-3 text-slate-900">「🔄 更新」アイコン＆ボタンセット</h1>
+            <p class="text-slate-500">視覚的ノイズを削ぎ落とし、24x24でもくっきりと見えるクリーンなデザインです。</p>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="icon-grid">
+            <!-- Icons will be injected here by JavaScript -->
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-slate-800 text-white px-6 py-3 rounded-lg shadow-lg opacity-0 transition-opacity duration-300 pointer-events-none z-50">
+        コピーしました！
+    </div>
+
+    <script>
+        // SVG Icon Data
+        const icons = [
+            {
+                name: 'シンプル・ローテート',
+                description: '1つの矢印で円を描く最もミニマルなデザイン。画面の「再読み込み」や、軽いステータス更新に最適です。',
+                svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <polyline points="23 4 23 10 17 10"></polyline>
+  <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+</svg>`
+            },
+            {
+                name: 'サイクル・シンク',
+                description: '2つの矢印が追いかける王道デザイン。サーバーとデータの「同期」や、レコードの確実な更新（Save）を伝えるのに向いています。',
+                svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <polyline points="23 4 23 10 17 10"></polyline>
+  <polyline points="1 20 1 14 7 14"></polyline>
+  <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"></path>
+  <path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14"></path>
+</svg>`
+            },
+            {
+                name: 'アップワード・プッシュ',
+                description: '箱から上へ矢印が向かうデザイン。フォームの入力内容をシステムへ「送信・反映（Push）」するアクションに最も馴染みます。',
+                svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+  <polyline points="17 8 12 3 7 8"></polyline>
+  <line x1="12" y1="3" x2="12" y2="15"></line>
+</svg>`
+            }
+        ];
+
+        const grid = document.getElementById('icon-grid');
+        const toast = document.getElementById('toast');
+        let toastTimeout;
+
+        function showToast(message) {
+            toast.textContent = message;
+            toast.classList.remove('opacity-0');
+            toast.classList.add('opacity-100');
+            
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('opacity-100');
+                toast.classList.add('opacity-0');
+            }, 2000);
+        }
+
+        function copyToClipboard(text, name) {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast(`「${name}」のSVGをコピーしました！`);
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+                showToast('コピーに失敗しました');
+            });
+        }
+
+        // Render Icons
+        icons.forEach(icon => {
+            const card = document.createElement('div');
+            card.className = 'icon-card bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col items-center justify-between cursor-pointer hover:shadow-md hover:border-blue-200 transition-all group';
+            card.onclick = () => copyToClipboard(icon.svg, icon.name);
+
+            card.innerHTML = `
+                <div class="icon-preview text-slate-700 w-16 h-16 mb-4 transition-all">
+                    ${icon.svg}
+                </div>
+                <div class="text-center w-full mb-6">
+                    <h2 class="text-lg font-semibold text-slate-800 mb-2">${icon.name}</h2>
+                    <p class="text-xs text-slate-500 h-12 leading-relaxed">${icon.description}</p>
+                </div>
+                
+                <!-- ボタンUIのプレビュー -->
+                <div class="w-full space-y-3 mb-6 p-4 bg-slate-50 rounded-lg border border-slate-100">
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider text-left mb-2">ボタン実装プレビュー</p>
+                    
+                    <!-- Solid Button -->
+                    <div class="btn-preview-solid bg-slate-800 text-white flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg font-medium text-sm transition-all w-full">
+                        <div class="w-4 h-4">${icon.svg}</div>
+                        更新する
+                    </div>
+                    
+                    <!-- Outline Button -->
+                    <div class="btn-preview border-2 border-slate-200 text-slate-600 flex items-center justify-center gap-2 py-2 px-4 rounded-lg font-medium text-sm transition-all w-full bg-white">
+                        <div class="w-4 h-4">${icon.svg}</div>
+                        再読み込み
+                    </div>
+                </div>
+
+                <button class="w-full py-2 bg-slate-100 group-hover:bg-blue-50 group-hover:text-blue-700 text-slate-600 text-sm font-medium rounded-lg transition-colors border border-slate-200 group-hover:border-blue-200">
+                    SVGコードをコピー
+                </button>
+            `;
+            grid.appendChild(card);
+        });
+    </script>
+<script>window.parent.postMessage({ action: "ready" }, "*"); 
+ 
+window.console = new Proxy(console, {
+  get(target, prop) {
+    if (['log', 'warn', 'error'].includes(prop)) {
+      return new Proxy(target[prop], {
+        apply(fn, thisArg, args) {
+          fn.apply(thisArg, args);
+          window.parent.postMessage({ action: 'console', 
+            type: prop, 
+            args: args.map((arg) => {
+              try {
+                return JSON.stringify(arg).replace(/^["']|["']$/g, '');
+              } catch (e) {
+                return arg;
+              }
+            }) 
+          }, '*');
+        }
+      });
+    }
+    return target[prop];
+  }
+});
+</script></body>
+</html>

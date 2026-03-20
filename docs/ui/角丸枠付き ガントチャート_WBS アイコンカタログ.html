@@ -1,0 +1,150 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Framed Gantt & WBS Icons Catalog</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .icon-card:hover .icon-preview {
+            transform: scale(1.1);
+            color: #0d9488; /* teal-600 */
+        }
+        .icon-preview {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen p-8 font-sans text-slate-800">
+    <div class="max-w-5xl mx-auto">
+        <header class="mb-10 text-center">
+            <h1 class="text-3xl font-bold mb-3 text-slate-900">ガントチャート / WBS アイコンセット (枠付き)</h1>
+            <p class="text-slate-500">全体を角丸の四角枠で囲み、アプリのUIとしてより馴染みやすい「ブロック感」を持たせたデザインです。</p>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="icon-grid">
+            <!-- Icons will be injected here by JavaScript -->
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-slate-800 text-white px-6 py-3 rounded-lg shadow-lg opacity-0 transition-opacity duration-300 pointer-events-none z-50">
+        コピーしました！
+    </div>
+
+    <script>
+        // SVG Icon Data
+        const icons = [
+            {
+                name: 'ミニマル・カスケード (枠付)',
+                description: '外枠の中に階段状のタスク進行を配置。枠があることでチャート全体の領域が明確になります。',
+                svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <rect x="3" y="3" width="18" height="18" rx="3"></rect>
+  <path d="M7 8h4"></path>
+  <path d="M10 12h4"></path>
+  <path d="M13 16h4"></path>
+</svg>`
+            },
+            {
+                name: 'クリーン・UIレイアウト (枠付)',
+                description: '枠内で左にリスト、右にバーを分割。アプリケーションのウィンドウやパネルそのものを模したデザイン。',
+                svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <rect x="3" y="3" width="18" height="18" rx="3"></rect>
+  <path d="M9 3v18"></path>
+  <path d="M6 8h.01"></path>
+  <path d="M6 12h.01"></path>
+  <path d="M6 16h.01"></path>
+  <path d="M12 8h5"></path>
+  <path d="M14 12h4"></path>
+  <path d="M16 16h3"></path>
+</svg>`
+            },
+            {
+                name: 'WBS・ツリー構造 (枠付)',
+                description: '枠の中に大タスクから小タスクへの分解を配置。組織図や構造図のアイコンとしても使いやすいまとまり。',
+                svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <rect x="3" y="3" width="18" height="18" rx="3"></rect>
+  <path d="M12 7v3"></path>
+  <path d="M8 10h8"></path>
+  <path d="M8 10v4"></path>
+  <path d="M16 10v4"></path>
+  <path d="M11 7h2"></path>
+  <path d="M7 14h2"></path>
+  <path d="M15 14h2"></path>
+</svg>`
+            }
+        ];
+
+        const grid = document.getElementById('icon-grid');
+        const toast = document.getElementById('toast');
+        let toastTimeout;
+
+        function showToast(message) {
+            toast.textContent = message;
+            toast.classList.remove('opacity-0');
+            toast.classList.add('opacity-100');
+            
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('opacity-100');
+                toast.classList.add('opacity-0');
+            }, 2000);
+        }
+
+        function copyToClipboard(text, name) {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast(`「${name}」のSVGをコピーしました！`);
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+                showToast('コピーに失敗しました');
+            });
+        }
+
+        // Render Icons
+        icons.forEach(icon => {
+            const card = document.createElement('div');
+            card.className = 'icon-card bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col items-center justify-between cursor-pointer hover:shadow-md hover:border-teal-200 transition-all group';
+            card.onclick = () => copyToClipboard(icon.svg, icon.name);
+
+            card.innerHTML = `
+                <div class="icon-preview text-slate-700 w-16 h-16 mb-4">
+                    ${icon.svg}
+                </div>
+                <div class="text-center w-full">
+                    <h2 class="text-lg font-semibold text-slate-800 mb-1">${icon.name}</h2>
+                    <p class="text-xs text-slate-400 mb-4 h-12">${icon.description}</p>
+                </div>
+                <button class="w-full py-2 bg-slate-100 group-hover:bg-teal-50 group-hover:text-teal-700 text-slate-600 text-sm font-medium rounded-lg transition-colors border border-slate-200 group-hover:border-teal-200">
+                    コードをコピー
+                </button>
+            `;
+            grid.appendChild(card);
+        });
+    </script>
+<script>window.parent.postMessage({ action: "ready" }, "*"); 
+ 
+window.console = new Proxy(console, {
+  get(target, prop) {
+    if (['log', 'warn', 'error'].includes(prop)) {
+      return new Proxy(target[prop], {
+        apply(fn, thisArg, args) {
+          fn.apply(thisArg, args);
+          window.parent.postMessage({ action: 'console', 
+            type: prop, 
+            args: args.map((arg) => {
+              try {
+                return JSON.stringify(arg).replace(/^["']|["']$/g, '');
+              } catch (e) {
+                return arg;
+              }
+            }) 
+          }, '*');
+        }
+      });
+    }
+    return target[prop];
+  }
+});
+</script></body>
+</html>
