@@ -5,6 +5,59 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.8.7] - 2026-03-20
+
+### Fixed
+- **Gantt Chart Sticky Headers**: Fixed task/date headers to actually stick during scroll
+  - Restructured HTML: Separated header row from body content
+  - Header row now independent with `position: sticky; top: 0; z-index: 100`
+  - Headers remain visible when scrolling vertically through tasks
+  - Removed ineffective sticky from `.task-list-header` and `.timeline-header` (they're now children of sticky parent)
+
+- **Horizontal Scrollbar**: Confirmed grid-template-columns uses `auto` (was already correct from v2.8.4)
+  - Timeline expands to full content width
+  - Horizontal scrollbar appears when needed
+
+- **Task Name Labels**: Confirmed labels are generated and positioned correctly (was already correct from v2.8.4/v2.8.5)
+  - Labels display above task bars: `WBS_No: Task_Name`
+  - Smart right-edge alignment when bar position > 80%
+  - Labels overlay task bars with z-index: 7
+
+### Changed
+- **HTML Structure**: Separated header and body for sticky functionality
+  - Added `.gantt-header-row` container (lines 3650-3652)
+  - Added `.gantt-body` container (lines 3654-3656)
+  - Removed old `.gantt-table` container
+
+- **CSS Structure**: New layout for sticky headers
+  - `.gantt-container` (lines 3383-3391): Changed to flexbox column, added height: calc(100vh - 60px)
+  - `.gantt-header-row` (lines 3393-3401): New sticky header with grid layout
+  - `.gantt-scroll` (lines 3403-3407): Overflow auto with flex: 1
+  - `.gantt-body` (lines 3409-3413): Grid layout for body content
+  - `.task-list-header` (lines 3420-3428): Removed sticky properties (parent handles it)
+  - `.timeline-header` (lines 3466-3471): Removed sticky properties (parent handles it)
+
+- **JavaScript**: Split rendering logic for header and body
+  - `renderGantt()` (lines 3670-3789): Now populates two separate containers
+  - Header content: `.gantt-header-row` (task list header + timeline header)
+  - Body content: `.gantt-body` (task rows + timeline rows)
+
+- **Media Queries**: Updated for new structure
+  - Changed `.gantt-table` references to `.gantt-header-row, .gantt-body` (lines 3592, 3604)
+
+### Technical
+- Header separation enables proper sticky behavior (sticky doesn't work inside overflow containers)
+- Grid layout maintained for both header and body with matching column widths
+- Vertical scrolling now works correctly with sticky headers
+- Horizontal scrolling works independently for header and body (synchronized by grid columns)
+
+### UI/UX
+- Task and date headers always visible during vertical scroll
+- Horizontal scrollbar appears when timeline is wide
+- Task name labels visible above task bars
+- Seamless navigation with sticky headers
+- More intuitive timeline reference while scrolling
+
 ## [2.8.6] - 2026-03-20
 
 ### Fixed
