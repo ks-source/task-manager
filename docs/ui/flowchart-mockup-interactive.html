@@ -4564,9 +4564,41 @@
       const savedPos = localStorage.getItem('minimap-position');
       if (savedPos) {
         const { top, left } = JSON.parse(savedPos);
-        minimap.style.top = top;
-        minimap.style.left = left;
-        console.log('📍 ミニマップ位置を復元:', { top, left });
+
+        // ミニマップのサイズを取得
+        const rect = minimap.getBoundingClientRect();
+        const minimapWidth = rect.width;
+        const minimapHeight = rect.height;
+
+        // 画面内に収まるようバリデーション
+        const topValue = parseFloat(top);
+        const leftValue = parseFloat(left);
+
+        // 画面サイズを取得
+        const maxLeft = window.innerWidth - minimapWidth;
+        const maxTop = window.innerHeight - minimapHeight;
+
+        // 画面内に収まるよう調整
+        const validLeft = Math.max(0, Math.min(leftValue, maxLeft));
+        const validTop = Math.max(0, Math.min(topValue, maxTop));
+
+        minimap.style.left = `${validLeft}px`;
+        minimap.style.top = `${validTop}px`;
+
+        console.log('📍 ミニマップ位置を復元:', {
+          saved: { top, left },
+          validated: { top: `${validTop}px`, left: `${validLeft}px` },
+          adjusted: topValue !== validTop || leftValue !== validLeft
+        });
+
+        // 調整された場合は保存し直す
+        if (topValue !== validTop || leftValue !== validLeft) {
+          localStorage.setItem('minimap-position', JSON.stringify({
+            top: `${validTop}px`,
+            left: `${validLeft}px`
+          }));
+          console.log('⚠️ ミニマップ位置が画面外だったため調整しました');
+        }
       }
 
       header.addEventListener('mousedown', (e) => {
