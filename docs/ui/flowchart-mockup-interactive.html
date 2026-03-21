@@ -142,6 +142,118 @@
       pointer-events: none;
     }
 
+    /* Custom Tooltip Styles */
+    .has-custom-tooltip {
+      position: relative;
+    }
+
+    .custom-tooltip {
+      display: none;
+      position: absolute;
+      top: calc(100% + 10px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: white;
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      padding: 12px;
+      width: 260px;
+      z-index: 10000;
+      font-size: 12px;
+      line-height: 1.4;
+      color: #333;
+    }
+
+    .has-custom-tooltip:hover .custom-tooltip {
+      display: block;
+      animation: tooltipFadeIn 0.2s ease-out;
+    }
+
+    @keyframes tooltipFadeIn {
+      from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-5px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+    }
+
+    .custom-tooltip::before {
+      content: '';
+      position: absolute;
+      top: -6px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 6px solid transparent;
+      border-right: 6px solid transparent;
+      border-bottom: 6px solid white;
+    }
+
+    .tooltip-title {
+      font-weight: 600;
+      font-size: 13px;
+      margin-bottom: 8px;
+      color: #007bff;
+    }
+
+    .tooltip-divider {
+      height: 1px;
+      background: #dee2e6;
+      margin: 8px 0;
+    }
+
+    .tooltip-section {
+      margin: 8px 0;
+    }
+
+    .tooltip-label {
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: #495057;
+    }
+
+    .tooltip-items {
+      margin-left: 8px;
+    }
+
+    .tooltip-item {
+      padding: 2px 0;
+      color: #6c757d;
+    }
+
+    .tooltip-highlight {
+      background: #e7f3ff;
+      padding: 6px 8px;
+      border-radius: 4px;
+      font-weight: 500;
+      color: #0056b3;
+    }
+
+    .tooltip-filename {
+      font-family: 'Courier New', monospace;
+      background: #f8f9fa;
+      padding: 4px 8px;
+      border-radius: 4px;
+      color: #495057;
+      font-size: 11px;
+      margin-top: 4px;
+    }
+
+    .tooltip-warning {
+      margin-top: 8px;
+      padding: 6px 8px;
+      background: #fff3cd;
+      border-left: 3px solid #ffc107;
+      border-radius: 4px;
+      color: #856404;
+      font-weight: 500;
+    }
+
     /* Dropdown Menu Styles */
     .dropdown {
       position: relative;
@@ -1876,6 +1988,146 @@
       min-width: 36px;
       text-align: center;
     }
+
+    /* Warning Modal Styles */
+    .warning-modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 20000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .warning-modal-overlay.show {
+      display: flex;
+    }
+
+    .warning-modal {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+      max-width: 500px;
+      width: 90%;
+      padding: 0;
+      animation: modalSlideIn 0.3s ease-out;
+    }
+
+    @keyframes modalSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .warning-modal-header {
+      background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+      color: #333;
+      padding: 20px 24px;
+      border-radius: 12px 12px 0 0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .warning-modal-header-icon {
+      font-size: 32px;
+    }
+
+    .warning-modal-header-title {
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .warning-modal-body {
+      padding: 24px;
+    }
+
+    .warning-modal-message {
+      font-size: 14px;
+      line-height: 1.6;
+      color: #333;
+      margin-bottom: 16px;
+    }
+
+    .warning-modal-highlight {
+      background: #fff3cd;
+      border-left: 4px solid #ffc107;
+      padding: 12px 16px;
+      margin: 16px 0;
+      border-radius: 4px;
+    }
+
+    .warning-modal-highlight-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 8px 0;
+      font-size: 13px;
+    }
+
+    .warning-modal-filename {
+      font-family: 'Courier New', monospace;
+      background: #f8f9fa;
+      padding: 8px 12px;
+      border-radius: 4px;
+      margin: 12px 0;
+      text-align: center;
+      color: #495057;
+      font-weight: 600;
+    }
+
+    .warning-modal-checkbox {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 16px;
+      padding: 12px;
+      background: #f8f9fa;
+      border-radius: 4px;
+      font-size: 13px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .warning-modal-checkbox input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+
+    .warning-modal-footer {
+      padding: 0 24px 24px 24px;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .warning-modal-btn {
+      padding: 10px 24px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .warning-modal-btn-primary {
+      background: #007bff;
+      color: white;
+    }
+
+    .warning-modal-btn-primary:hover {
+      background: #0056b3;
+    }
   </style>
 </head>
 <body>
@@ -1930,12 +2182,33 @@
       </div>
     </div>
 
-    <button class="icon-button disabled" id="save-btn" onclick="saveToFileAs()" title="保存">
+    <button class="icon-button disabled has-custom-tooltip" id="save-btn" onclick="exportEditedSvg()" title="保存">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
         <polyline points="17 21 17 13 7 13 7 21"></polyline>
         <polyline points="7 3 7 8 15 8"></polyline>
       </svg>
+      <div class="custom-tooltip">
+        <div class="tooltip-title">💾 再編集用システムSVGとして保存</div>
+        <div class="tooltip-divider"></div>
+        <div class="tooltip-section">
+          <div class="tooltip-label">保存される内容:</div>
+          <div class="tooltip-items">
+            <div class="tooltip-item">✓ Mermaid SVG本体</div>
+            <div class="tooltip-item">✓ カスタムラベル</div>
+            <div class="tooltip-item">✓ メモノード・手動エッジ（視覚）</div>
+            <div class="tooltip-item">✓ すべてのメタデータ（埋め込み）</div>
+          </div>
+        </div>
+        <div class="tooltip-section">
+          <div class="tooltip-highlight">💡 次回このSVGを読み込めば完全復元可能</div>
+        </div>
+        <div class="tooltip-section">
+          <div class="tooltip-label">ファイル名例:</div>
+          <div class="tooltip-filename">flowchart_editable.svg</div>
+        </div>
+        <div class="tooltip-warning">⚠️ 保存しないと編集内容は次回失われます</div>
+      </div>
     </button>
 
     <div class="dropdown">
@@ -2088,7 +2361,11 @@
               <line x1="12" y1="3" x2="12" y2="15"></line>
             </svg>
             <h3>フローチャートSVGファイルを読み込む</h3>
-            <p>MermaidからエクスポートしたSVGファイルを選択してください</p>
+            <p style="margin-bottom: 8px;">読み込み可能なファイル:</p>
+            <p style="font-size: 13px; line-height: 1.6; color: #6c757d; margin-bottom: 16px;">
+              ✓ Mermaidからエクスポートした元SVG<br>
+              ✓ 本ツールで保存した編集済みSVG (<code style="background: #f8f9fa; padding: 2px 6px; border-radius: 3px; font-size: 12px;">_editable.svg</code>)
+            </p>
             <input type="file" id="svg-file-input" accept=".svg" style="display: none;">
             <button onclick="document.getElementById('svg-file-input').click()" class="upload-button">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -3137,6 +3414,42 @@
       document.querySelectorAll('.dropdown-menu').forEach(menu => {
         menu.classList.remove('show');
       });
+    }
+
+    /**
+     * 警告モーダルを表示（初回のみ）
+     */
+    function showWarningModal() {
+      // localStorage で「次回から表示しない」が設定されているかチェック
+      const dontShowAgain = localStorage.getItem('dontShowWarningModal');
+      if (dontShowAgain === 'true') {
+        console.log('⏭️ 警告モーダルをスキップ（ユーザー設定）');
+        return;
+      }
+
+      const modal = document.getElementById('warning-modal');
+      if (modal) {
+        modal.classList.add('show');
+        console.log('⚠️ 警告モーダルを表示');
+      }
+    }
+
+    /**
+     * 警告モーダルを閉じる
+     */
+    function closeWarningModal() {
+      const modal = document.getElementById('warning-modal');
+      const checkbox = document.getElementById('dont-show-warning-again');
+
+      // チェックボックスがONなら localStorage に保存
+      if (checkbox && checkbox.checked) {
+        localStorage.setItem('dontShowWarningModal', 'true');
+        console.log('✅ 次回から警告モーダルを表示しない設定を保存');
+      }
+
+      if (modal) {
+        modal.classList.remove('show');
+      }
     }
 
     // ドロップダウン外をクリックしたら閉じる
@@ -4444,6 +4757,11 @@
                 if (typeof updateMinimapViewport === 'function') {
                   updateMinimapViewport();
                 }
+
+                // ★ 警告モーダルを表示（初回のみ）
+                setTimeout(() => {
+                  showWarningModal();
+                }, 300);
               }
             }, 50);
           }, 100);
@@ -5215,21 +5533,7 @@
           document.getElementById('reset-label-btn').style.display = customLabel ? 'inline-block' : 'none';
         }
 
-        // ★手動エッジを復元
-        let loadedEdgeCount = 0;
-        if (data.manualEdges && typeof data.manualEdges === 'object') {
-          manualEdges = data.manualEdges;
-
-          // SVGに再描画
-          for (const edge of Object.values(manualEdges)) {
-            drawEdgeToSvg(edge);
-            loadedEdgeCount++;
-          }
-
-          console.log('手動エッジを復元しました:', loadedEdgeCount, '件');
-        }
-
-        // ★Phase 1: メモノードを復元
+        // ★Phase 1: メモノードを復元（先に描画してレイヤーを確立）
         let loadedNodeCount = 0;
         if (data.manualNodes && typeof data.manualNodes === 'object') {
           manualNodes = data.manualNodes;
@@ -5242,6 +5546,20 @@
           }
 
           console.log('メモノードを復元しました:', loadedNodeCount, '件');
+        }
+
+        // ★手動エッジを復元（ノードより後に描画してノードの下に配置）
+        let loadedEdgeCount = 0;
+        if (data.manualEdges && typeof data.manualEdges === 'object') {
+          manualEdges = data.manualEdges;
+
+          // SVGに再描画
+          for (const edge of Object.values(manualEdges)) {
+            drawEdgeToSvg(edge);
+            loadedEdgeCount++;
+          }
+
+          console.log('手動エッジを復元しました:', loadedEdgeCount, '件');
         }
 
         // ★全エッジのクリック感度を向上（ルールベース自動適用）
@@ -5341,9 +5659,11 @@ ${metadataJson}
         const serializer = new XMLSerializer();
         const svgString = serializer.serializeToString(svgClone);
 
-        // ファイル名の提案（カスタムラベルが適用済みであることを明示）
-        const baseName = currentSvgFileName ? currentSvgFileName.replace(/\.svg$/i, '') : 'flowchart';
-        const suggestedName = `${baseName}_edited.svg`;
+        // ファイル名の提案（再編集可能システムSVGとして保存）
+        let baseName = currentSvgFileName ? currentSvgFileName.replace(/\.svg$/i, '') : 'flowchart';
+        // 既存のサフィックスを削除（重複防止）
+        baseName = baseName.replace(/_(editable|edited)$/i, '');
+        const suggestedName = `${baseName}_editable.svg`;
 
         // ファイルピッカーを表示
         const handle = await window.showSaveFilePicker({
@@ -6570,8 +6890,22 @@ ${metadataJson}
 
       // ★ Phase B修正: 正しい親要素に追加（Z-order問題を解決）
       const target = findCorrectAppendTarget(svg);
-      target.appendChild(g);
-      console.log(`✅ Edge ${edge.id} added to:`, target.tagName, target.className?.baseVal || target.className);
+
+      // ★ メモノードより前に表示するため、#manual-layerがあればその前に挿入
+      const manualLayer = svg.querySelector('#manual-layer');
+      if (manualLayer && target === svg) {
+        // SVG直下に追加する場合、manual-layerの前に挿入
+        svg.insertBefore(g, manualLayer);
+        console.log(`✅ Edge ${edge.id} inserted before #manual-layer`);
+      } else if (manualLayer && target.contains(manualLayer)) {
+        // targetがmanualLayerを含む場合、manual-layerの前に挿入
+        target.insertBefore(g, manualLayer);
+        console.log(`✅ Edge ${edge.id} inserted before #manual-layer in`, target.tagName);
+      } else {
+        // それ以外は通常通り追加
+        target.appendChild(g);
+        console.log(`✅ Edge ${edge.id} added to:`, target.tagName, target.className?.baseVal || target.className);
+      }
     }
 
     /**
@@ -7516,6 +7850,47 @@ ${metadataJson}
     }
 
   </script>
+
+  <!-- Warning Modal -->
+  <div class="warning-modal-overlay" id="warning-modal">
+    <div class="warning-modal">
+      <div class="warning-modal-header">
+        <div class="warning-modal-header-icon">⚠️</div>
+        <div class="warning-modal-header-title">重要な注意事項</div>
+      </div>
+      <div class="warning-modal-body">
+        <div class="warning-modal-message">
+          このツールで追加した編集内容（メモノード・手動エッジ・カスタムラベル等）を次回も復元するには、編集完了後に必ず<strong>【保存】ボタン</strong>でシステムSVGとして保存してください。
+        </div>
+
+        <div class="warning-modal-highlight">
+          <div class="warning-modal-highlight-item">
+            <span>💾</span>
+            <span><strong>保存しない場合</strong> → 編集内容は次回失われます</span>
+          </div>
+          <div class="warning-modal-highlight-item">
+            <span>✅</span>
+            <span><strong>保存した場合</strong> → 次回そのSVGを読み込めば復元されます</span>
+          </div>
+        </div>
+
+        <div class="warning-modal-message">
+          保存形式:
+        </div>
+        <div class="warning-modal-filename">flowchart_editable.svg</div>
+
+        <label class="warning-modal-checkbox">
+          <input type="checkbox" id="dont-show-warning-again">
+          <span>次回から表示しない</span>
+        </label>
+      </div>
+      <div class="warning-modal-footer">
+        <button class="warning-modal-btn warning-modal-btn-primary" onclick="closeWarningModal()">
+          理解しました
+        </button>
+      </div>
+    </div>
+  </div>
 
 </body>
 </html>
