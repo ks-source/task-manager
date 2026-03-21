@@ -413,20 +413,21 @@
      * ========================================== */
     .status-buttons {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-      gap: 0.5rem;
+      grid-template-columns: repeat(4, 1fr);  /* 4列固定で2行レイアウト */
+      gap: 0.4rem;  /* 間隔を狭くしてコンパクト化 */
     }
 
     .status-button {
-      padding: 0.75rem;
+      padding: 0.5rem 0.25rem;  /* 縦横のpaddingを縮小 */
       border: 2px solid var(--color-border);
       border-radius: 4px;
       background-color: white;
       cursor: pointer;
-      font-size: 0.875rem;
+      font-size: 0.75rem;  /* 12px - フォントサイズ縮小 */
       font-weight: 500;
       transition: all 0.2s;
       text-align: center;
+      min-width: 0;  /* 最小幅制限を解除 */
     }
 
     .status-button:hover {
@@ -876,9 +877,13 @@
       .progress-summary {
         grid-template-columns: 1fr;
       }
+    }
 
-      .status-buttons {
-        grid-template-columns: 1fr;
+    /* モバイル専用（360px以下）でステータスボタンをさらにコンパクト化 */
+    @media (max-width: 360px) {
+      .status-button {
+        padding: 0.4rem 0.2rem;  /* さらにpaddingを縮小 */
+        font-size: 0.7rem;  /* 11px - フォントサイズをさらに縮小 */
       }
     }
   </style>
