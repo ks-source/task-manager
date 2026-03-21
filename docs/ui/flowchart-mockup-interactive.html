@@ -1046,7 +1046,7 @@
       background: white;
       border: none;
       border-radius: 0;
-      scroll-behavior: smooth; /* ミニマップ操作時のスムーズスクロール */
+      scroll-behavior: auto; /* ズーム時は即座にスクロール位置を設定 */
       will-change: scroll-position; /* スクロール最適化のヒント */
     }
 
@@ -1074,7 +1074,8 @@
       max-width: none;
       max-height: none;
       display: block;
-      transition: width 0.2s ease, height 0.2s ease;
+      /* ズーム時のサイズ変更を即座に適用するためtransitionを削除 */
+      /* transition: width 0.2s ease, height 0.2s ease; */
     }
 
     /* ==========================================
@@ -1546,10 +1547,31 @@
     }
 
     /* エッジ追加モードボタンのアクティブ状態 */
-    .btn.active {
-      background-color: #007bff;
-      color: white;
-      border-color: #0056b3;
+    .btn.active,
+    .icon-button.active,
+    #edge-add-mode-btn.active {
+      background-color: #007bff !important;
+      color: white !important;
+      border-color: #0056b3 !important;
+    }
+
+    #edge-add-mode-btn.active svg {
+      stroke: white !important;
+    }
+
+    /* ノード吸着時のハイライト（Phase 2） */
+    .node-snap-highlight {
+      filter: drop-shadow(0 0 8px #28a745) brightness(1.2);
+      animation: pulse-snap 0.6s ease-in-out;
+    }
+
+    @keyframes pulse-snap {
+      0%, 100% {
+        filter: drop-shadow(0 0 8px #28a745) brightness(1.2);
+      }
+      50% {
+        filter: drop-shadow(0 0 15px #28a745) brightness(1.4);
+      }
     }
 
     /* ==========================================
@@ -1838,6 +1860,18 @@
       </svg>
     </button>
 
+    <div class="toolbar-divider"></div>
+
+    <!-- Edge Add Mode Button -->
+    <button class="icon-button disabled" id="edge-add-mode-btn" onclick="toggleEdgeAddMode()" title="手動エッジ追加" style="display: none;">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2v20M2 12h20"></path>
+        <circle cx="7" cy="12" r="2"></circle>
+        <circle cx="17" cy="12" r="2"></circle>
+        <line x1="9" y1="12" x2="15" y2="12"></line>
+      </svg>
+    </button>
+
     <div class="toolbar-divider" id="zoom-divider" style="display: none;"></div>
 
     <!-- Zoom Controls -->
@@ -1991,7 +2025,7 @@
     </div>
     <div class="status-controls">
       <button class="status-icon-btn" id="toggle-panel-footer-btn" onclick="togglePanel()" title="パネル表示/非表示">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="panel-icon-svg">
           <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
           <line x1="9" y1="3" x2="9" y2="21"></line>
         </svg>
@@ -2499,14 +2533,34 @@
     const ZOOM_STEP = 0.25;  // 25%刻み
     const MIN_ZOOM = 0.25;   // 最小25%
     const MAX_ZOOM = 5.0;    // 最大500%
+    let isZooming = false;   // ズーム処理中フラグ
 
     /**
      * ズーム拡大
      */
     function zoomIn() {
       if (currentZoom >= MAX_ZOOM) return;
+
+      // ズーム処理中フラグを立てる
+      isZooming = true;
+
+      // ① ズーム前のビューポート中心を保存（この時点のcurrentZoomは古い値）
+      const center = getCurrentViewportCenter();
+
+      // ② ズーム倍率を変更
+      const oldZoom = currentZoom;
       currentZoom = Math.min(MAX_ZOOM, currentZoom + ZOOM_STEP);
-      applyZoom();
+
+      console.log(`🔍 ズームイン: ${(oldZoom * 100).toFixed(0)}% → ${(currentZoom * 100).toFixed(0)}%`);
+
+      // ③ SVGにズームを適用（スクロール位置調整完了後にミニマップ更新）
+      applyZoom(center, currentZoom, () => {
+        // スクロール位置調整が完了してからミニマップを更新
+        if (typeof updateMinimapViewport === 'function') {
+          updateMinimapViewport();
+        }
+        isZooming = false;
+      });
     }
 
     /**
@@ -2514,25 +2568,131 @@
      */
     function zoomOut() {
       if (currentZoom <= MIN_ZOOM) return;
+
+      // ズーム処理中フラグを立てる
+      isZooming = true;
+
+      // ① ズーム前のビューポート中心を保存（この時点のcurrentZoomは古い値）
+      const center = getCurrentViewportCenter();
+
+      // ② ズーム倍率を変更
+      const oldZoom = currentZoom;
       currentZoom = Math.max(MIN_ZOOM, currentZoom - ZOOM_STEP);
-      applyZoom();
+
+      console.log(`🔍 ズームアウト: ${(oldZoom * 100).toFixed(0)}% → ${(currentZoom * 100).toFixed(0)}%`);
+
+      // ③ SVGにズームを適用（スクロール位置調整完了後にミニマップ更新）
+      applyZoom(center, currentZoom, () => {
+        // スクロール位置調整が完了してからミニマップを更新
+        if (typeof updateMinimapViewport === 'function') {
+          updateMinimapViewport();
+        }
+        isZooming = false;
+      });
     }
 
     /**
      * ズームリセット
      */
     function zoomReset() {
+      // ズーム処理中フラグを立てる
+      isZooming = true;
+
+      // ① ズーム前のビューポート中心を保存（この時点のcurrentZoomは古い値）
+      const center = getCurrentViewportCenter();
+
+      // ② ズーム倍率をリセット
+      const oldZoom = currentZoom;
       currentZoom = 1.0;
-      applyZoom();
+
+      console.log(`🔍 ズームリセット: ${(oldZoom * 100).toFixed(0)}% → 100%`);
+
+      // ③ SVGにズームを適用（スクロール位置調整完了後にミニマップ更新）
+      applyZoom(center, currentZoom, () => {
+        // スクロール位置調整が完了してからミニマップを更新
+        if (typeof updateMinimapViewport === 'function') {
+          updateMinimapViewport();
+        }
+        isZooming = false;
+      });
     }
 
     /**
-     * ズームを適用
+     * 現在のビューポート矩形の中心座標を取得
+     * @returns {Object} { svgCenterX, svgCenterY, containerCenterX, containerCenterY }
      */
-    function applyZoom() {
+    function getCurrentViewportCenter() {
+      const container = document.getElementById('flowchart-container');
+      const svg = container.querySelector('svg');
+
+      if (!svg) {
+        return { svgCenterX: 0, svgCenterY: 0, containerCenterX: 0, containerCenterY: 0 };
+      }
+
+      // コンテナの表示領域の中心（ビューポートの中心）
+      const containerRect = container.getBoundingClientRect();
+      const containerCenterX = containerRect.width / 2;
+      const containerCenterY = containerRect.height / 2;
+
+      // 現在のスクロール位置を考慮したSVG座標系での中心点
+      // スクロール位置 + ビューポート中心 = SVG上の絶対位置
+      const svgAbsX = container.scrollLeft + containerCenterX;
+      const svgAbsY = container.scrollTop + containerCenterY;
+
+      // 正規化座標（ズーム倍率で割る）
+      const normalizedX = svgAbsX / currentZoom;
+      const normalizedY = svgAbsY / currentZoom;
+
+      console.log(`📍 中心座標取得:
+  - currentZoom: ${currentZoom}
+  - scroll: (${container.scrollLeft}, ${container.scrollTop})
+  - viewportCenter: (${containerCenterX}, ${containerCenterY})
+  - svgAbs: (${svgAbsX}, ${svgAbsY})
+  - normalized: (${normalizedX}, ${normalizedY})`);
+
+      return {
+        svgCenterX: normalizedX,
+        svgCenterY: normalizedY,
+        containerCenterX,
+        containerCenterY
+      };
+    }
+
+    /**
+     * ズーム後にビューポート中心を維持するようスクロール位置を調整
+     * @param {Object} center - getCurrentViewportCenter()で取得した中心座標
+     * @param {number} newZoom - 新しいズーム倍率
+     */
+    function adjustScrollToMaintainCenter(center, newZoom) {
+      const container = document.getElementById('flowchart-container');
+
+      // 新しいズーム倍率での中心点の位置
+      const newCenterX = center.svgCenterX * newZoom;
+      const newCenterY = center.svgCenterY * newZoom;
+
+      // ビューポート中心を維持するための新しいスクロール位置
+      const newScrollLeft = newCenterX - center.containerCenterX;
+      const newScrollTop = newCenterY - center.containerCenterY;
+
+      // スクロール位置を更新
+      container.scrollLeft = Math.max(0, newScrollLeft);
+      container.scrollTop = Math.max(0, newScrollTop);
+
+      console.log(`📐 スクロール調整: (${Math.round(newScrollLeft)}, ${Math.round(newScrollTop)})`);
+    }
+
+    /**
+     * ズームを適用（SVGサイズ変更とスクロール位置調整を同時実行）
+     * @param {Object} center - getCurrentViewportCenter()で取得した中心座標（nullの場合はスクロール位置を維持しない）
+     * @param {number} newZoom - 新しいズーム倍率
+     * @param {Function} callback - ズーム適用完了後に呼び出すコールバック関数
+     */
+    function applyZoom(center = null, newZoom = null, callback = null) {
       const container = document.getElementById('flowchart-container');
       const svg = container.querySelector('svg');
       if (!svg) return;
+
+      const zoomToApply = newZoom || currentZoom;
 
       // SVGの元のサイズを取得（初回のみ）
       if (!svg.dataset.originalWidth) {
@@ -2557,10 +2717,27 @@
       const originalHeight = parseFloat(svg.dataset.originalHeight);
 
       // SVGのサイズを直接変更（transformではなくサイズで拡大）
-      const newWidth = originalWidth * currentZoom;
-      const newHeight = originalHeight * currentZoom;
+      const newWidth = originalWidth * zoomToApply;
+      const newHeight = originalHeight * zoomToApply;
 
-      console.log(`ズーム適用: ${currentZoom * 100}% - 新サイズ: ${newWidth}px x ${newHeight}px`);
+      console.log(`ズーム適用: ${zoomToApply * 100}% - 新サイズ: ${newWidth}px x ${newHeight}px`);
+
+      // スクロール位置を計算（SVGサイズ変更前に）
+      let targetScrollLeft = 0;
+      let targetScrollTop = 0;
+      if (center) {
+        const newCenterX = center.svgCenterX * zoomToApply;
+        const newCenterY = center.svgCenterY * zoomToApply;
+        targetScrollLeft = Math.max(0, newCenterX - center.containerCenterX);
+        targetScrollTop = Math.max(0, newCenterY - center.containerCenterY);
+
+        console.log(`📐 スクロール位置計算:
+  - 正規化中心: (${center.svgCenterX}, ${center.svgCenterY})
+  - 新ズーム倍率: ${zoomToApply}
+  - 新中心絶対位置: (${newCenterX}, ${newCenterY})
+  - ビューポート中心: (${center.containerCenterX}, ${center.containerCenterY})
+  - 目標スクロール: (${targetScrollLeft}, ${targetScrollTop})`);
+      }
 
       // SVGのサイズを明示的に設定
       svg.style.width = `${newWidth}px`;
@@ -2569,13 +2746,6 @@
       svg.style.minHeight = `${newHeight}px`;
       svg.style.display = 'block';
 
-      // コンテナサイズとSVGサイズを確認
-      setTimeout(() => {
-        console.log('コンテナサイズ:', container.clientWidth, 'x', container.clientHeight);
-        console.log('SVG実サイズ:', svg.clientWidth, 'x', svg.clientHeight);
-        console.log('SVG scrollWidth:', container.scrollWidth, 'scrollHeight:', container.scrollHeight);
-      }, 100);
-
       // SVGのviewBoxを維持
       if (!svg.getAttribute('viewBox') && originalWidth && originalHeight) {
         svg.setAttribute('viewBox', `0 0 ${originalWidth} ${originalHeight}`);
@@ -2583,10 +2753,23 @@
 
       updateZoomLabel();
 
-      // ミニマップのビューポート矩形を更新（SVGサイズ変更後に実行）
-      setTimeout(() => {
-        updateMinimapViewport();
-      }, 50);
+      // スクロール位置を即座に設定（SVGサイズ変更と同じフレーム内で）
+      if (center) {
+        // scroll-behavior を auto に強制設定（smoothだと即座に反映されない）
+        container.style.scrollBehavior = 'auto';
+
+        container.scrollLeft = targetScrollLeft;
+        container.scrollTop = targetScrollTop;
+        console.log(`📐 スクロール位置設定（即座）: actual=(${container.scrollLeft}, ${container.scrollTop}), target=(${Math.round(targetScrollLeft)}, ${Math.round(targetScrollTop)})`);
+      }
+
+      // 次のフレームでコールバックを実行（ミニマップ更新）
+      if (callback) {
+        requestAnimationFrame(() => {
+          console.log(`📐 最終確認: scroll=(${container.scrollLeft}, ${container.scrollTop})`);
+          callback();
+        });
+      }
     }
 
     /**
@@ -2761,6 +2944,7 @@
       restorePanelPosition();
       const btn = document.getElementById('toggle-panel-footer-btn');
       if (btn) btn.classList.add('active');
+      updatePanelIcon(true);  // パネル表示中 → 非表示アイコン（斜線付き）
     }
 
     /**
@@ -2770,6 +2954,7 @@
       panel.style.display = 'none';
       const btn = document.getElementById('toggle-panel-footer-btn');
       if (btn) btn.classList.remove('active');
+      updatePanelIcon(false);  // パネル非表示中 → 表示アイコン（通常）
     }
 
     /**
@@ -3286,6 +3471,30 @@
     }
 
     /**
+     * パネルアイコンを更新（表示/非表示状態に応じて）
+     * @param {boolean} isVisible - パネルが表示されているか
+     */
+    function updatePanelIcon(isVisible) {
+      const iconSvg = document.getElementById('panel-icon-svg');
+      if (!iconSvg) return;
+
+      if (isVisible) {
+        // パネル表示中 → 非表示アイコン（斜線付き）
+        iconSvg.innerHTML = `
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="9" y1="3" x2="9" y2="21"></line>
+          <line x1="2" y1="2" x2="22" y2="22"></line>
+        `;
+      } else {
+        // パネル非表示中 → 表示アイコン（通常）
+        iconSvg.innerHTML = `
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="9" y1="3" x2="9" y2="21"></line>
+        `;
+      }
+    }
+
+    /**
      * ミニマップアイコンを更新
      */
     function updateMinimapIcon(isVisible) {
@@ -3405,6 +3614,8 @@
       // スクロールイベントで同期（requestAnimationFrameでスロットリング）
       let scrollRafId = null;
       mainContainer.addEventListener('scroll', () => {
+        // ズーム処理中はミニマップ更新をスキップ（ズーム完了後に更新される）
+        if (isZooming) return;
         if (scrollRafId !== null) return;
         scrollRafId = requestAnimationFrame(() => {
           updateMinimapViewport();
@@ -3582,9 +3793,9 @@
             rafId = null;
           }
 
-          // ドラッグ終了後はスムーススクロールを再有効化
-          const mainContainer = document.getElementById('flowchart-container');
-          mainContainer.style.scrollBehavior = 'smooth';
+          // ドラッグ終了後もスムーススクロールは無効のまま（ズーム操作と競合するため）
+          // const mainContainer = document.getElementById('flowchart-container');
+          // mainContainer.style.scrollBehavior = 'smooth';
         }
       });
     }
@@ -3793,7 +4004,8 @@
           // ツールバーのボタンを有効化
           document.getElementById('save-btn').classList.remove('disabled');
           document.getElementById('export-dropdown-btn').classList.remove('disabled');
-          document.getElementById('edge-add-btn').classList.remove('disabled');
+          document.getElementById('edge-add-mode-btn').classList.remove('disabled');
+          document.getElementById('edge-add-mode-btn').style.display = ''; // ボタンを表示
 
           // ズームコントロールを表示・有効化
           showZoomControls();
@@ -5206,6 +5418,7 @@
      */
     function toggleEdgeAddMode() {
       edgeAddMode = !edgeAddMode;
+      console.log('🔄 toggleEdgeAddMode:', edgeAddMode ? 'ON' : 'OFF');
 
       const btn = document.getElementById('edge-add-mode-btn');
       const container = document.getElementById('flowchart-container');
@@ -5213,12 +5426,15 @@
       if (edgeAddMode) {
         btn.classList.add('active');
         container.classList.add('edge-add-mode');
+        console.log('✅ Button and container classes added');
         showNotification('エッジ追加モード: 開始点をクリック');
       } else {
         btn.classList.remove('active');
         container.classList.remove('edge-add-mode');
         clearEdgePreview();
+        clearNodeSnapHighlight(); // ★Phase 2: ハイライトクリア
         edgeStartPoint = null;
+        console.log('✅ Edge add mode disabled, classes removed');
       }
     }
 
@@ -5255,10 +5471,13 @@
      * SVGクリック処理（エッジ追加モード中）
      */
     function onSvgClickForEdgeAdd(event) {
+      console.log('🖱️ onSvgClickForEdgeAdd called, edgeAddMode:', edgeAddMode);
+      
       if (!edgeAddMode) return;
 
       // パネルやボタンのクリックは無視
       if (event.target.closest('.floating-panel') || event.target.closest('.toolbar')) {
+        console.log('🚫 Click ignored: panel or toolbar');
         return;
       }
 
@@ -5284,12 +5503,40 @@
 
       if (!edgeStartPoint) {
         // 開始点を設定
-        edgeStartPoint = { x: x, y: y, nodeId: null };
-        showStartMarker(x, y);
-        showNotification('終点をクリックしてください');
+        // ★ノード吸着判定（Phase 2）
+        const nearestNode = findNearestNode(x, y, 50);
+
+        if (nearestNode) {
+          // ノードに吸着
+          edgeStartPoint = {
+            x: nearestNode.centerX,
+            y: nearestNode.centerY,
+            nodeId: nearestNode.nodeId
+          };
+          showStartMarker(nearestNode.centerX, nearestNode.centerY);
+          highlightNodeForSnap(nearestNode.element); // ★ビジュアルフィードバック
+          showNotification(`ノード "${nearestNode.nodeId}" から開始 - 終点をクリックしてください`);
+        } else {
+          // 自由位置
+          edgeStartPoint = { x: x, y: y, nodeId: null };
+          showStartMarker(x, y);
+          clearNodeSnapHighlight(); // ★ハイライトクリア
+          showNotification('終点をクリックしてください');
+        }
       } else {
         // 終了点を設定してエッジ作成
-        createManualEdge(x, y);
+        // ★ノード吸着判定（Phase 2）
+        const nearestNode = findNearestNode(x, y, 50);
+
+        if (nearestNode) {
+          // ノードに吸着
+          highlightNodeForSnap(nearestNode.element); // ★ビジュアルフィードバック
+          createManualEdge(nearestNode.centerX, nearestNode.centerY, nearestNode.nodeId);
+        } else {
+          // 自由位置
+          createManualEdge(x, y, null);
+        }
+        // エッジ作成後、ハイライトはクリア（toggleEdgeAddMode内で処理）
       }
 
       event.stopPropagation();
@@ -5313,8 +5560,19 @@
       const scaleY = viewBox.height / rect.height;
 
       // マウス位置をSVG座標に変換
-      const x = (event.clientX - rect.left) * scaleX + viewBox.x;
-      const y = (event.clientY - rect.top) * scaleY + viewBox.y;
+      let x = (event.clientX - rect.left) * scaleX + viewBox.x;
+      let y = (event.clientY - rect.top) * scaleY + viewBox.y;
+
+      // ★ノード吸着判定（Phase 2 - プレビュー時）
+      const nearestNode = findNearestNode(x, y, 50);
+      if (nearestNode) {
+        // ノードに吸着
+        x = nearestNode.centerX;
+        y = nearestNode.centerY;
+        highlightNodeForSnap(nearestNode.element); // ★ビジュアルフィードバック
+      } else {
+        clearNodeSnapHighlight(); // ★ハイライトクリア
+      }
 
       if (!edgePreviewLine) {
         // プレビュー線を作成
@@ -5325,15 +5583,143 @@
         svg.appendChild(edgePreviewLine);
       }
 
-      // プレビュー線の終点を更新
+      // プレビュー線の終点を更新（吸着時はノード中心座標）
       edgePreviewLine.setAttribute('x2', x);
       edgePreviewLine.setAttribute('y2', y);
     }
 
     /**
-     * 手動エッジを作成
+     * ノード吸着のハイライトをクリア
      */
-    function createManualEdge(endX, endY) {
+    function clearNodeSnapHighlight() {
+      const highlighted = document.querySelectorAll('.node-snap-highlight');
+      highlighted.forEach(el => el.classList.remove('node-snap-highlight'));
+    }
+
+    /**
+     * ノードをハイライト表示（吸着フィードバック）
+     * @param {Element} nodeElement - ハイライトするノード要素
+     */
+    function highlightNodeForSnap(nodeElement) {
+      if (nodeElement) {
+        clearNodeSnapHighlight();
+        nodeElement.classList.add('node-snap-highlight');
+      }
+    }
+
+    /**
+     * 指定座標から最も近いノードを検索
+     * @param {number} x - SVG座標系のX座標
+     * @param {number} y - SVG座標系のY座標
+     * @param {number} radius - 吸着半径（デフォルト50px）
+     * @returns {Object|null} { nodeId, centerX, centerY, element } または null
+     */
+    function findNearestNode(x, y, radius = 50) {
+      const svg = document.querySelector('.svg-content-wrapper svg') || document.querySelector('svg');
+      if (!svg) {
+        console.warn('🚫 findNearestNode: SVG not found');
+        return null;
+      }
+
+      // 全ノードを取得（Mermaidノード + クラスター）
+      const nodes = svg.querySelectorAll('[data-et="node"], [data-et="cluster"]');
+      console.log(`🔍 findNearestNode: Found ${nodes.length} nodes with [data-et="node|cluster"]`);
+
+      // デバッグ: 最初の5つのノードの属性を出力
+      if (nodes.length === 0) {
+        console.warn('⚠️ No nodes found with [data-et="node|cluster"]. Trying alternative selectors...');
+        
+        // 代替セレクタを試す
+        const altNodes = svg.querySelectorAll('g.node, g[class*="node"], [id*="flowchart"]');
+        console.log(`🔍 Alternative selector found ${altNodes.length} nodes`);
+        
+        if (altNodes.length > 0) {
+          console.log('Sample node attributes:', {
+            tagName: altNodes[0].tagName,
+            className: altNodes[0].className?.baseVal || altNodes[0].className,
+            id: altNodes[0].id,
+            dataEt: altNodes[0].getAttribute('data-et'),
+            allAttributes: Array.from(altNodes[0].attributes || []).map(a => `${a.name}="${a.value}"`).join(', ')
+          });
+        }
+      } else {
+        console.log('Sample node:', {
+          id: nodes[0].id || nodes[0].getAttribute('data-id'),
+          dataEt: nodes[0].getAttribute('data-et')
+        });
+      }
+
+      let nearestNode = null;
+      let minDistance = Infinity;
+
+      let closestDistances = [];
+      
+      nodes.forEach((node, index) => {
+        try {
+          // ノードの境界ボックスを取得
+          const bbox = node.getBBox();
+
+          // ノードの中心座標を計算
+          const centerX = bbox.x + bbox.width / 2;
+          const centerY = bbox.y + bbox.height / 2;
+
+          // クリック位置との距離を計算
+          const dx = x - centerX;
+          const dy = y - centerY;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+
+          // デバッグ: 最初の3ノードと、50px以内のノードの距離を記録
+          if (index < 3 || distance <= radius) {
+            closestDistances.push({
+              nodeId: node.getAttribute('data-id') || node.id,
+              distance: distance.toFixed(1),
+              bbox: { x: bbox.x.toFixed(1), y: bbox.y.toFixed(1), w: bbox.width.toFixed(1), h: bbox.height.toFixed(1) },
+              center: { x: centerX.toFixed(1), y: centerY.toFixed(1) }
+            });
+          }
+
+          // 最も近いノードを記録
+          if (distance < minDistance && distance <= radius) {
+            minDistance = distance;
+            nearestNode = {
+              nodeId: node.getAttribute('data-id') || node.id,
+              centerX: centerX,
+              centerY: centerY,
+              element: node,
+              distance: distance
+            };
+          }
+        } catch (err) {
+          // getBBox()が失敗する場合があるのでスキップ
+          console.warn('getBBox failed for node:', node, err);
+        }
+      });
+
+      // デバッグ: クリック座標と最も近い3ノードを表示
+      console.log(`📍 Click at (${x.toFixed(1)}, ${y.toFixed(1)}), radius: ${radius}px`);
+      if (closestDistances.length > 0) {
+        console.log(`🎯 Top 5 closest nodes:`);
+        closestDistances.slice(0, 5).forEach((n, i) => {
+          console.log(`  ${i+1}. ${n.nodeId}: ${n.distance}px - center:(${n.center.x}, ${n.center.y}) bbox:(${n.bbox.x}, ${n.bbox.y}) ${n.bbox.w}x${n.bbox.h}`);
+        });
+      } else {
+        console.log('⚠️ No nodes within range');
+      }
+
+      if (nearestNode) {
+        console.log(`🎯 ノード吸着: ${nearestNode.nodeId} (距離: ${nearestNode.distance.toFixed(1)}px)`);
+      }
+
+      return nearestNode;
+    }
+
+    /**
+     * 手動エッジを作成
+     * @param {number} endX - 終点X座標
+     * @param {number} endY - 終点Y座標
+     * @param {string|null} endNodeId - 終点ノードID（Phase 2で追加）
+     */
+    function createManualEdge(endX, endY, endNodeId = null) {
       // ラベル入力ダイアログ
       const label = prompt('エッジラベルを入力してください（省略可）:', '');
 
@@ -5355,7 +5741,7 @@
         startNodeId: edgeStartPoint.nodeId,
         endX: endX,
         endY: endY,
-        endNodeId: null, // Phase 2で実装
+        endNodeId: endNodeId, // ★Phase 2で実装完了
         label: label.trim(),
         style: {
           color: '#666',
