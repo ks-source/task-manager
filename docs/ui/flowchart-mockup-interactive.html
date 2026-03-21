@@ -4280,10 +4280,17 @@
 
       const svgClone = mainSvg.cloneNode(true);
       svgClone.removeAttribute('id'); // ID重複を避ける
+
+      // ★ ミニマップ表示のためにサイズ制約を削除
       svgClone.style.width = '100%';
       svgClone.style.height = '100%';
+      svgClone.style.minWidth = 'auto';
+      svgClone.style.minHeight = 'auto';
+      svgClone.style.maxWidth = 'none';
+      svgClone.style.maxHeight = 'none';
+      svgClone.style.display = 'block';
+      svgClone.style.background = 'transparent';
       svgClone.style.pointerEvents = 'none';
-      svgClone.style.objectFit = 'contain'; // アスペクト比を維持
 
       console.log('🔍 クローンしたSVG:', svgClone);
       console.log('  - viewBox:', svgClone.getAttribute('viewBox'));
