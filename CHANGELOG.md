@@ -5,6 +5,105 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.12.0] - 2026-03-21
+
+### Added
+- **Flowchart Mockup: Enhanced Minimap Zoom Controls**
+  - Improved zoom button visibility with "－" "＋" text instead of small SVG icons
+  - Increased button size from 20px to 24px for better accessibility
+  - Enhanced zoom percentage display (9px → 11px, bold)
+  - Fixed display issue: Changed `.minimap-container` overflow from `hidden` to `visible`
+  - Adjusted `.minimap-content` height to accommodate zoom controls (calc(100% - 57px))
+
+- **Flowchart Mockup: Toolbar Reorganization with SVG Icons**
+  - Unified icon button styles (36px × 36px) consistent with task-manager.html
+  - Implemented dropdown menus for file operations (Load, Export)
+  - Consolidated related actions into organized groups
+  - Added hover effects and active states for better UX
+
+- **Flowchart Mockup: Panel & Minimap Toggle with Icon State Indicators**
+  - Moved toggle buttons from toolbar to footer with slim icon style (24px × 24px)
+  - Implemented dynamic icon switching (normal ↔ strikethrough) based on visibility state
+  - Added `updatePanelIcon()` and `updateMinimapIcon()` functions for state management
+  - Visual indicators: Active state with blue background, icon changes to show current action
+
+### Fixed
+- **Flowchart Mockup: CRITICAL - Zoom Jump Issue Resolved**
+  - **Root Cause**: `scroll-behavior: smooth` caused scroll position to animate instead of updating instantly during zoom
+  - **Symptom**: Visual "jumping" when zooming - viewport would briefly show incorrect position before settling
+  - **Solution**:
+    - Removed `scroll-behavior: smooth` from container (flowchart-mockup-interactive.html:1049)
+    - Removed SVG size transition that caused delayed rendering (line 1077)
+    - Force set `scrollBehavior = 'auto'` in `applyZoom()` (line 2759)
+    - Commented out `scrollBehavior = 'smooth'` restoration after minimap drag (line 3795)
+  - **Result**: Zoom operations now execute instantly without visual artifacts
+
+- **Flowchart Mockup: Viewport Center-Based Zooming**
+  - Implemented `getCurrentViewportCenter()` to calculate current viewport center in SVG coordinates
+  - Modified `applyZoom()` to synchronize SVG resize and scroll position adjustment in same frame
+  - Added `isZooming` flag to prevent scroll event conflicts during zoom operations
+  - Zoom now maintains the viewport center point, providing intuitive zoom behavior
+
+- **Flowchart Mockup: Node Detection Accuracy at Different Zoom Levels**
+  - **Issue**: Node click detection became inaccurate when SVG was zoomed
+  - **Solution**: Calculate SVG scale ratio and adjust detection radius proportionally
+  - Added scale calculation from viewBox and bounding rect (flowchart-mockup-interactive.html:5624-5631)
+  - Updated detection threshold to use adjusted radius based on zoom level (line 5692)
+  - Enhanced debug logging to show both screen-space and SVG-space radius values
+
+### Technical Details
+
+**Zoom Function Implementation**:
+```javascript
+// Before: Separate SVG resize and scroll adjustment caused timing issues
+applyZoom();
+adjustScrollToMaintainCenter(center, currentZoom);
+
+// After: Unified approach in same frame
+function applyZoom(center, newZoom, callback) {
+  container.style.scrollBehavior = 'auto';  // Force instant scroll
+  // SVG resize
+  svg.style.width = `${newWidth}px`;
+  // Immediate scroll position adjustment
+  container.scrollLeft = targetScrollLeft;
+  container.scrollTop = targetScrollTop;
+  // Callback for minimap update
+  requestAnimationFrame(callback);
+}
+```
+
+**Center Calculation**:
+```javascript
+function getCurrentViewportCenter() {
+  const containerCenterX = containerRect.width / 2;
+  const containerCenterY = containerRect.height / 2;
+  const svgAbsX = container.scrollLeft + containerCenterX;
+  const svgAbsY = container.scrollTop + containerCenterY;
+  // Normalize to pre-zoom coordinates
+  return {
+    svgCenterX: svgAbsX / currentZoom,
+    svgCenterY: svgAbsY / currentZoom,
+    containerCenterX,
+    containerCenterY
+  };
+}
+```
+
+**Node Detection Scale Adjustment**:
+```javascript
+const scaleX = viewBox.width / rect.width;
+const scaleY = viewBox.height / rect.height;
+const scale = Math.max(scaleX, scaleY);
+const adjustedRadius = radius * scale;  // Screen → SVG coordinates
+```
+
+### UI/UX Improvements
+- **Smooth Zoom Experience**: Eliminated visual jumping, viewport stays centered on zoom point
+- **Intuitive Controls**: Clear icon states show current visibility and next action
+- **Organized Interface**: Reduced toolbar clutter with dropdown menus
+- **Better Accessibility**: Larger, more visible zoom controls
+- **Consistent Behavior**: Node detection works accurately at any zoom level
+
 ## [2.11.1] - 2026-03-20
 
 ### Fixed
