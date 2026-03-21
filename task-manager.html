@@ -893,7 +893,7 @@
    * Header / Menu Bar
    * ========================================== -->
   <header class="header">
-    <h1 class="header-title">Task Manager v2.11.1</h1>
+    <h1 class="header-title" id="project-name-display">新規プロジェクト</h1>
     <nav class="header-nav">
       <button class="icon-button active" onclick="showDashboard()" title="ダッシュボード">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1303,12 +1303,12 @@
         <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1rem;">
           <button onclick="exportJSON(); closeExportDialog();" style="text-align: left; padding: 1rem; background: #2c3e50; color: white; border: none; border-radius: 6px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#34495e'" onmouseout="this.style.background='#2c3e50'">
             <strong>📄 JSON形式（完全データ）</strong>
-            <div style="font-size: 0.85rem; opacity: 0.9; margin-top: 0.25rem;">プロジェクトの全データ（タスク・担当者等のシステムデータ含む）をJSON形式でエクスポート</div>
+            <div style="font-size: 0.85rem; opacity: 0.9; margin-top: 0.25rem;">プロジェクトの全データ（プロジェクト名・タスク・担当者等のシステムデータ含む）をJSON形式でエクスポート</div>
           </button>
 
           <button onclick="exportCSV(); closeExportDialog();" style="text-align: left; padding: 1rem; background: #2c3e50; color: white; border: none; border-radius: 6px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#34495e'" onmouseout="this.style.background='#2c3e50'">
             <strong>📊 CSV形式（Excel互換）</strong>
-            <div style="font-size: 0.85rem; opacity: 0.9; margin-top: 0.25rem;">タスクリストのみをExcelで開けるCSV形式でエクスポート（担当者等のシステムデータは含まれません）</div>
+            <div style="font-size: 0.85rem; opacity: 0.9; margin-top: 0.25rem;">タスクリストのみをExcelで開けるCSV形式でエクスポート（プロジェクト名・担当者等のシステムデータは含まれません）</div>
           </button>
 
           <button onclick="downloadAITemplate('json'); closeExportDialog();" style="text-align: left; padding: 1rem; background: linear-gradient(135deg, #1a252f 0%, #2c3e50 100%); color: white; border: none; border-radius: 6px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='linear-gradient(135deg, #2c3e50 0%, #34495e 100%)'" onmouseout="this.style.background='linear-gradient(135deg, #1a252f 0%, #2c3e50 100%)'">
@@ -1344,12 +1344,12 @@
         <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1rem;">
           <button onclick="loadFromFile(); closeImportDialog();" style="text-align: left; padding: 1rem; background: #2c3e50; color: white; border: none; border-radius: 6px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#34495e'" onmouseout="this.style.background='#2c3e50'">
             <strong>📄 JSON形式</strong>
-            <div style="font-size: 0.85rem; opacity: 0.9; margin-top: 0.25rem;">タスクマネージャープロジェクトファイル（タスク・担当者等のシステムデータを含む完全データ）</div>
+            <div style="font-size: 0.85rem; opacity: 0.9; margin-top: 0.25rem;">タスクマネージャープロジェクトファイル（プロジェクト名・タスク・担当者等のシステムデータを含む完全データ）</div>
           </button>
 
           <button onclick="importFromCSV(); closeImportDialog();" style="text-align: left; padding: 1rem; background: #2c3e50; color: white; border: none; border-radius: 6px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#34495e'" onmouseout="this.style.background='#2c3e50'">
             <strong>📊 CSV形式</strong>
-            <div style="font-size: 0.85rem; opacity: 0.9; margin-top: 0.25rem;">WBSタスクリストのみ（担当者等のシステムデータは含まれません・既存データは置き換えられます）</div>
+            <div style="font-size: 0.85rem; opacity: 0.9; margin-top: 0.25rem;">WBSタスクリストのみ（プロジェクト名・担当者等のシステムデータは含まれません・既存データは置き換えられます）</div>
           </button>
         </div>
 
@@ -1370,6 +1370,23 @@
         <button class="modal-close" onclick="closeSettingsModal()">&times;</button>
       </div>
       <div class="modal-body">
+        <!-- プロジェクト名設定セクション -->
+        <div class="modal-section">
+          <h3 class="modal-section-title">📝 プロジェクト名</h3>
+          <input
+            type="text"
+            id="project-name-input"
+            placeholder="プロジェクト名を入力してください"
+            style="width: 100%; padding: 0.75rem; border: 1px solid var(--color-border); border-radius: 4px; font-size: 0.95rem; font-weight: 500;"
+            onchange="updateProjectName(this.value)"
+            onkeypress="if(event.key==='Enter') { this.blur(); }"
+          >
+          <p style="font-size: 0.85rem; color: var(--color-gray); margin-top: 0.5rem; margin-bottom: 0;">
+            💡 ヘッダーに表示されるプロジェクト名を設定できます
+          </p>
+        </div>
+
+        <!-- 担当者管理セクション -->
         <div class="modal-section">
           <h3 class="modal-section-title">👥 担当者管理</h3>
 
@@ -1434,7 +1451,7 @@
 {
   "meta": {
     "version": "2.8.7",
-    "project_name": "New Project",
+    "project_name": "新規プロジェクト",
     "project_start": "",
     "project_end": "",
     "total_tasks": 0,
@@ -1484,6 +1501,18 @@
       setupCrossHTMLSync(); // 🆕 クロスHTML連携の初期化
       setupGanttCommunication(); // 🔧 ガントチャートとの通信（postMessage）
       setupSearchListener();
+
+      // プロジェクト名をヘッダーに反映
+      updateProjectNameDisplay();
+    }
+
+    // プロジェクト名表示を更新
+    function updateProjectNameDisplay() {
+      const displayElement = document.getElementById('project-name-display');
+      if (displayElement && projectData && projectData.meta) {
+        const projectName = projectData.meta.project_name || '新規プロジェクト';
+        displayElement.textContent = projectName;
+      }
     }
 
     function setupSearchListener() {
@@ -3954,6 +3983,117 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
       cursor: move !important;
     }
 
+    /* リサイズハンドル（○） - 超目立つデザイン */
+    .resize-handle {
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      background: #FFD700;  /* 金色 */
+      border: 4px solid #FF6B00;  /* オレンジの枠 */
+      border-radius: 50%;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 1000;
+      pointer-events: none;
+      box-shadow:
+        0 0 0 2px white,
+        0 4px 12px rgba(0,0,0,0.6),
+        0 0 20px rgba(255, 215, 0, 0.8);
+      opacity: 0;
+      transition: all 0.2s;
+    }
+
+    .resize-handle.visible {
+      opacity: 1;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        transform: translateY(-50%) scale(1);
+      }
+      50% {
+        transform: translateY(-50%) scale(1.15);
+      }
+    }
+
+    .resize-handle.active {
+      background: #FF6B00;
+      border-color: #FF4500;
+      width: 28px;
+      height: 28px;
+      box-shadow:
+        0 0 0 3px white,
+        0 6px 16px rgba(0,0,0,0.7),
+        0 0 30px rgba(255, 107, 0, 1);
+      animation: none;
+    }
+
+    .resize-handle.left {
+      left: -12px;
+    }
+
+    .resize-handle.right {
+      right: -12px;
+    }
+
+    /* プレビューバーのハンドル */
+    .task-bar-preview .resize-handle {
+      border-color: #00C853;
+      background: #76FF03;
+      width: 26px;
+      height: 26px;
+      border-width: 4px;
+      box-shadow:
+        0 0 0 2px white,
+        0 5px 15px rgba(0,0,0,0.6),
+        0 0 25px rgba(118, 255, 3, 0.9);
+    }
+
+    /* ドラッグ中のガイドライン */
+    .drag-guideline {
+      position: absolute;
+      top: 50%;
+      height: 2px;
+      background: repeating-linear-gradient(
+        to right,
+        #3498db 0px,
+        #3498db 8px,
+        transparent 8px,
+        transparent 16px
+      );
+      transform: translateY(-50%);
+      pointer-events: none;
+      z-index: 99;
+      opacity: 0.6;
+    }
+
+    /* 日付ラベル（ハンドル位置） */
+    .resize-date-label {
+      position: absolute;
+      top: -30px;
+      background: #2c3e50;
+      color: white;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      white-space: nowrap;
+      pointer-events: none;
+      z-index: 1001;
+      font-weight: 600;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.4);
+    }
+
+    .resize-date-label::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 5px solid transparent;
+      border-top-color: #2c3e50;
+    }
+
     .legend {
       display: flex;
       gap: 0.75rem;
@@ -4320,37 +4460,46 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
       });
     }
 
+    // リサイザーのmousemoveハンドラ（高優先度）
     document.addEventListener('mousemove', (e) => {
-      if (!isResizing) return;
+      // リサイズ中は最優先で処理
+      if (isResizing) {
+        const deltaX = e.clientX - startX;
+        let newWidth = startWidth + deltaX;
 
-      const deltaX = e.clientX - startX;
-      let newWidth = startWidth + deltaX;
+        // Constrain width between 150px and 500px
+        newWidth = Math.max(150, Math.min(500, newWidth));
 
-      // Constrain width between 150px and 500px
-      newWidth = Math.max(150, Math.min(500, newWidth));
-
-      document.documentElement.style.setProperty('--task-column-width', newWidth + 'px');
+        document.documentElement.style.setProperty('--task-column-width', newWidth + 'px');
+        e.stopPropagation(); // 他のイベントを停止
+        return;
+      }
     });
 
-    document.addEventListener('mouseup', () => {
-      if (!isResizing) return;
+    // リサイザーのmouseupハンドラ（高優先度）
+    document.addEventListener('mouseup', (e) => {
+      // リサイズ中の場合のみ処理
+      if (isResizing) {
+        isResizing = false;
+        const resizer = document.getElementById('column-resizer');
+        if (resizer) {
+          resizer.classList.remove('resizing');
+        }
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
 
-      isResizing = false;
-      const resizer = document.getElementById('column-resizer');
-      if (resizer) {
-        resizer.classList.remove('resizing');
-      }
-      document.body.style.cursor = '';
-      document.body.style.userSelect = '';
+        // Save to localStorage
+        // 🔧 Blob URLからはLocalStorageにアクセスできないため、try-catchで保護
+        try {
+          const currentWidth = getComputedStyle(document.documentElement)
+            .getPropertyValue('--task-column-width');
+          localStorage.setItem('gantt_task_column_width', parseInt(currentWidth, 10));
+        } catch (error) {
+          console.log('[Gantt Window] LocalStorage not accessible (Blob URL origin)');
+        }
 
-      // Save to localStorage
-      // 🔧 Blob URLからはLocalStorageにアクセスできないため、try-catchで保護
-      try {
-        const currentWidth = getComputedStyle(document.documentElement)
-          .getPropertyValue('--task-column-width');
-        localStorage.setItem('gantt_task_column_width', parseInt(currentWidth, 10));
-      } catch (error) {
-        console.log('[Gantt Window] LocalStorage not accessible (Blob URL origin)');
+        e.stopPropagation(); // 他のイベントを停止
+        return;
       }
     });
 
@@ -4401,12 +4550,48 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
     function attachDragToTaskBars() {
       const taskBars = document.querySelectorAll('.task-bar');
       taskBars.forEach(bar => {
-        // ホバー時のカーソル変更
+        // リサイズハンドルを追加
+        if (!bar.querySelector('.resize-handle')) {
+          const leftHandle = document.createElement('div');
+          leftHandle.className = 'resize-handle left';
+          bar.appendChild(leftHandle);
+
+          const rightHandle = document.createElement('div');
+          rightHandle.className = 'resize-handle right';
+          bar.appendChild(rightHandle);
+        }
+
+        // ホバー時のカーソル変更とハンドル表示
         bar.addEventListener('mousemove', (e) => {
           if (dragState) return; // ドラッグ中は無視
 
           const zone = getBarZone(e, bar);
           bar.style.cursor = getCursorStyle(zone);
+
+          // ハンドル表示制御
+          const leftHandle = bar.querySelector('.resize-handle.left');
+          const rightHandle = bar.querySelector('.resize-handle.right');
+
+          if (zone === 'START_RESIZE') {
+            leftHandle.classList.add('visible');
+            rightHandle.classList.remove('visible');
+          } else if (zone === 'END_RESIZE') {
+            leftHandle.classList.remove('visible');
+            rightHandle.classList.add('visible');
+          } else {
+            leftHandle.classList.remove('visible');
+            rightHandle.classList.remove('visible');
+          }
+        });
+
+        // マウスが離れたらハンドルを非表示
+        bar.addEventListener('mouseleave', (e) => {
+          if (dragState) return;
+
+          const leftHandle = bar.querySelector('.resize-handle.left');
+          const rightHandle = bar.querySelector('.resize-handle.right');
+          leftHandle.classList.remove('visible');
+          rightHandle.classList.remove('visible');
         });
 
         bar.addEventListener('mousedown', startDrag);
@@ -4414,7 +4599,12 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
     }
 
     function startDrag(e) {
-      const bar = e.target;
+      // リサイズ中はドラッグを無視
+      if (isResizing) return;
+
+      const bar = e.target.closest('.task-bar');
+      if (!bar) return;
+
       const wbsNo = bar.getAttribute('data-wbs');
       if (!wbsNo) return;
 
@@ -4437,12 +4627,30 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
 
       bar.classList.add('dragging');
       document.body.style.cursor = getCursorStyle(zone);
+
+      // ハンドルをアクティブ化
+      const leftHandle = bar.querySelector('.resize-handle.left');
+      const rightHandle = bar.querySelector('.resize-handle.right');
+
+      if (zone === 'START_RESIZE') {
+        leftHandle.classList.add('active', 'visible');
+        rightHandle.classList.remove('active', 'visible');
+      } else if (zone === 'END_RESIZE') {
+        leftHandle.classList.remove('active', 'visible');
+        rightHandle.classList.add('active', 'visible');
+      } else {
+        leftHandle.classList.remove('active', 'visible');
+        rightHandle.classList.remove('active', 'visible');
+      }
+
       document.addEventListener('mousemove', onDrag);
       document.addEventListener('mouseup', endDrag);
       e.preventDefault();
     }
 
     function onDrag(e) {
+      // リサイズ中はドラッグを無視
+      if (isResizing) return;
       if (!dragState) return;
 
       const deltaX = e.clientX - dragState.startX;
@@ -4488,6 +4696,8 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
     }
 
     function endDrag(e) {
+      // リサイズ中はドラッグを無視
+      if (isResizing) return;
       if (!dragState) return;
 
       document.removeEventListener('mousemove', onDrag);
@@ -4598,11 +4808,15 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
       const originalBar = dragState.barElement;
       const timelineRow = originalBar.parentElement;
 
-      // Remove existing preview if any
+      // Remove existing preview, guidelines, and labels
       const existingPreview = timelineRow.querySelector('.task-bar-preview');
-      if (existingPreview) {
-        existingPreview.remove();
-      }
+      if (existingPreview) existingPreview.remove();
+
+      const existingGuidelines = timelineRow.querySelectorAll('.drag-guideline');
+      existingGuidelines.forEach(g => g.remove());
+
+      const existingLabels = timelineRow.querySelectorAll('.resize-date-label');
+      existingLabels.forEach(l => l.remove());
 
       // Calculate position for preview using the SAME logic as renderGantt()
       // Parse date strings to Date objects
@@ -4611,9 +4825,20 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
       const startDate = new Date(parseInt(parts1[0]), parseInt(parts1[1]) - 1, parseInt(parts1[2]));
       const endDate = new Date(parseInt(parts2[0]), parseInt(parts2[1]) - 1, parseInt(parts2[2]));
 
-      // Use percentage-based positioning (same as task bars in renderGantt)
+      // Calculate original bar position (for guidelines)
+      const originalRect = originalBar.getBoundingClientRect();
+      const timelineRect = timelineRow.getBoundingClientRect();
+      const originalLeft = ((originalRect.left - timelineRect.left) / timelineRect.width) * 100;
+      const originalRight = ((originalRect.right - timelineRect.left) / timelineRect.width) * 100;
+
+      // Calculate start position (percentage from minDate)
       const startOffset = Math.max(0, (startDate - minDate) / (maxDate - minDate) * 100);
-      const duration = Math.max(3, (endDate - startDate) / (maxDate - minDate) * 100);
+
+      // Calculate end position (percentage from minDate)
+      const endOffset = Math.min(100, (endDate - minDate) / (maxDate - minDate) * 100);
+
+      // Calculate width as the difference between end and start positions
+      const duration = Math.max(0.5, endOffset - startOffset);
 
       // Create preview element
       const preview = document.createElement('div');
@@ -4624,15 +4849,58 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
       preview.style.height = '30px';
       preview.style.top = '50%';
       preview.style.transform = 'translateY(-50%)';
-      preview.style.backgroundColor = 'rgba(52, 152, 219, 0.3)';
-      preview.style.border = '2px dashed #3498db';
+      preview.style.backgroundColor = 'rgba(76, 175, 80, 0.5)';
+      preview.style.border = '3px dashed #4CAF50';
       preview.style.borderRadius = '4px';
       preview.style.pointerEvents = 'none';
-      preview.style.zIndex = '5';
+      preview.style.zIndex = '500';
+
+      // Add resize handles to preview
+      const leftHandle = document.createElement('div');
+      leftHandle.className = 'resize-handle left visible';
+      preview.appendChild(leftHandle);
+
+      const rightHandle = document.createElement('div');
+      rightHandle.className = 'resize-handle right visible';
+      preview.appendChild(rightHandle);
 
       timelineRow.appendChild(preview);
 
-      console.log('Preview: ' + newStartDate + ' ~ ' + newEndDate);
+      // ガイドライン表示（リサイズモードの場合のみ）
+      if (dragState.mode === 'START_RESIZE') {
+        // 左端リサイズ：新しい開始位置から元の右端へのガイドライン
+        const guideline = document.createElement('div');
+        guideline.className = 'drag-guideline';
+        guideline.style.left = startOffset + '%';
+        guideline.style.width = (originalRight - startOffset) + '%';
+        timelineRow.appendChild(guideline);
+
+        // 日付ラベル（左端）
+        const label = document.createElement('div');
+        label.className = 'resize-date-label';
+        label.textContent = newStartDate;
+        label.style.left = startOffset + '%';
+        label.style.transform = 'translateX(-50%)';
+        timelineRow.appendChild(label);
+
+      } else if (dragState.mode === 'END_RESIZE') {
+        // 右端リサイズ：元の左端から新しい終了位置へのガイドライン
+        const guideline = document.createElement('div');
+        guideline.className = 'drag-guideline';
+        guideline.style.left = originalLeft + '%';
+        guideline.style.width = (endOffset - originalLeft) + '%';
+        timelineRow.appendChild(guideline);
+
+        // 日付ラベル（右端）
+        const label = document.createElement('div');
+        label.className = 'resize-date-label';
+        label.textContent = newEndDate;
+        label.style.left = endOffset + '%';
+        label.style.transform = 'translateX(-50%)';
+        timelineRow.appendChild(label);
+      }
+
+      console.log('[Preview] ' + newStartDate + ' ~ ' + newEndDate + ' | Left: ' + startOffset.toFixed(1) + '%, Width: ' + duration.toFixed(1) + '%');
     }
 
     // Attach drag functionality after render
@@ -4731,12 +4999,48 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
     function openSettingsModal() {
       initializeAssignees();
       renderAssigneeList();
+
+      // プロジェクト名を入力欄に設定
+      const projectNameInput = document.getElementById('project-name-input');
+      if (projectNameInput) {
+        projectNameInput.value = projectData.meta.project_name || '新規プロジェクト';
+      }
+
       document.getElementById('settings-modal').style.display = 'flex';
     }
 
     // Close settings modal
     function closeSettingsModal() {
       document.getElementById('settings-modal').style.display = 'none';
+    }
+
+    // Update project name
+    function updateProjectName(newName) {
+      // Trim whitespace
+      newName = (newName || '').trim();
+
+      // デフォルト値を設定
+      if (newName === '') {
+        newName = '新規プロジェクト';
+      }
+
+      // projectData.meta を更新
+      if (!projectData.meta) {
+        projectData.meta = {};
+      }
+      projectData.meta.project_name = newName;
+
+      // ヘッダーのプロジェクト名を更新
+      const displayElement = document.getElementById('project-name-display');
+      if (displayElement) {
+        displayElement.textContent = newName;
+      }
+
+      // LocalStorage に保存
+      saveToLocalStorage();
+      markDirty();
+
+      console.log(`[updateProjectName] プロジェクト名を更新: ${newName}`);
     }
 
     // Render assignee list
@@ -4891,13 +5195,23 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
    * Footer
    * ========================================== -->
   <footer class="footer" id="footer">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-      <path d="M14 2v6h6"></path>
-    </svg>
-    <span id="current-file-name">(新規ファイル)</span>
-    <span>|</span>
-    <span>最終保存: <span id="last-save-time">未保存</span></span>
+    <!-- 左側: ファイル情報 -->
+    <div style="display: flex; align-items: center; gap: 0.5rem;">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+        <path d="M14 2v6h6"></path>
+      </svg>
+      <span id="current-file-name">(新規ファイル)</span>
+      <span>|</span>
+      <span>最終保存: <span id="last-save-time">未保存</span></span>
+    </div>
+
+    <!-- 中央: ツール名 -->
+    <div style="position: absolute; left: 50%; transform: translateX(-50%); font-size: 0.8rem; font-weight: 500; opacity: 0.7;">
+      Task Manager v2.11.1
+    </div>
+
+    <!-- 右側: 保存ステータス -->
     <div class="status-indicator unsaved" id="save-status">
       <span>● 未保存の変更あり</span>
     </div>
