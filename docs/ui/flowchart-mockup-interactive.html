@@ -1732,6 +1732,8 @@
     .minimap-container.minimized {
       width: auto;
       height: auto;
+      min-width: 0;
+      min-height: 0;
       cursor: pointer;
     }
 
@@ -1945,18 +1947,24 @@
         </svg>
       </button>
       <div class="dropdown-menu" id="export-dropdown">
-        <button class="dropdown-item" onclick="exportEditedSvg(); closeDropdown('export-dropdown');">
+        <button class="dropdown-item" onclick="exportEditedSvg(); closeDropdown('export-dropdown');" title="視覚表示用SVG（カスタムラベル・手動要素表示、メタデータ含む）">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;">
             <polygon points="16 3 21 8 8 21 3 21 3 16 16 3"></polygon>
           </svg>
-          SVGエクスポート
+          <div style="display: flex; flex-direction: column; align-items: flex-start; line-height: 1.4;">
+            <span style="font-weight: 600;">📄 SVG（完全版）</span>
+            <span style="font-size: 11px; color: #666; margin-top: 2px;">視覚+メタデータ・次回復元可能</span>
+          </div>
         </button>
-        <button class="dropdown-item" onclick="saveToFileAs(); closeDropdown('export-dropdown');">
+        <button class="dropdown-item" onclick="saveToFileAs(); closeDropdown('export-dropdown');" title="JSONデータ（すべてのメモ・ラベル・手動要素のメタデータ）">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;">
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
             <polyline points="14 2 14 8 20 8"></polyline>
           </svg>
-          メモエクスポート
+          <div style="display: flex; flex-direction: column; align-items: flex-start; line-height: 1.4;">
+            <span style="font-weight: 600;">💾 JSON（データのみ）</span>
+            <span style="font-size: 11px; color: #666; margin-top: 2px;">従来形式・JSONのみで復元可能</span>
+          </div>
         </button>
       </div>
     </div>
