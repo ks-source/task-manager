@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ノード吸着問題の診断コマンド</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    h1 {
+      color: #333;
+      border-bottom: 3px solid #dc3545;
+      padding-bottom: 10px;
+    }
+    .issue-summary {
+      background-color: #fff3cd;
+      border-left: 4px solid #ffc107;
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+    .command-block {
+      background-color: white;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      margin-bottom: 30px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .command-header {
+      background-color: #dc3545;
+      color: white;
+      padding: 15px;
+      border-radius: 5px 5px 0 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .command-title {
+      font-size: 18px;
+      font-weight: bold;
+    }
+    .copy-btn {
+      background-color: #28a745;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+      transition: background-color 0.3s;
+    }
+    .copy-btn:hover {
+      background-color: #218838;
+    }
+    .copy-btn.copied {
+      background-color: #6c757d;
+    }
+    .command-code {
+      padding: 15px;
+      background-color: #f8f9fa;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      white-space: pre-wrap;
+      overflow-x: auto;
+      line-height: 1.5;
+    }
+    .description {
+      padding: 15px;
+      background-color: #e7f3ff;
+      border-bottom: 1px solid #ddd;
+    }
+    .expected-result {
+      padding: 15px;
+      background-color: #d4edda;
+      border-top: 1px solid #ddd;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔍 ノード吸着問題の診断</h1>
+
+  <div class="issue-summary">
+    <strong>報告された問題:</strong>
+    <ol>
+      <li>個別ノード（PHASE1, PHASE2, PHASE3）が緑ハイライトされない</li>
+      <li>サブグラフ（SCOPE）しか吸着対象として認識されていない</li>
+      <li>エッジが「中心から中心」ではなく「側面から側面」に接続すべき</li>
+    </ol>
+  </div>
+
+  <!-- コマンド1: ビルドバージョン確認 -->
+  <div class="command-block">
+    <div class="command-header">
+      <div class="command-title">
+        ステップ1: ビルドバージョン確認
+      </div>
+      <button class="copy-btn" onclick="copyToClipboard('cmd1', this)">📋 コピー</button>
+    </div>
+    <div class="description">
+      <strong>目的:</strong> Phase C のコードが正しく読み込まれているか確認
+    </div>
+    <div class="command-code" id="cmd1">(function() {
+  console.log('=== ビルドバージョン確認 ===');
+  if (typeof DEBUG_BUILD !== 'undefined') {
+    console.log('✅ DEBUG_BUILD:', DEBUG_BUILD);
+  } else {
+    console.log('❌ DEBUG_BUILD is not defined');
+  }
+
+  console.log('✅ calcBoundaryDistance:', typeof calcBoundaryDistance);
+  console.log('✅ findNearestInSet:', typeof findNearestInSet);
+})();</div>
+    <div class="expected-result">
+      期待される結果: DEBUG_BUILD = "phase2-fix-2026-03-21-v2-boundary-distance"
+    </div>
+  </div>
+
+  <!-- コマンド2: ノードとクラスターの確認 -->
+  <div class="command-block">
+    <div class="command-header">
+      <div class="command-title">
+        ステップ2: ノードとサブグラフの存在確認
+      </div>
+      <button class="copy-btn" onclick="copyToClipboard('cmd2', this)">📋 コピー</button>
+    </div>
+    <div class="description">
+      <strong>目的:</strong> data-et="node" と data-et="cluster" が正しく存在するか確認
+    </div>
+    <div class="command-code" id="cmd2">(function() {
+  const svg = document.querySelector('.svg-content-wrapper svg') || document.querySelector('svg');
+
+  console.log('=== ノードとサブグラフの確認 ===');
+
+  const nodes = svg.querySelectorAll('[data-et="node"]');
+  const clusters = svg.querySelectorAll('[data-et="cluster"]');
+
+  console.log('個別ノード数 [data-et="node"]:', nodes.length);
+  console.log('サブグラフ数 [data-et="cluster"]:', clusters.length);
+
+  console.log('\n個別ノード一覧:');
+  nodes.forEach((node, i) => {
+    console.log(`  ${i+1}. ${node.getAttribute('data-id') || node.id}`);
+  });
+
+  console.log('\nサブグラフ一覧:');
+  clusters.forEach((cluster, i) => {
+    console.log(`  ${i+1}. ${cluster.getAttribute('data-id') || cluster.id}`);
+  });
+})();</div>
+    <div class="expected-result">
+      期待される結果: 個別ノード数 > 0（PHASE1, PHASE2, PHASE3などが表示される）
+    </div>
+  </div>
+
+  <!-- コマンド3: エッジ追加モードで個別ノードをクリックしてログ確認 -->
+  <div class="command-block">
+    <div class="command-header">
+      <div class="command-title">
+        ステップ3: 個別ノードクリック時のログ確認
+      </div>
+      <button class="copy-btn" onclick="copyToClipboard('cmd3', this)">📋 コピー</button>
+    </div>
+    <div class="description">
+      <strong>手順:</strong>
+      <ol>
+        <li>「✏️ エッジ追加」ボタンをクリック</li>
+        <li>個別ノード（例: PHASE1）の<strong>中央</strong>をクリック</li>
+        <li>以下のコマンドを実行してログを表示</li>
+      </ol>
+    </div>
+    <div class="command-code" id="cmd3">(function() {
+  console.log('=== 最新のfindNearestNodeログを確認 ===');
+  console.log('コンソールの上のログで以下を確認してください:');
+  console.log('1. "🔍 Pass 1: Found XX individual nodes" が表示されているか');
+  console.log('2. "🎯 Pass1-Node - Top 3 closest:" が表示されているか');
+  console.log('3. どのノードが選択されたか（"🎯 ノード吸着: XXXX"）');
+  console.log('\nもし Pass 2（クラスター）が実行されている場合、Pass 1で個別ノードが見つからなかったことを意味します');
+})();</div>
+    <div class="expected-result">
+      期待される結果: Pass 1 で個別ノードが検出され、PHASE1 に吸着
+    </div>
+  </div>
+
+  <!-- コマンド4: ハイライト関数の確認 -->
+  <div class="command-block">
+    <div class="command-header">
+      <div class="command-title">
+        ステップ4: ノードハイライト機能の動作確認
+      </div>
+      <button class="copy-btn" onclick="copyToClipboard('cmd4', this)">📋 コピー</button>
+    </div>
+    <div class="description">
+      <strong>目的:</strong> highlightNode() 関数が正しく動作するかテスト
+    </div>
+    <div class="command-code" id="cmd4">(function() {
+  const svg = document.querySelector('.svg-content-wrapper svg') || document.querySelector('svg');
+  const phase1 = svg.querySelector('[data-id="PHASE1"]');
+
+  if (phase1) {
+    console.log('✅ PHASE1 ノードが見つかりました');
+    console.log('  data-et:', phase1.getAttribute('data-et'));
+    console.log('  data-id:', phase1.getAttribute('data-id'));
+
+    console.log('\n🔧 手動でPHASE1をハイライトしてみます...');
+    phase1.classList.add('node-snap-highlight');
+
+    setTimeout(() => {
+      console.log('✅ 3秒後にハイライトを解除します');
+      phase1.classList.remove('node-snap-highlight');
+    }, 3000);
+
+    console.log('\n視覚的確認: PHASE1が緑色に光りましたか？');
+  } else {
+    console.log('❌ PHASE1 ノードが見つかりません');
+    console.log('代わりに最初の [data-et="node"] を探します...');
+
+    const firstNode = svg.querySelector('[data-et="node"]');
+    if (firstNode) {
+      console.log('✅ 最初の個別ノードが見つかりました:', firstNode.getAttribute('data-id'));
+      firstNode.classList.add('node-snap-highlight');
+
+      setTimeout(() => {
+        firstNode.classList.remove('node-snap-highlight');
+      }, 3000);
+    } else {
+      console.log('❌ [data-et="node"] が1つも見つかりません');
+    }
+  }
+})();</div>
+    <div class="expected-result">
+      期待される結果: ノードが緑色にハイライトされる（3秒間）
+    </div>
+  </div>
+
+  <script>
+    function copyToClipboard(elementId, button) {
+      const element = document.getElementById(elementId);
+      const text = element.textContent;
+
+      navigator.clipboard.writeText(text).then(() => {
+        const originalText = button.textContent;
+        button.textContent = '✅ コピー完了！';
+        button.classList.add('copied');
+
+        setTimeout(() => {
+          button.textContent = originalText;
+          button.classList.remove('copied');
+        }, 2000);
+      }).catch(err => {
+        alert('コピーに失敗しました: ' + err);
+      });
+    }
+  </script>
+</body>
+</html>

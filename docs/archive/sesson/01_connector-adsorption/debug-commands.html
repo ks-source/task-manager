@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Phase 2 デバッグコマンド実行ガイド</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    h1 {
+      color: #333;
+      border-bottom: 3px solid #007bff;
+      padding-bottom: 10px;
+    }
+    h2 {
+      color: #007bff;
+      margin-top: 30px;
+    }
+    .instructions {
+      background-color: #fff3cd;
+      border-left: 4px solid #ffc107;
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+    .command-block {
+      background-color: white;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      margin-bottom: 30px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .command-header {
+      background-color: #007bff;
+      color: white;
+      padding: 15px;
+      border-radius: 5px 5px 0 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .command-title {
+      font-size: 18px;
+      font-weight: bold;
+    }
+    .copy-btn {
+      background-color: #28a745;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background-color 0.3s;
+    }
+    .copy-btn:hover {
+      background-color: #218838;
+    }
+    .copy-btn:active {
+      background-color: #1e7e34;
+    }
+    .copy-btn.copied {
+      background-color: #6c757d;
+    }
+    .command-description {
+      padding: 15px;
+      background-color: #e7f3ff;
+      border-bottom: 1px solid #ddd;
+    }
+    .command-code {
+      padding: 15px;
+      background-color: #f8f9fa;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      white-space: pre-wrap;
+      overflow-x: auto;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    .visual-check {
+      padding: 15px;
+      background-color: #fff3e0;
+      border-top: 1px solid #ddd;
+      font-weight: bold;
+      color: #e65100;
+    }
+    .step-number {
+      display: inline-block;
+      width: 30px;
+      height: 30px;
+      background-color: #ffc107;
+      color: #333;
+      border-radius: 50%;
+      text-align: center;
+      line-height: 30px;
+      font-weight: bold;
+      margin-right: 10px;
+    }
+    .success-message {
+      display: none;
+      background-color: #d4edda;
+      border: 1px solid #c3e6cb;
+      color: #155724;
+      padding: 10px;
+      border-radius: 4px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔍 Phase 2 デバッグコマンド実行ガイド</h1>
+
+  <div class="instructions">
+    <strong>📋 実行前の準備:</strong>
+    <ol>
+      <li>flowchart-mockup-interactive.html を開く</li>
+      <li>「✏️ エッジ追加」ボタンをクリック</li>
+      <li>フローチャート上で2回クリックしてエッジを作成（ラベル: "test" など）</li>
+      <li>F12 キーで開発者ツールを開き、「Console」タブを選択</li>
+      <li>以下のコマンドを<strong>順番に</strong>実行し、<strong>全出力をコピー</strong>して報告</li>
+    </ol>
+  </div>
+
+  <h2>デバッグコマンド（順番に実行）</h2>
+
+  <!-- ステップ1 -->
+  <div class="command-block">
+    <div class="command-header">
+      <div class="command-title">
+        <span class="step-number">1</span>
+        DOM上に要素が存在するか確認
+      </div>
+      <button class="copy-btn" onclick="copyToClipboard('cmd1', this)">📋 コピー</button>
+    </div>
+    <div class="command-description">
+      <strong>目的:</strong> 手動エッジがDOMに追加されているか、親要素、BBoxを確認
+    </div>
+    <div class="command-code" id="cmd1">const manualEdges = document.querySelectorAll('[data-et="manual-edge"]');
+console.log('手動エッジ数:', manualEdges.length);
+manualEdges.forEach(edge => {
+  console.log('Edge:', edge.getAttribute('data-id'));
+  console.log('  Parent:', edge.parentElement?.tagName, edge.parentElement?.className);
+  console.log('  Line:', edge.querySelector('line')?.outerHTML);
+  console.log('  Text:', edge.querySelector('text')?.outerHTML);
+  try {
+    const bbox = edge.getBBox();
+    console.log('  BBox:', bbox.x, bbox.y, bbox.width, bbox.height);
+  } catch(e) {
+    console.log('  BBox: ERROR', e.message);
+  }
+});</div>
+  </div>
+
+  <!-- ステップ2 -->
+  <div class="command-block">
+    <div class="command-header">
+      <div class="command-title">
+        <span class="step-number">2</span>
+        親要素の transform チェーン確認
+      </div>
+      <button class="copy-btn" onclick="copyToClipboard('cmd2', this)">📋 コピー</button>
+    </div>
+    <div class="command-description">
+      <strong>目的:</strong> SVGの viewBox、output グループの transform、親要素チェーンを確認
+    </div>
+    <div class="command-code" id="cmd2">const svg = document.querySelector('.svg-content-wrapper svg') || document.querySelector('svg');
+const output = svg.querySelector('.output') || svg.querySelector('g');
+console.log('SVG viewBox:', svg.getAttribute('viewBox'));
+console.log('output transform:', output?.getAttribute('transform'));
+
+if (output) {
+  Array.from(output.children).forEach(child => {
+    console.log('  child:', child.tagName, child.className,
+                'transform:', child.getAttribute('transform'));
+  });
+}
+
+const edge = document.querySelector('[data-et="manual-edge"]');
+if (edge) {
+  let parent = edge.parentElement;
+  let chain = [];
+  while (parent && parent !== document.body) {
+    chain.push({
+      tag: parent.tagName,
+      class: parent.className?.baseVal || parent.className,
+      transform: parent.getAttribute('transform'),
+      viewBox: parent.getAttribute('viewBox')
+    });
+    parent = parent.parentElement;
+  }
+  console.log('Parent chain:', JSON.stringify(chain, null, 2));
+}</div>
+  </div>
+
+  <!-- ステップ3 -->
+  <div class="command-block">
+    <div class="command-header">
+      <div class="command-title">
+        <span class="step-number">3</span>
+        テスト円を追加して表示確認
+      </div>
+      <button class="copy-btn" onclick="copyToClipboard('cmd3', this)">📋 コピー</button>
+    </div>
+    <div class="command-description">
+      <strong>目的:</strong> SVGルート vs output内での表示差を確認
+    </div>
+    <div class="command-code" id="cmd3">const svg = document.querySelector('.svg-content-wrapper svg') || document.querySelector('svg');
+const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+circle.setAttribute('cx', '100');
+circle.setAttribute('cy', '100');
+circle.setAttribute('r', '50');
+circle.setAttribute('fill', 'red');
+circle.setAttribute('id', 'test-circle-root');
+svg.appendChild(circle);
+console.log('赤い円をSVGルートに追加 (100,100)');
+
+const output = svg.querySelector('.output > g') || svg.querySelector('.output') || svg.querySelector('g');
+if (output) {
+  const circle2 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  circle2.setAttribute('cx', '100');
+  circle2.setAttribute('cy', '100');
+  circle2.setAttribute('r', '50');
+  circle2.setAttribute('fill', 'blue');
+  circle2.setAttribute('id', 'test-circle-output');
+  output.appendChild(circle2);
+  console.log('青い円をoutput内に追加 (100,100)');
+}</div>
+    <div class="visual-check">
+      ⚠️ 視覚的確認: 赤い円・青い円がどう見えるか報告してください<br>
+      （見えない / 見える / 位置が違う / 画面外 など）
+    </div>
+  </div>
+
+  <!-- ステップ4 -->
+  <div class="command-block">
+    <div class="command-header">
+      <div class="command-title">
+        <span class="step-number">4</span>
+        既存ノードと同じ親に追加
+      </div>
+      <button class="copy-btn" onclick="copyToClipboard('cmd4', this)">📋 コピー</button>
+    </div>
+    <div class="command-description">
+      <strong>目的:</strong> PHASE1ノードと同じ親に要素を追加して表示確認
+    </div>
+    <div class="command-code" id="cmd4">const phase1 = document.querySelector('[data-id="PHASE1"]');
+if (phase1) {
+  const parent = phase1.parentElement;
+  console.log('PHASE1 parent:', parent.tagName, parent.className);
+
+  const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  circle.setAttribute('cx', '1600');
+  circle.setAttribute('cy', '848');
+  circle.setAttribute('r', '30');
+  circle.setAttribute('fill', 'lime');
+  circle.setAttribute('stroke', 'black');
+  circle.setAttribute('stroke-width', '3');
+  parent.appendChild(circle);
+  console.log('緑の円をPHASE1と同じ親に追加 (1600,848)');
+}</div>
+    <div class="visual-check">
+      ⚠️ 視覚的確認: 緑の円が見えるか、PHASE1ノードの上に表示されているか報告してください
+    </div>
+  </div>
+
+  <div class="instructions" style="background-color: #d1ecf1; border-left-color: #0c5460;">
+    <strong>📤 報告内容:</strong>
+    <ol>
+      <li>各ステップのコンソール出力（全文）</li>
+      <li>ステップ3の視覚的結果（赤い円・青い円の表示状態）</li>
+      <li>ステップ4の視覚的結果（緑の円の表示状態）</li>
+      <li>（可能であれば）スクリーンショット</li>
+    </ol>
+  </div>
+
+  <script>
+    function copyToClipboard(elementId, button) {
+      const element = document.getElementById(elementId);
+      const text = element.textContent;
+
+      navigator.clipboard.writeText(text).then(() => {
+        // ボタンのテキストを変更
+        const originalText = button.textContent;
+        button.textContent = '✅ コピー完了！';
+        button.classList.add('copied');
+
+        // 2秒後に元に戻す
+        setTimeout(() => {
+          button.textContent = originalText;
+          button.classList.remove('copied');
+        }, 2000);
+      }).catch(err => {
+        alert('コピーに失敗しました: ' + err);
+      });
+    }
+  </script>
+</body>
+</html>

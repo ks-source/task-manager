@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>すべてのノードID確認</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    h1 {
+      color: #333;
+      border-bottom: 3px solid #007bff;
+      padding-bottom: 10px;
+    }
+    .command-block {
+      background-color: white;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      margin-bottom: 30px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .command-header {
+      background-color: #007bff;
+      color: white;
+      padding: 15px;
+      border-radius: 5px 5px 0 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .command-title {
+      font-size: 20px;
+      font-weight: bold;
+    }
+    .copy-btn {
+      background-color: #28a745;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+      transition: background-color 0.3s;
+    }
+    .copy-btn:hover {
+      background-color: #218838;
+    }
+    .copy-btn.copied {
+      background-color: #6c757d;
+    }
+    .command-code {
+      padding: 15px;
+      background-color: #f8f9fa;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      white-space: pre-wrap;
+      overflow-x: auto;
+      line-height: 1.5;
+    }
+    .description {
+      padding: 15px;
+      background-color: #e7f3ff;
+      border-bottom: 1px solid #ddd;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔍 すべてのノードID確認</h1>
+
+  <!-- コマンド1: すべての data-id をリスト -->
+  <div class="command-block">
+    <div class="command-header">
+      <div class="command-title">
+        コマンド1: すべての data-id を列挙
+      </div>
+      <button class="copy-btn" onclick="copyToClipboard('cmd1', this)">📋 コピー</button>
+    </div>
+    <div class="description">
+      <strong>目的:</strong> SVG 内のすべての要素の data-id と data-et を確認
+    </div>
+    <div class="command-code" id="cmd1">(function() {
+  const svg = document.querySelector('.svg-content-wrapper svg') || document.querySelector('svg');
+
+  console.log('=== すべての data-id を持つ要素 ===');
+
+  const allElements = svg.querySelectorAll('[data-id]');
+  console.log(`Total: ${allElements.length} 要素\n`);
+
+  const nodes = [];
+  const clusters = [];
+
+  allElements.forEach(el => {
+    const id = el.getAttribute('data-id');
+    const et = el.getAttribute('data-et');
+
+    if (et === 'node') {
+      nodes.push(id);
+    } else if (et === 'cluster') {
+      clusters.push(id);
+    }
+  });
+
+  console.log('📦 個別ノード [data-et="node"]:');
+  nodes.forEach((id, i) => {
+    console.log(`  ${i + 1}. ${id}`);
+  });
+
+  console.log(`\n📦 サブグラフ/クラスタ [data-et="cluster"]:`);
+  clusters.forEach((id, i) => {
+    console.log(`  ${i + 1}. ${id}`);
+  });
+})();</div>
+  </div>
+
+  <!-- コマンド2: DAT で始まる ID を検索 -->
+  <div class="command-block">
+    <div class="command-header">
+      <div class="command-title">
+        コマンド2: "DAT" を含む ID を検索
+      </div>
+      <button class="copy-btn" onclick="copyToClipboard('cmd2', this)">📋 コピー</button>
+    </div>
+    <div class="description">
+      <strong>目的:</strong> DAT_04 に類似した ID を探す
+    </div>
+    <div class="command-code" id="cmd2">(function() {
+  const svg = document.querySelector('.svg-content-wrapper svg') || document.querySelector('svg');
+
+  console.log('=== "DAT" を含む data-id を検索 ===');
+
+  const allElements = svg.querySelectorAll('[data-id]');
+  const matchingElements = [];
+
+  allElements.forEach(el => {
+    const id = el.getAttribute('data-id');
+    if (id && id.includes('DAT')) {
+      matchingElements.push({
+        id: id,
+        et: el.getAttribute('data-et'),
+        bbox: el.getBBox()
+      });
+    }
+  });
+
+  if (matchingElements.length > 0) {
+    console.log(`✅ ${matchingElements.length} 件見つかりました:`);
+    matchingElements.forEach((item, i) => {
+      console.log(`\n${i + 1}. ${item.id}`);
+      console.log(`   data-et: ${item.et}`);
+      console.log(`   BBox: (${item.bbox.x.toFixed(1)}, ${item.bbox.y.toFixed(1)}) ${item.bbox.width.toFixed(1)}x${item.bbox.height.toFixed(1)}`);
+    });
+  } else {
+    console.log('❌ "DAT" を含む data-id が見つかりません');
+  }
+})();</div>
+  </div>
+
+  <!-- コマンド3: クリックした要素の data-id を取得 -->
+  <div class="command-block">
+    <div class="command-header">
+      <div class="command-title">
+        コマンド3: クリック要素の ID を取得（インタラクティブ）
+      </div>
+      <button class="copy-btn" onclick="copyToClipboard('cmd3', this)">📋 コピー</button>
+    </div>
+    <div class="description">
+      <strong>手順:</strong>
+      <ol>
+        <li>このコマンドを実行</li>
+        <li>フローチャート上の任意の要素をクリック</li>
+        <li>その要素の data-id と data-et がコンソールに表示されます</li>
+        <li>DAT_04 だと思っている要素をクリックして、実際の ID を確認してください</li>
+      </ol>
+    </div>
+    <div class="command-code" id="cmd3">(function() {
+  const svg = document.querySelector('.svg-content-wrapper svg') || document.querySelector('svg');
+
+  console.log('=== クリック要素検出モード有効化 ===');
+  console.log('フローチャート上の任意の要素をクリックしてください');
+
+  // 既存のリスナーを削除（重複防止）
+  if (window._debugClickListener) {
+    svg.removeEventListener('click', window._debugClickListener);
+  }
+
+  window._debugClickListener = function(e) {
+    // data-id を持つ最も近い祖先要素を探す
+    let target = e.target;
+    let foundElement = null;
+
+    while (target && target !== svg) {
+      if (target.hasAttribute('data-id')) {
+        foundElement = target;
+        break;
+      }
+      target = target.parentElement;
+    }
+
+    if (foundElement) {
+      const id = foundElement.getAttribute('data-id');
+      const et = foundElement.getAttribute('data-et');
+      const bbox = foundElement.getBBox();
+
+      console.log('\n🎯 クリックした要素:');
+      console.log(`  data-id: ${id}`);
+      console.log(`  data-et: ${et}`);
+      console.log(`  BBox:`, {
+        x: bbox.x,
+        y: bbox.y,
+        width: bbox.width,
+        height: bbox.height,
+        centerX: bbox.x + bbox.width / 2,
+        centerY: bbox.y + bbox.height / 2
+      });
+      console.log(`  クリック座標 (screen): (${e.clientX}, ${e.clientY})`);
+
+      // SVG 座標に変換
+      const pt = svg.createSVGPoint();
+      pt.x = e.clientX;
+      pt.y = e.clientY;
+      const svgPt = pt.matrixTransform(svg.getScreenCTM().inverse());
+      console.log(`  クリック座標 (SVG): (${svgPt.x.toFixed(1)}, ${svgPt.y.toFixed(1)})`);
+    } else {
+      console.log('⚠️ data-id を持つ要素が見つかりません');
+    }
+  };
+
+  svg.addEventListener('click', window._debugClickListener);
+  console.log('✅ 準備完了。要素をクリックしてください。');
+})();</div>
+  </div>
+
+  <script>
+    function copyToClipboard(elementId, button) {
+      const element = document.getElementById(elementId);
+      const text = element.textContent;
+
+      navigator.clipboard.writeText(text).then(() => {
+        const originalText = button.textContent;
+        button.textContent = '✅ コピー完了！';
+        button.classList.add('copied');
+
+        setTimeout(() => {
+          button.textContent = originalText;
+          button.classList.remove('copied');
+        }, 2000);
+      }).catch(err => {
+        alert('コピーに失敗しました: ' + err);
+      });
+    }
+  </script>
+</body>
+</html>

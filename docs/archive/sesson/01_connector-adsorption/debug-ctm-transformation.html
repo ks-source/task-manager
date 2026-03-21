@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CTM変換後のBBox確認</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    h1 {
+      color: #333;
+      border-bottom: 3px solid #dc3545;
+      padding-bottom: 10px;
+    }
+    .command-block {
+      background-color: white;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      margin-bottom: 30px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .command-header {
+      background-color: #dc3545;
+      color: white;
+      padding: 15px;
+      border-radius: 5px 5px 0 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .command-title {
+      font-size: 18px;
+      font-weight: bold;
+    }
+    .copy-btn {
+      background-color: #28a745;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+      transition: background-color 0.3s;
+    }
+    .copy-btn:hover {
+      background-color: #218838;
+    }
+    .copy-btn.copied {
+      background-color: #6c757d;
+    }
+    .command-code {
+      padding: 15px;
+      background-color: #f8f9fa;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      white-space: pre-wrap;
+      overflow-x: auto;
+      line-height: 1.5;
+    }
+    .description {
+      padding: 15px;
+      background-color: #e7f3ff;
+      border-bottom: 1px solid #ddd;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔍 CTM変換後のBBox確認</h1>
+
+  <!-- コマンド1: SCOPE_OK の変換前/変換後 BBox 比較 -->
+  <div class="command-block">
+    <div class="command-header">
+      <div class="command-title">
+        コマンド1: SCOPE_OK の BBox（変換前 vs 変換後）
+      </div>
+      <button class="copy-btn" onclick="copyToClipboard('cmd1', this)">📋 コピー</button>
+    </div>
+    <div class="description">
+      <strong>目的:</strong> SCOPE_OK の CTM 変換前後の BBox を比較
+    </div>
+    <div class="command-code" id="cmd1">(function() {
+  const svg = document.querySelector('.svg-content-wrapper svg') || document.querySelector('svg');
+  const scopeOk = svg.querySelector('[data-id="SCOPE_OK"]');
+
+  if (!scopeOk) {
+    console.log('❌ SCOPE_OK not found');
+    return;
+  }
+
+  console.log('=== SCOPE_OK の BBox 比較 ===');
+
+  // 変換前（ローカル座標）
+  const bboxRaw = scopeOk.getBBox();
+  console.log('📦 変換前（ローカル座標）:');
+  console.log('  x:', bboxRaw.x);
+  console.log('  y:', bboxRaw.y);
+  console.log('  width:', bboxRaw.width);
+  console.log('  height:', bboxRaw.height);
+  console.log('  center:', {
+    x: bboxRaw.x + bboxRaw.width / 2,
+    y: bboxRaw.y + bboxRaw.height / 2
+  });
+
+  // CTM 取得
+  const ctm = scopeOk.getCTM();
+  console.log('\n🔧 CTM (Coordinate Transform Matrix):');
+  if (ctm) {
+    console.log('  a:', ctm.a, '(x scale)');
+    console.log('  b:', ctm.b, '(y skew)');
+    console.log('  c:', ctm.c, '(x skew)');
+    console.log('  d:', ctm.d, '(y scale)');
+    console.log('  e:', ctm.e, '(x translation)');
+    console.log('  f:', ctm.f, '(y translation)');
+  } else {
+    console.log('  ❌ CTM is null');
+  }
+
+  // 変換後（絶対座標）
+  if (ctm) {
+    const transformPoint = (x, y, ctm) => {
+      return {
+        x: ctm.a * x + ctm.c * y + ctm.e,
+        y: ctm.b * x + ctm.d * y + ctm.f
+      };
+    };
+
+    const topLeft = transformPoint(bboxRaw.x, bboxRaw.y, ctm);
+    const topRight = transformPoint(bboxRaw.x + bboxRaw.width, bboxRaw.y, ctm);
+    const bottomLeft = transformPoint(bboxRaw.x, bboxRaw.y + bboxRaw.height, ctm);
+    const bottomRight = transformPoint(bboxRaw.x + bboxRaw.width, bboxRaw.y + bboxRaw.height, ctm);
+
+    const minX = Math.min(topLeft.x, topRight.x, bottomLeft.x, bottomRight.x);
+    const maxX = Math.max(topLeft.x, topRight.x, bottomLeft.x, bottomRight.x);
+    const minY = Math.min(topLeft.y, topRight.y, bottomLeft.y, bottomRight.y);
+    const maxY = Math.max(topLeft.y, topRight.y, bottomLeft.y, bottomRight.y);
+
+    console.log('\n📦 変換後（絶対座標）:');
+    console.log('  x:', minX);
+    console.log('  y:', minY);
+    console.log('  width:', maxX - minX);
+    console.log('  height:', maxY - minY);
+    console.log('  center:', {
+      x: (minX + maxX) / 2,
+      y: (minY + maxY) / 2
+    });
+
+    console.log('\n📍 4つの角の座標:');
+    console.log('  Top-Left:', topLeft);
+    console.log('  Top-Right:', topRight);
+    console.log('  Bottom-Left:', bottomLeft);
+    console.log('  Bottom-Right:', bottomRight);
+  }
+})();</div>
+  </div>
+
+  <!-- コマンド2: クリック位置との距離計算 -->
+  <div class="command-block">
+    <div class="command-header">
+      <div class="command-title">
+        コマンド2: クリック位置 (1350, 2152) との距離計算
+      </div>
+      <button class="copy-btn" onclick="copyToClipboard('cmd2', this)">📋 コピー</button>
+    </div>
+    <div class="description">
+      <strong>目的:</strong> 最後にクリックした位置から SCOPE_OK と PHASE2 への距離を比較
+    </div>
+    <div class="command-code" id="cmd2">(function() {
+  const svg = document.querySelector('.svg-content-wrapper svg') || document.querySelector('svg');
+  const scopeOk = svg.querySelector('[data-id="SCOPE_OK"]');
+  const phase2 = svg.querySelector('[data-id="PHASE2"]');
+
+  const clickX = 1350.0;
+  const clickY = 2152.8;
+
+  console.log('=== 距離計算比較 ===');
+  console.log(`クリック位置: (${clickX}, ${clickY})`);
+
+  const calcBoundaryDistance = (x, y, bbox) => {
+    const left = bbox.x;
+    const right = bbox.x + bbox.width;
+    const top = bbox.y;
+    const bottom = bbox.y + bbox.height;
+
+    if (x >= left && x <= right && y >= top && y <= bottom) {
+      return 0;
+    }
+
+    let dx = 0;
+    let dy = 0;
+
+    if (x < left) {
+      dx = left - x;
+    } else if (x > right) {
+      dx = x - right;
+    }
+
+    if (y < top) {
+      dy = top - y;
+    } else if (y > bottom) {
+      dy = y - bottom;
+    }
+
+    return Math.sqrt(dx * dx + dy * dy);
+  };
+
+  const getBBoxInSVGCoordinates = (element) => {
+    const bbox = element.getBBox();
+    const ctm = element.getCTM();
+
+    if (!ctm) {
+      return {
+        x: bbox.x,
+        y: bbox.y,
+        width: bbox.width,
+        height: bbox.height
+      };
+    }
+
+    const transformPoint = (x, y, ctm) => {
+      return {
+        x: ctm.a * x + ctm.c * y + ctm.e,
+        y: ctm.b * x + ctm.d * y + ctm.f
+      };
+    };
+
+    const topLeft = transformPoint(bbox.x, bbox.y, ctm);
+    const topRight = transformPoint(bbox.x + bbox.width, bbox.y, ctm);
+    const bottomLeft = transformPoint(bbox.x, bbox.y + bbox.height, ctm);
+    const bottomRight = transformPoint(bbox.x + bbox.width, bbox.y + bbox.height, ctm);
+
+    const minX = Math.min(topLeft.x, topRight.x, bottomLeft.x, bottomRight.x);
+    const maxX = Math.max(topLeft.x, topRight.x, bottomLeft.x, bottomRight.x);
+    const minY = Math.min(topLeft.y, topRight.y, bottomLeft.y, bottomRight.y);
+    const maxY = Math.max(topLeft.y, topRight.y, bottomLeft.y, bottomRight.y);
+
+    return {
+      x: minX,
+      y: minY,
+      width: maxX - minX,
+      height: maxY - minY
+    };
+  };
+
+  if (scopeOk) {
+    const bboxScopeOk = getBBoxInSVGCoordinates(scopeOk);
+    const distScopeOk = calcBoundaryDistance(clickX, clickY, bboxScopeOk);
+    console.log('\n📦 SCOPE_OK:');
+    console.log('  BBox:', bboxScopeOk);
+    console.log('  境界距離:', distScopeOk.toFixed(1), 'px');
+  }
+
+  if (phase2) {
+    const bboxPhase2 = getBBoxInSVGCoordinates(phase2);
+    const distPhase2 = calcBoundaryDistance(clickX, clickY, bboxPhase2);
+    console.log('\n📦 PHASE2:');
+    console.log('  BBox:', bboxPhase2);
+    console.log('  境界距離:', distPhase2.toFixed(1), 'px');
+  }
+
+  console.log('\n🎯 結果:');
+  if (scopeOk && phase2) {
+    const bboxScopeOk = getBBoxInSVGCoordinates(scopeOk);
+    const bboxPhase2 = getBBoxInSVGCoordinates(phase2);
+    const distScopeOk = calcBoundaryDistance(clickX, clickY, bboxScopeOk);
+    const distPhase2 = calcBoundaryDistance(clickX, clickY, bboxPhase2);
+
+    if (distScopeOk < distPhase2) {
+      console.log('✅ SCOPE_OK の方が近い');
+    } else {
+      console.log('❌ PHASE2 の方が近い（または同じ）');
+    }
+  }
+})();</div>
+  </div>
+
+  <!-- コマンド3: すべての個別ノードの変換後 BBox をリスト -->
+  <div class="command-block">
+    <div class="command-header">
+      <div class="command-title">
+        コマンド3: 全個別ノードの変換後 BBox リスト
+      </div>
+      <button class="copy-btn" onclick="copyToClipboard('cmd3', this)">📋 コピー</button>
+    </div>
+    <div class="description">
+      <strong>目的:</strong> すべての個別ノード（data-et="node"）の変換後 BBox を確認
+    </div>
+    <div class="command-code" id="cmd3">(function() {
+  const svg = document.querySelector('.svg-content-wrapper svg') || document.querySelector('svg');
+  const nodes = svg.querySelectorAll('[data-et="node"]');
+
+  const getBBoxInSVGCoordinates = (element) => {
+    const bbox = element.getBBox();
+    const ctm = element.getCTM();
+
+    if (!ctm) {
+      return {
+        x: bbox.x,
+        y: bbox.y,
+        width: bbox.width,
+        height: bbox.height
+      };
+    }
+
+    const transformPoint = (x, y, ctm) => {
+      return {
+        x: ctm.a * x + ctm.c * y + ctm.e,
+        y: ctm.b * x + ctm.d * y + ctm.f
+      };
+    };
+
+    const topLeft = transformPoint(bbox.x, bbox.y, ctm);
+    const topRight = transformPoint(bbox.x + bbox.width, bbox.y, ctm);
+    const bottomLeft = transformPoint(bbox.x, bbox.y + bbox.height, ctm);
+    const bottomRight = transformPoint(bbox.x + bbox.width, bbox.y + bbox.height, ctm);
+
+    const minX = Math.min(topLeft.x, topRight.x, bottomLeft.x, bottomRight.x);
+    const maxX = Math.max(topLeft.x, topRight.x, bottomLeft.x, bottomRight.x);
+    const minY = Math.min(topLeft.y, topRight.y, bottomLeft.y, bottomRight.y);
+    const maxY = Math.max(topLeft.y, topRight.y, bottomLeft.y, bottomRight.y);
+
+    return {
+      x: minX,
+      y: minY,
+      width: maxX - minX,
+      height: maxY - minY
+    };
+  };
+
+  console.log('=== 全個別ノードの変換後 BBox ===');
+  console.log(`Total: ${nodes.length} nodes\n`);
+
+  nodes.forEach((node, i) => {
+    const id = node.getAttribute('data-id');
+    const bbox = getBBoxInSVGCoordinates(node);
+
+    console.log(`${i + 1}. ${id}:`);
+    console.log(`   BBox: (${bbox.x.toFixed(1)}, ${bbox.y.toFixed(1)}) ${bbox.width.toFixed(1)}x${bbox.height.toFixed(1)}`);
+  });
+})();</div>
+  </div>
+
+  <script>
+    function copyToClipboard(elementId, button) {
+      const element = document.getElementById(elementId);
+      const text = element.textContent;
+
+      navigator.clipboard.writeText(text).then(() => {
+        const originalText = button.textContent;
+        button.textContent = '✅ コピー完了！';
+        button.classList.add('copied');
+
+        setTimeout(() => {
+          button.textContent = originalText;
+          button.classList.remove('copied');
+        }, 2000);
+      }).catch(err => {
+        alert('コピーに失敗しました: ' + err);
+      });
+    }
+  </script>
+</body>
+</html>

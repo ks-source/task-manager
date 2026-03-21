@@ -3368,6 +3368,51 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
     // Gantt Chart
     // ==========================================
 
+    /**
+     * ガントチャートから日程変更を受け取る関数
+     * @param {string} wbsNo - タスクのWBS番号
+     * @param {string} newStartDate - 新開始日 "YYYY/M/D"
+     * @param {string} newEndDate - 新終了日 "YYYY/M/D"
+     */
+    function updateTaskDates(wbsNo, newStartDate, newEndDate) {
+      const task = projectData.tasks.find(t => t.wbs_no === wbsNo);
+
+      if (!task) {
+        console.error('タスク ' + wbsNo + ' が見つかりません');
+        return;
+      }
+
+      const oldStartDate = task.start_date;
+      const oldEndDate = task.finish_date;
+
+      // 日程更新
+      task.start_date = newStartDate;
+      task.finish_date = newEndDate;
+
+      // 期間を再計算
+      const start = new Date(newStartDate.replace(/\//g, '-'));
+      const end = new Date(newEndDate.replace(/\//g, '-'));
+      const diffTime = Math.abs(end - start);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      task.duration_bd = diffDays;
+
+      // コメント追加（変更履歴）
+      const now = new Date().toISOString();
+      if (!task.comments) task.comments = [];
+      task.comments.push({
+        timestamp: now,
+        type: 'date_change',
+        content: 'ガントチャートで日程変更: ' + newStartDate + ' ～ ' + newEndDate + ' (変更前: ' + oldStartDate + ' ～ ' + oldEndDate + ')'
+      });
+
+      // 保存 & UI更新
+      saveToLocalStorage();
+      markDirty();
+      renderTaskTable();
+
+      console.log('[updateTaskDates] ' + wbsNo + ': ' + newStartDate + ' ～ ' + newEndDate);
+    }
+
     function openGanttChart() {
       if (!projectData || !projectData.tasks || projectData.tasks.length === 0) {
         alert('ガントチャートを表示するタスクがありません');
@@ -3707,6 +3752,11 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
     .task-bar.on-hold { background: #f39c12; }
     .task-bar.cancelled { background: #e74c3c; }
 
+    .task-bar.dragging {
+      opacity: 0.5;
+      cursor: move !important;
+    }
+
     .legend {
       display: flex;
       gap: 0.75rem;
@@ -3898,9 +3948,9 @@ Predecessors: \${task.predecessors || 'N/A'}\`;
 
         timelineHTML += \`
           <div class="task-bar \${statusClass}"
-               style="left: \${startOffset}%; width: \${duration}%; cursor: pointer;"
+               style="left: \${startOffset}%; width: \${duration}%; cursor: move;"
                title="\${barTooltipText}"
-               onclick="openTaskInMainWindow('\${task.wbs_no}')">
+               data-wbs="\${task.wbs_no}">
           </div>
         \`;
 
@@ -4085,6 +4135,116 @@ Predecessors: \${task.predecessors || 'N/A'}\`;
 
     // Initialize resizer after initial render
     setTimeout(initResizer, 100);
+
+    // ==========================================
+    // Drag & Drop Functionality
+    // ==========================================
+
+    let dragState = null;
+
+    function attachDragToTaskBars() {
+      const taskBars = document.querySelectorAll('.task-bar');
+      taskBars.forEach(bar => {
+        bar.style.cursor = 'move';
+        bar.addEventListener('mousedown', startDrag);
+      });
+    }
+
+    function startDrag(e) {
+      const bar = e.target;
+      const wbsNo = bar.getAttribute('data-wbs');
+      if (!wbsNo) return;
+
+      const task = projectData.tasks.find(t => t.wbs_no === wbsNo);
+      if (!task) return;
+
+      console.log('[startDrag] WBS: ' + wbsNo + ', Start: ' + task.start_date + ', End: ' + task.finish_date);
+
+      dragState = {
+        wbsNo: wbsNo,
+        originalStartDate: task.start_date,
+        originalEndDate: task.finish_date,
+        startX: e.clientX,
+        barElement: bar
+      };
+
+      bar.classList.add('dragging');
+      document.addEventListener('mousemove', onDrag);
+      document.addEventListener('mouseup', endDrag);
+      e.preventDefault();
+    }
+
+    function onDrag(e) {
+      if (!dragState) return;
+
+      const deltaX = e.clientX - dragState.startX;
+      const cellWidth = currentViewMode === 'day' ? 40 : (currentViewMode === 'week' ? 80 : 120);
+      const deltaDays = Math.round(deltaX / cellWidth);
+
+      if (deltaDays !== 0) {
+        const newStartDate = shiftDateByDays(dragState.originalStartDate, deltaDays);
+        const newEndDate = shiftDateByDays(dragState.originalEndDate, deltaDays);
+        updatePreview(newStartDate, newEndDate);
+      }
+    }
+
+    function endDrag(e) {
+      if (!dragState) return;
+
+      document.removeEventListener('mousemove', onDrag);
+      document.removeEventListener('mouseup', endDrag);
+
+      const deltaX = e.clientX - dragState.startX;
+      const cellWidth = currentViewMode === 'day' ? 40 : (currentViewMode === 'week' ? 80 : 120);
+      const deltaDays = Math.round(deltaX / cellWidth);
+
+      if (deltaDays !== 0) {
+        const newStartDate = shiftDateByDays(dragState.originalStartDate, deltaDays);
+        const newEndDate = shiftDateByDays(dragState.originalEndDate, deltaDays);
+
+        console.log('[endDrag] deltaDays: ' + deltaDays);
+        console.log('[endDrag] Original: ' + dragState.originalStartDate + ' ~ ' + dragState.originalEndDate);
+        console.log('[endDrag] New: ' + newStartDate + ' ~ ' + newEndDate);
+
+        if (window.opener && window.opener.updateTaskDates) {
+          window.opener.updateTaskDates(dragState.wbsNo, newStartDate, newEndDate);
+          setTimeout(() => {
+            if (window.opener && window.opener.projectData) {
+              projectData.tasks = window.opener.projectData.tasks;
+              renderGantt();
+            }
+          }, 200);
+        }
+      }
+
+      dragState.barElement.classList.remove('dragging');
+      dragState = null;
+    }
+
+    function shiftDateByDays(dateStr, days) {
+      const normalized = dateStr.split('/').join('-');
+      const date = new Date(normalized);
+      date.setDate(date.getDate() + days);
+      const year = date.getFullYear();
+      const month = date.getMonth() + 1;
+      const day = date.getDate();
+      return year + '/' + month + '/' + day;
+    }
+
+    function updatePreview(newStartDate, newEndDate) {
+      console.log('Preview: ' + newStartDate + ' ~ ' + newEndDate);
+    }
+
+    // Attach drag functionality after render
+    const originalRenderGantt = renderGantt;
+    renderGantt = function() {
+      originalRenderGantt();
+      attachDragToTaskBars();
+    };
+
+    // Initial attach
+    attachDragToTaskBars();
+
   <\/script>
 </body>
 </html>

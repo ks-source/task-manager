@@ -1,0 +1,172 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Element Properties Icons</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .icon-card:hover .icon-preview {
+            color: #0d9488; /* teal-600 */
+        }
+        .icon-card:hover .btn-preview-solid {
+            background-color: #0d9488;
+        }
+        .transition-all {
+            transition: all 0.2s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen p-8 font-sans text-slate-800">
+    <div class="max-w-6xl mx-auto">
+        <header class="mb-10 text-center">
+            <h1 class="text-3xl font-bold mb-3 text-slate-900">要素情報・プロパティ アイコンセット</h1>
+            <p class="text-slate-500">データ属性やオブジェクトの状態を示すための、クリーンで視認性の高い標準デザインです。</p>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="icon-grid">
+            <!-- Icons will be injected here by JavaScript -->
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-slate-900 text-white px-6 py-3 rounded-lg shadow-lg opacity-0 transition-opacity duration-300 pointer-events-none z-50 flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        <span>SVGをコピーしました</span>
+    </div>
+
+    <script>
+        // SVG Icon Data
+        const icons = [
+            {
+                name: '編集 (Edit)',
+                description: '鉛筆と紙のオーソドックスな表現。オブジェクトのデータやプロパティの編集アクションに。',
+                svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+</svg>`
+            },
+            {
+                name: 'リンク (Link)',
+                description: '2つの環が交差するチェーン。他の要素や外部URLとの紐付け、関連性の定義に。',
+                svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+</svg>`
+            },
+            {
+                name: 'Type (種類)',
+                description: '円・四角・三角の基本図形の組み合わせ。オブジェクトの「分類」「カテゴリ」を表現する標準的なメタファー。',
+                svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <circle cx="7" cy="7" r="4"></circle>
+  <rect x="13" y="3" width="8" height="8" rx="1"></rect>
+  <path d="M12 13.5l4.5 7.5H7.5z"></path>
+</svg>`
+            },
+            {
+                name: 'ID (識別子)',
+                description: 'プロフィールと文字列が印字されたIDカード。一意の識別子やユーザーID、システムキーの明示に。',
+                svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <rect x="3" y="5" width="18" height="14" rx="2"></rect>
+  <circle cx="8" cy="12" r="3"></circle>
+  <line x1="14" y1="10" x2="19" y2="10"></line>
+  <line x1="14" y1="14" x2="19" y2="14"></line>
+</svg>`
+            },
+            {
+                name: 'Label (ラベル)',
+                description: 'ヒモを通す穴の空いた荷札（タグ）。オブジェクトに付与する任意の目印や文字ラベルに。',
+                svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+  <line x1="7" y1="7" x2="7.01" y2="7"></line>
+</svg>`
+            },
+            {
+                name: 'メモ (Note)',
+                description: '行線と折り目のある書類。付帯情報や補足説明、長文のコメントなどのテキストデータ領域に。',
+                svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+  <polyline points="14 2 14 8 20 8"></polyline>
+  <line x1="16" y1="13" x2="8" y2="13"></line>
+  <line x1="16" y1="17" x2="8" y2="17"></line>
+  <polyline points="10 9 9 9 8 9"></polyline>
+</svg>`
+            },
+            {
+                name: '未作成 (Uncreated)',
+                description: '点線（破線）で描かれたプレースホルダー。「まだインスタンスが存在しない」「これから作成される」空の領域に。',
+                svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <!-- stroke-dasharrayを用いて破線を表現 -->
+  <rect x="3" y="3" width="18" height="18" rx="2" stroke-dasharray="5 5"></rect>
+</svg>`
+            }
+        ];
+
+        const grid = document.getElementById('icon-grid');
+        const toast = document.getElementById('toast');
+        let toastTimeout;
+
+        function showToast() {
+            toast.classList.remove('opacity-0');
+            toast.classList.add('opacity-100');
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('opacity-100');
+                toast.classList.add('opacity-0');
+            }, 2000);
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(showToast).catch(console.error);
+        }
+
+        icons.forEach(icon => {
+            const card = document.createElement('div');
+            card.className = 'icon-card bg-white rounded-xl shadow-sm border border-slate-200 p-5 cursor-pointer hover:shadow-md hover:border-teal-300 transition-all group flex flex-col h-full';
+            card.onclick = () => copyToClipboard(icon.svg);
+
+            card.innerHTML = `
+                <div class="flex items-start gap-4 mb-3">
+                    <div class="icon-preview text-slate-700 w-10 h-10 flex-shrink-0 transition-all">
+                        ${icon.svg}
+                    </div>
+                    <div>
+                        <h2 class="text-base font-bold text-slate-800">${icon.name}</h2>
+                    </div>
+                </div>
+                <p class="text-xs text-slate-500 mb-4 leading-relaxed flex-grow">${icon.description}</p>
+                <div class="mt-auto pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-medium text-slate-400 group-hover:text-teal-600 transition-all">
+                    <span>SVGコード</span>
+                    <span class="bg-slate-100 group-hover:bg-teal-50 px-2 py-1 rounded">コピー</span>
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+    </script>
+<script>window.parent.postMessage({ action: "ready" }, "*"); 
+ 
+window.console = new Proxy(console, {
+  get(target, prop) {
+    if (['log', 'warn', 'error'].includes(prop)) {
+      return new Proxy(target[prop], {
+        apply(fn, thisArg, args) {
+          fn.apply(thisArg, args);
+          window.parent.postMessage({ action: 'console', 
+            type: prop, 
+            args: args.map((arg) => {
+              try {
+                return JSON.stringify(arg).replace(/^["']|["']$/g, '');
+              } catch (e) {
+                return arg;
+              }
+            }) 
+          }, '*');
+        }
+      });
+    }
+    return target[prop];
+  }
+});
+</script></body>
+</html>

@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ステップ1 コマンド（リロード不要版）</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    h1 {
+      color: #333;
+      border-bottom: 3px solid #28a745;
+      padding-bottom: 10px;
+    }
+    .instructions {
+      background-color: #d4edda;
+      border-left: 4px solid #28a745;
+      padding: 15px;
+      margin-bottom: 20px;
+      font-size: 16px;
+    }
+    .command-block {
+      background-color: white;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      margin-bottom: 30px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .command-header {
+      background-color: #28a745;
+      color: white;
+      padding: 15px;
+      border-radius: 5px 5px 0 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .command-title {
+      font-size: 20px;
+      font-weight: bold;
+    }
+    .copy-btn {
+      background-color: #ffc107;
+      color: #333;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+      transition: background-color 0.3s;
+    }
+    .copy-btn:hover {
+      background-color: #e0a800;
+    }
+    .copy-btn:active {
+      background-color: #d39e00;
+    }
+    .copy-btn.copied {
+      background-color: #6c757d;
+      color: white;
+    }
+    .command-description {
+      padding: 15px;
+      background-color: #e7f3ff;
+      border-bottom: 1px solid #ddd;
+      font-size: 15px;
+    }
+    .command-code {
+      padding: 15px;
+      background-color: #f8f9fa;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      white-space: pre-wrap;
+      overflow-x: auto;
+      max-height: 500px;
+      overflow-y: auto;
+      line-height: 1.5;
+    }
+    .warning-note {
+      background-color: #fff3cd;
+      border: 2px solid #ffc107;
+      color: #856404;
+      padding: 15px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+      font-size: 15px;
+    }
+    .step-list {
+      background-color: white;
+      padding: 20px;
+      border-radius: 5px;
+      border: 1px solid #ddd;
+      margin-bottom: 20px;
+    }
+    .step-list ol {
+      margin: 0;
+      padding-left: 25px;
+    }
+    .step-list li {
+      margin-bottom: 10px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <h1>✅ ステップ1 コマンド（リロード不要版）</h1>
+
+  <div class="warning-note">
+    ⚠️ このバージョンは変数衝突エラーを回避するため、IIFE（即時実行関数）形式になっています。<br>
+    <strong>ページをリロードしなくても実行できます</strong>が、最も正確なテストには F5 リロード後の実行を推奨します。
+  </div>
+
+  <div class="instructions">
+    <strong>📋 実行手順:</strong>
+  </div>
+
+  <div class="step-list">
+    <ol>
+      <li><strong>推奨:</strong> ページをリロード（F5キー）←より正確な結果のため</li>
+      <li><strong>代替:</strong> リロードせずそのまま実行も可能</li>
+      <li>下の「📋 コマンドをコピー」ボタンをクリック</li>
+      <li>開発者ツールのコンソールに<strong>貼り付けて実行（Enter）</strong></li>
+      <li><strong>すべての出力をコピー</strong>して報告</li>
+    </ol>
+  </div>
+
+  <div class="command-block">
+    <div class="command-header">
+      <div class="command-title">
+        ステップ1: 手動エッジのDOM情報とBBoxを確認（IIFE版）
+      </div>
+      <button class="copy-btn" onclick="copyToClipboard('cmd1', this)">📋 コマンドをコピー</button>
+    </div>
+    <div class="command-description">
+      <strong>目的:</strong> 手動エッジがDOMに追加されているか、親要素、Line要素のHTML、BBox座標を確認します。<br>
+      <strong>特に重要:</strong> BBox の x, y 座標が viewBox 範囲内（0〜1955, 0〜5344）にあるかチェック
+    </div>
+    <div class="command-code" id="cmd1">(function() {
+  const manualEdges = document.querySelectorAll('[data-et="manual-edge"]');
+  console.log('手動エッジ数:', manualEdges.length);
+  manualEdges.forEach(edge => {
+    console.log('Edge:', edge.getAttribute('data-id'));
+    console.log('  Parent:', edge.parentElement?.tagName, edge.parentElement?.className);
+    console.log('  Line:', edge.querySelector('line')?.outerHTML);
+    console.log('  Text:', edge.querySelector('text')?.outerHTML);
+    try {
+      const bbox = edge.getBBox();
+      console.log('  BBox:', bbox.x, bbox.y, bbox.width, bbox.height);
+    } catch(e) {
+      console.log('  BBox: ERROR', e.message);
+    }
+  });
+})();</div>
+  </div>
+
+  <div class="instructions" style="background-color: #d1ecf1; border-left-color: #0c5460;">
+    <strong>📤 報告してください:</strong>
+    <ul>
+      <li>「手動エッジ数:」の値</li>
+      <li>「Parent:」の値（SVG か他の要素か）</li>
+      <li>「Line:」のHTML（<strong>x1, y1, x2, y2 の座標値</strong>）</li>
+      <li>「BBox:」の値（<strong>x, y, width, height</strong>）← これが最重要！</li>
+    </ul>
+    <p><strong>期待される BBox の範囲:</strong></p>
+    <ul>
+      <li>x: 0 〜 1955 の範囲内</li>
+      <li>y: 0 〜 5344 の範囲内</li>
+    </ul>
+    <p>これらの範囲外にある場合、エッジが画面外に描画されています。</p>
+  </div>
+
+  <script>
+    function copyToClipboard(elementId, button) {
+      const element = document.getElementById(elementId);
+      const text = element.textContent;
+
+      navigator.clipboard.writeText(text).then(() => {
+        const originalText = button.textContent;
+        button.textContent = '✅ コピー完了！';
+        button.classList.add('copied');
+
+        setTimeout(() => {
+          button.textContent = originalText;
+          button.classList.remove('copied');
+        }, 2000);
+      }).catch(err => {
+        alert('コピーに失敗しました: ' + err);
+      });
+    }
+  </script>
+</body>
+</html>
