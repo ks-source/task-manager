@@ -6977,24 +6977,33 @@ ${metadataJson}
         startInlineEditEdgeLabel(g, textElement, edge);
       });
 
-      // ★ Phase B修正: 正しい親要素に追加（Z-order問題を解決）
-      const target = findCorrectAppendTarget(svg);
+      // ★ メモエッジ専用レイヤーを取得または作成（メモノードより前面に表示）
+      let edgeLayer = svg.querySelector('#manual-edge-layer');
+      if (!edgeLayer) {
+        edgeLayer = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        edgeLayer.setAttribute('id', 'manual-edge-layer');
 
-      // ★ メモノードより前に表示するため、#manual-layerがあればその前に挿入
-      const manualLayer = svg.querySelector('#manual-layer');
-      if (manualLayer && target === svg) {
-        // SVG直下に追加する場合、manual-layerの前に挿入
-        svg.insertBefore(g, manualLayer);
-        console.log(`✅ Edge ${edge.id} inserted before #manual-layer`);
-      } else if (manualLayer && target.contains(manualLayer)) {
-        // targetがmanualLayerを含む場合、manual-layerの前に挿入
-        target.insertBefore(g, manualLayer);
-        console.log(`✅ Edge ${edge.id} inserted before #manual-layer in`, target.tagName);
-      } else {
-        // それ以外は通常通り追加
-        target.appendChild(g);
-        console.log(`✅ Edge ${edge.id} added to:`, target.tagName, target.className?.baseVal || target.className);
+        // #manual-layer の後に配置（z-orderでエッジがノードより前面に）
+        const manualLayer = svg.querySelector('#manual-layer');
+        if (manualLayer) {
+          // manual-layer の次の要素の前に挿入、または最後に追加
+          if (manualLayer.nextSibling) {
+            svg.insertBefore(edgeLayer, manualLayer.nextSibling);
+          } else {
+            svg.appendChild(edgeLayer);
+          }
+          console.log('✅ Created #manual-edge-layer after #manual-layer');
+        } else {
+          // manual-layerがない場合は通常通り追加
+          const target = findCorrectAppendTarget(svg);
+          target.appendChild(edgeLayer);
+          console.log('✅ Created #manual-edge-layer in', target.tagName);
+        }
       }
+
+      // エッジレイヤーに追加
+      edgeLayer.appendChild(g);
+      console.log(`✅ Edge ${edge.id} added to #manual-edge-layer`);
     }
 
     /**
