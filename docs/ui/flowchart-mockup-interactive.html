@@ -4274,6 +4274,10 @@
       const minimapSvgContainer = document.getElementById('minimap-svg-container');
       minimapSvgContainer.innerHTML = '';
 
+      console.log('🔍 ミニマップSVGコンテナ:', minimapSvgContainer);
+      console.log('  - width:', minimapSvgContainer.style.width || window.getComputedStyle(minimapSvgContainer).width);
+      console.log('  - height:', minimapSvgContainer.style.height || window.getComputedStyle(minimapSvgContainer).height);
+
       const svgClone = mainSvg.cloneNode(true);
       svgClone.removeAttribute('id'); // ID重複を避ける
       svgClone.style.width = '100%';
@@ -4281,7 +4285,16 @@
       svgClone.style.pointerEvents = 'none';
       svgClone.style.objectFit = 'contain'; // アスペクト比を維持
 
+      console.log('🔍 クローンしたSVG:', svgClone);
+      console.log('  - viewBox:', svgClone.getAttribute('viewBox'));
+      console.log('  - width:', svgClone.style.width);
+      console.log('  - height:', svgClone.style.height);
+
       minimapSvgContainer.appendChild(svgClone);
+
+      console.log('🔍 SVG追加後のコンテナ:');
+      console.log('  - 子要素数:', minimapSvgContainer.children.length);
+      console.log('  - SVGのBoundingClientRect:', svgClone.getBoundingClientRect());
 
       // ビューポート矩形を表示
       const viewport = document.getElementById('minimap-viewport');
