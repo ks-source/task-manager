@@ -3628,24 +3628,37 @@
         return;
       }
 
-      isMinimapMinimized = !isMinimapMinimized;
+      const minimapContent = minimap.querySelector('.minimap-content');
+      const minimapZoomControls = minimap.querySelector('.minimap-zoom-controls');
 
-      console.log('🔍 toggleMinimap:', {
-        isMinimized: isMinimapMinimized,
-        hasMinimizedClass: minimap.classList.contains('minimized')
-      });
-
-      if (isMinimapMinimized) {
-        console.log('📦 最小化: minimizedクラスを追加');
-        minimap.classList.add('minimized');
-      } else {
-        console.log('📖 展開: minimizedクラスを削除');
-        minimap.classList.remove('minimized');
+      if (!minimapContent || !minimapZoomControls) {
+        console.error('❌ minimap-content または minimap-zoom-controls が見つかりません');
+        return;
       }
 
-      console.log('✅ 完了:', {
-        hasMinimizedClass: minimap.classList.contains('minimized')
-      });
+      isMinimapMinimized = !isMinimapMinimized;
+
+      console.log('🔍 toggleMinimap - 最小化:', isMinimapMinimized);
+
+      if (isMinimapMinimized) {
+        console.log('📦 最小化実行');
+        // CSSクラスを追加
+        minimap.classList.add('minimized');
+        // 念のため直接スタイルも設定
+        minimapContent.style.display = 'none';
+        minimapZoomControls.style.display = 'none';
+      } else {
+        console.log('📖 展開実行');
+        // CSSクラスを削除
+        minimap.classList.remove('minimized');
+        // 直接スタイルをリセット
+        minimapContent.style.display = '';
+        minimapZoomControls.style.display = '';
+      }
+
+      console.log('✅ toggleMinimap完了 - クラス:', minimap.classList.contains('minimized'));
+      console.log('   - content display:', minimapContent.style.display);
+      console.log('   - zoom display:', minimapZoomControls.style.display);
     }
 
     /**
@@ -6361,6 +6374,13 @@
         e.stopPropagation();
       });
 
+      // ★ グループレベルのダブルクリックでラベル編集（ラベルが空でも対応）
+      g.addEventListener('dblclick', (e) => {
+        e.stopPropagation();
+        const textElement = g.querySelector('.manual-edge-label');
+        startInlineEditEdgeLabel(g, textElement, edge);
+      });
+
       // ★ Phase B修正: 正しい親要素に追加（Z-order問題を解決）
       const target = findCorrectAppendTarget(svg);
       target.appendChild(g);
@@ -6395,13 +6415,20 @@
     function startInlineEditEdgeLabel(edgeGroup, textElement, edge) {
       const currentLabel = edge.label || '';
 
-      // テキスト要素を非表示
-      textElement.style.display = 'none';
+      // テキスト要素の位置を取得（なければエッジの中点から計算）
+      let x, y;
+      if (textElement) {
+        // テキスト要素を非表示
+        textElement.style.display = 'none';
+        x = parseFloat(textElement.getAttribute('x'));
+        y = parseFloat(textElement.getAttribute('y'));
+      } else {
+        // テキスト要素がない場合、エッジの中点を計算
+        x = (edge.startX + edge.endX) / 2;
+        y = (edge.startY + edge.endY) / 2;
+      }
 
       // foreignObject + input を作成
-      const x = parseFloat(textElement.getAttribute('x'));
-      const y = parseFloat(textElement.getAttribute('y'));
-
       const fo = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject');
       fo.setAttribute('x', x - 100);
       fo.setAttribute('y', y - 15);
@@ -6443,6 +6470,25 @@
           edge.label = newLabel;
           manualEdges[edge.id].label = newLabel;
           manualEdges[edge.id].updatedAt = new Date().toISOString();
+
+          // テキスト要素がなければ作成
+          if (!textElement) {
+            textElement = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            textElement.setAttribute('class', 'manual-edge-label');
+            textElement.setAttribute('x', x);
+            textElement.setAttribute('y', y);
+            textElement.setAttribute('text-anchor', 'middle');
+            textElement.setAttribute('cursor', 'text');
+
+            // ダブルクリックでインライン編集
+            textElement.addEventListener('dblclick', (e) => {
+              e.stopPropagation();
+              startInlineEditEdgeLabel(edgeGroup, textElement, edge);
+            });
+
+            edgeGroup.appendChild(textElement);
+          }
+
           textElement.textContent = newLabel;
 
           // 自動保存
@@ -6457,7 +6503,9 @@
 
         // foreignObjectを削除してテキストを表示
         fo.remove();
-        textElement.style.display = '';
+        if (textElement) {
+          textElement.style.display = '';
+        }
       };
 
       // Enterで確定、Escapeでキャンセル
