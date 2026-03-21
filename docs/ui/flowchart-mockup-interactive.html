@@ -7820,13 +7820,17 @@ ${metadataJson}
         return;
       }
 
-      // クリック位置のSVG座標を取得
+      // クリック位置のSVG座標を取得（ズーム・パン変換を考慮）
       const svg = e.currentTarget.querySelector('svg');
       if (!svg) return;
 
-      const rect = svg.getBoundingClientRect();
-      const svgX = e.clientX - rect.left;
-      const svgY = e.clientY - rect.top;
+      // SVGのズーム・パン変換を考慮した正しい座標変換
+      const pt = svg.createSVGPoint();
+      pt.x = e.clientX;
+      pt.y = e.clientY;
+      const svgPt = pt.matrixTransform(svg.getScreenCTM().inverse());
+      const svgX = svgPt.x;
+      const svgY = svgPt.y;
 
       // クリックされた要素を判定
       const target = e.target.closest('[data-et], [data-id]');
