@@ -1481,6 +1481,8 @@
       loadFromLocalStorage();
       renderDashboard();
       setupAutoSave();
+      setupCrossHTMLSync(); // 🆕 クロスHTML連携の初期化
+      setupGanttCommunication(); // 🔧 ガントチャートとの通信（postMessage）
       setupSearchListener();
     }
 
@@ -1560,12 +1562,66 @@
           projectData.assignees = JSON.parse(assigneesData).assignees;
         }
 
+        // 🆕 クロスHTML連携用: task-manager-data キーも保存
+        const data = {
+          tasks: projectData.tasks,
+          meta: projectData.meta || { project_name: '無題のプロジェクト', version: '1.0' },
+          timestamp: Date.now()
+        };
+
+        const jsonStr = JSON.stringify(data);
+        const sizeKB = new Blob([jsonStr]).size / 1024;
+        const sizeMB = sizeKB / 1024;
+
+        // 🆕 容量警告（3MB超過時）
+        if (sizeKB > 3072) {
+          console.warn(`[LocalStorage] データサイズ: ${sizeKB.toFixed(0)}KB (警告: 3MB超)`);
+
+          const proceed = confirm(
+            `タスクデータが大きくなっています (${sizeMB.toFixed(1)}MB)。\n` +
+            `保存を続けますか？\n\n` +
+            `対処法:\n` +
+            `1. 完了タスクをアーカイブ\n` +
+            `2. 不要なコメントを削除\n` +
+            `3. JSONファイルへエクスポート`
+          );
+
+          if (!proceed) return false;
+        }
+
+        // 既存キーに保存（後方互換性）
         localStorage.setItem('task_manager_v2_project_data', JSON.stringify(projectData));
-        console.log('Saved to localStorage');
+
+        // 🆕 クロスHTML連携用キーに保存
+        localStorage.setItem('task-manager-data', jsonStr);
+
+        // 🆕 更新トリガーを発火（flowchart-editor.htmlへの通知）
+        localStorage.setItem('task-manager-update-trigger', Date.now().toString());
+
+        console.log(`[TaskManager] データ保存成功 (${sizeKB.toFixed(0)}KB)`);
         isDirty = false;
         updateFileStatus();
+        return true;
+
       } catch (error) {
+        if (error.name === 'QuotaExceededError') {
+          const sizeKB = new Blob([JSON.stringify(projectData)]).size / 1024;
+          const sizeMB = sizeKB / 1024;
+
+          alert(
+            `❌ LocalStorage容量不足でデータを保存できませんでした。\n\n` +
+            `現在のデータサイズ: ${sizeMB.toFixed(1)}MB\n` +
+            `ブラウザ上限: 5MB\n\n` +
+            `対処法:\n` +
+            `1. 完了タスクをアーカイブ（推奨）\n` +
+            `2. 不要なコメント・履歴を削除\n` +
+            `3. JSONファイルへエクスポートして別管理\n` +
+            `4. ブラウザの開発者ツールでLocalStorageをクリア`
+          );
+          return false;
+        }
         console.error('Error saving to localStorage:', error);
+        return false;
       }
     }
 
@@ -1586,6 +1642,117 @@
           return e.returnValue;
         }
       });
+    }
+
+    // 🆕 クロスHTML連携: フローチャート側からの更新を検知
+    function setupCrossHTMLSync() {
+      // storage イベントハンドラを追加
+      window.addEventListener('storage', handleFlowchartUpdate);
+
+      // 初期化時にフローチャート属性を読み込み
+      loadFlowchartAttributes();
+
+      console.log('[TaskManager] Cross-HTML sync initialized');
+    }
+
+    function handleFlowchartUpdate(e) {
+      // フローチャート更新トリガーのみを処理
+      if (e.key !== 'flowchart-update-trigger') return;
+
+      console.log('[TaskManager] Flowchart updated, reloading attributes...');
+
+      try {
+        // フローチャート属性を取得
+        const attrsStr = localStorage.getItem('flowchart-attributes');
+        if (!attrsStr) return;
+
+        const attrs = JSON.parse(attrsStr);
+
+        // タスクにフローチャート属性を統合
+        let updatedCount = 0;
+        projectData.tasks.forEach(task => {
+          if (attrs[task.wbs_no]) {
+            task.flowchart = attrs[task.wbs_no];
+            updatedCount++;
+            console.log(`[TaskManager] Updated flowchart info for ${task.wbs_no}`);
+          }
+        });
+
+        if (updatedCount > 0) {
+          // UI更新
+          renderTaskTable();
+
+          // 変更を永続化（flowchart属性を含めて保存）
+          markDirty();
+          saveToLocalStorage();
+
+          console.log(`[TaskManager] ✓ ${updatedCount}個のタスクにフローチャート情報を統合しました`);
+        }
+
+      } catch (error) {
+        console.error('[TaskManager] Failed to parse flowchart attributes:', error);
+      }
+    }
+
+    function loadFlowchartAttributes() {
+      const attrsStr = localStorage.getItem('flowchart-attributes');
+      if (!attrsStr) return;
+
+      try {
+        const attrs = JSON.parse(attrsStr);
+
+        // タスクに統合
+        let loadedCount = 0;
+        projectData.tasks.forEach(task => {
+          if (attrs[task.wbs_no]) {
+            task.flowchart = attrs[task.wbs_no];
+            loadedCount++;
+          }
+        });
+
+        if (loadedCount > 0) {
+          console.log(`[TaskManager] Flowchart attributes loaded (${loadedCount} tasks)`);
+        }
+      } catch (error) {
+        console.error('[TaskManager] Failed to load flowchart attributes:', error);
+      }
+    }
+
+    // 🔧 postMessage API: ガントチャートウィンドウとの通信（file://プロトコル対応）
+    function setupGanttCommunication() {
+      window.addEventListener('message', (event) => {
+        const { type, payload } = event.data;
+
+        switch (type) {
+          case 'REQUEST_PROJECT_DATA':
+            // ガントチャートウィンドウからのデータ要求に応答
+            if (event.source) {
+              event.source.postMessage({
+                type: 'PROJECT_DATA',
+                payload: projectData
+              }, '*');
+            }
+            break;
+
+          case 'GANTT_DATE_CHANGE':
+            // ガントチャートからの日程変更を受信
+            updateTaskDates(payload.wbsNo, payload.startDate, payload.endDate);
+            if (event.source) {
+              event.source.postMessage({
+                type: 'DATE_CHANGE_APPLIED',
+                payload: { wbsNo: payload.wbsNo }
+              }, '*');
+            }
+            break;
+
+          case 'OPEN_TASK_DETAIL':
+            // タスク詳細を開く要求
+            openTaskDetail(payload.wbsNo);
+            break;
+        }
+      });
+
+      console.log('[TaskManager] Gantt communication initialized');
     }
 
     function markDirty() {
@@ -4068,20 +4235,35 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
       renderGantt();
     }
 
+    // 🔧 postMessage APIを使用したデータ受信（file://プロトコル対応）
     function refreshData() {
-      if (window.opener && !window.opener.closed && window.opener.projectData) {
-        const newData = window.opener.projectData;
-        Object.assign(projectData, newData);
-        renderGantt();
-        alert('データを更新しました');
+      if (window.opener && !window.opener.closed) {
+        // メインウィンドウにデータ要求を送信
+        window.opener.postMessage({ type: 'REQUEST_PROJECT_DATA' }, '*');
       } else {
         alert('メインウィンドウが閉じられているため、データを更新できません');
       }
     }
 
+    // postMessageでデータを受信
+    window.addEventListener('message', (event) => {
+      if (event.data.type === 'PROJECT_DATA') {
+        const newData = event.data.payload;
+        Object.assign(projectData, newData);
+        renderGantt();
+        console.log('[Gantt Window] ✓ データを受信しました');
+      } else if (event.data.type === 'DATE_CHANGE_APPLIED') {
+        console.log('[Gantt Window] ✓ 日程変更が適用されました:', event.data.payload.wbsNo);
+      }
+    });
+
     function openTaskInMainWindow(wbsNo) {
       if (window.opener && !window.opener.closed) {
-        window.opener.openTaskDetail(wbsNo);
+        // postMessageでタスク詳細を開く要求を送信
+        window.opener.postMessage({
+          type: 'OPEN_TASK_DETAIL',
+          payload: { wbsNo: wbsNo }
+        }, '*');
         window.opener.focus();
       } else {
         alert('メインウィンドウが閉じられているため、タスク詳細を開けません');
@@ -4090,10 +4272,8 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
 
     // Auto-refresh every 5 seconds
     setInterval(() => {
-      if (window.opener && !window.opener.closed && window.opener.projectData) {
-        const newData = window.opener.projectData;
-        Object.assign(projectData, newData);
-        renderGantt();
+      if (window.opener && !window.opener.closed) {
+        window.opener.postMessage({ type: 'REQUEST_PROJECT_DATA' }, '*');
       }
     }, 5000);
 
@@ -4102,12 +4282,17 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
     // ==========================================
 
     // Restore saved column width from localStorage
-    const savedWidth = localStorage.getItem('gantt_task_column_width');
-    if (savedWidth) {
-      const width = parseInt(savedWidth, 10);
-      if (width >= 150 && width <= 500) {
-        document.documentElement.style.setProperty('--task-column-width', width + 'px');
+    // 🔧 Blob URLからはLocalStorageにアクセスできないため、try-catchで保護
+    try {
+      const savedWidth = localStorage.getItem('gantt_task_column_width');
+      if (savedWidth) {
+        const width = parseInt(savedWidth, 10);
+        if (width >= 150 && width <= 500) {
+          document.documentElement.style.setProperty('--task-column-width', width + 'px');
+        }
       }
+    } catch (error) {
+      console.log('[Gantt Window] LocalStorage not accessible (Blob URL origin)');
     }
 
     // Setup column resizer
@@ -4159,9 +4344,14 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
       document.body.style.userSelect = '';
 
       // Save to localStorage
-      const currentWidth = getComputedStyle(document.documentElement)
-        .getPropertyValue('--task-column-width');
-      localStorage.setItem('gantt_task_column_width', parseInt(currentWidth, 10));
+      // 🔧 Blob URLからはLocalStorageにアクセスできないため、try-catchで保護
+      try {
+        const currentWidth = getComputedStyle(document.documentElement)
+          .getPropertyValue('--task-column-width');
+        localStorage.setItem('gantt_task_column_width', parseInt(currentWidth, 10));
+      } catch (error) {
+        console.log('[Gantt Window] LocalStorage not accessible (Blob URL origin)');
+      }
     });
 
 
@@ -4171,10 +4361,54 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
 
     let dragState = null;
 
+    /**
+     * クリック位置からインタラクション領域を判定
+     * @param {MouseEvent} event - マウスイベント
+     * @param {HTMLElement} barElement - 日程バー要素
+     * @returns {string} 'START_RESIZE' | 'END_RESIZE' | 'MOVE'
+     */
+    function getBarZone(event, barElement) {
+      const rect = barElement.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const width = rect.width;
+      const RESIZE_HANDLE_WIDTH = 8; // 8px
+
+      if (x < RESIZE_HANDLE_WIDTH) {
+        return 'START_RESIZE';  // 左端リサイズ（開始日変更）
+      } else if (x > width - RESIZE_HANDLE_WIDTH) {
+        return 'END_RESIZE';    // 右端リサイズ（終了日変更）
+      } else {
+        return 'MOVE';          // 中央ドラッグ移動
+      }
+    }
+
+    /**
+     * ドラッグモードに応じたカーソルスタイルを取得
+     * @param {string} zone - 'START_RESIZE' | 'END_RESIZE' | 'MOVE'
+     * @returns {string} CSSカーソルスタイル
+     */
+    function getCursorStyle(zone) {
+      switch (zone) {
+        case 'START_RESIZE':
+        case 'END_RESIZE':
+          return 'col-resize';
+        case 'MOVE':
+        default:
+          return 'move';
+      }
+    }
+
     function attachDragToTaskBars() {
       const taskBars = document.querySelectorAll('.task-bar');
       taskBars.forEach(bar => {
-        bar.style.cursor = 'move';
+        // ホバー時のカーソル変更
+        bar.addEventListener('mousemove', (e) => {
+          if (dragState) return; // ドラッグ中は無視
+
+          const zone = getBarZone(e, bar);
+          bar.style.cursor = getCursorStyle(zone);
+        });
+
         bar.addEventListener('mousedown', startDrag);
       });
     }
@@ -4187,9 +4421,13 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
       const task = projectData.tasks.find(t => t.wbs_no === wbsNo);
       if (!task) return;
 
-      console.log('[startDrag] WBS: ' + wbsNo + ', Start: ' + task.start_date + ', End: ' + task.finish_date);
+      // クリック位置から操作モードを判定
+      const zone = getBarZone(e, bar);
+
+      console.log('[startDrag] WBS: ' + wbsNo + ', Mode: ' + zone + ', Start: ' + task.start_date + ', End: ' + task.finish_date);
 
       dragState = {
+        mode: zone,  // 'START_RESIZE' | 'END_RESIZE' | 'MOVE'
         wbsNo: wbsNo,
         originalStartDate: task.start_date,
         originalEndDate: task.finish_date,
@@ -4198,6 +4436,7 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
       };
 
       bar.classList.add('dragging');
+      document.body.style.cursor = getCursorStyle(zone);
       document.addEventListener('mousemove', onDrag);
       document.addEventListener('mouseup', endDrag);
       e.preventDefault();
@@ -4210,11 +4449,42 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
       const cellWidth = currentViewMode === 'day' ? 40 : (currentViewMode === 'week' ? 80 : 120);
       const deltaDays = Math.round(deltaX / cellWidth);
 
-      if (deltaDays !== 0) {
-        const newStartDate = shiftDateByDays(dragState.originalStartDate, deltaDays);
-        const newEndDate = shiftDateByDays(dragState.originalEndDate, deltaDays);
-        updatePreview(newStartDate, newEndDate);
+      if (deltaDays === 0) return;
+
+      let newStartDate, newEndDate;
+
+      switch (dragState.mode) {
+        case 'START_RESIZE':
+          // 左端リサイズ：開始日のみ変更、終了日固定
+          newStartDate = shiftDateByDays(dragState.originalStartDate, deltaDays);
+          newEndDate = dragState.originalEndDate;
+
+          // 最小期間チェック（1日以上）
+          if (new Date(newStartDate) >= new Date(newEndDate)) {
+            newStartDate = shiftDateByDays(newEndDate, -1);
+          }
+          break;
+
+        case 'END_RESIZE':
+          // 右端リサイズ：終了日のみ変更、開始日固定
+          newStartDate = dragState.originalStartDate;
+          newEndDate = shiftDateByDays(dragState.originalEndDate, deltaDays);
+
+          // 最小期間チェック（1日以上）
+          if (new Date(newEndDate) <= new Date(newStartDate)) {
+            newEndDate = shiftDateByDays(newStartDate, 1);
+          }
+          break;
+
+        case 'MOVE':
+        default:
+          // 中央ドラッグ：期間維持して移動
+          newStartDate = shiftDateByDays(dragState.originalStartDate, deltaDays);
+          newEndDate = shiftDateByDays(dragState.originalEndDate, deltaDays);
+          break;
       }
+
+      updatePreview(newStartDate, newEndDate);
     }
 
     function endDrag(e) {
@@ -4228,38 +4498,61 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
       const deltaDays = Math.round(deltaX / cellWidth);
 
       if (deltaDays !== 0) {
-        const newStartDate = shiftDateByDays(dragState.originalStartDate, deltaDays);
-        const newEndDate = shiftDateByDays(dragState.originalEndDate, deltaDays);
+        let newStartDate, newEndDate;
 
-        console.log('[endDrag] deltaDays: ' + deltaDays);
+        // モードに応じて日程を計算
+        switch (dragState.mode) {
+          case 'START_RESIZE':
+            // 左端リサイズ：開始日のみ変更
+            newStartDate = shiftDateByDays(dragState.originalStartDate, deltaDays);
+            newEndDate = dragState.originalEndDate;
+
+            // 最小期間チェック（1日以上）
+            if (new Date(newStartDate) >= new Date(newEndDate)) {
+              newStartDate = shiftDateByDays(newEndDate, -1);
+            }
+            break;
+
+          case 'END_RESIZE':
+            // 右端リサイズ：終了日のみ変更
+            newStartDate = dragState.originalStartDate;
+            newEndDate = shiftDateByDays(dragState.originalEndDate, deltaDays);
+
+            // 最小期間チェック（1日以上）
+            if (new Date(newEndDate) <= new Date(newStartDate)) {
+              newEndDate = shiftDateByDays(newStartDate, 1);
+            }
+            break;
+
+          case 'MOVE':
+          default:
+            // 中央ドラッグ：期間維持して移動
+            newStartDate = shiftDateByDays(dragState.originalStartDate, deltaDays);
+            newEndDate = shiftDateByDays(dragState.originalEndDate, deltaDays);
+            break;
+        }
+
+        console.log('[endDrag] Mode: ' + dragState.mode + ', deltaDays: ' + deltaDays);
         console.log('[endDrag] Original: ' + dragState.originalStartDate + ' ~ ' + dragState.originalEndDate);
         console.log('[endDrag] New: ' + newStartDate + ' ~ ' + newEndDate);
 
-        console.log('[endDrag] window.opener:', window.opener);
-        console.log('[endDrag] window.opener.updateTaskDates:', window.opener ? window.opener.updateTaskDates : 'no opener');
+        // 🔧 postMessage APIを使用（file://プロトコル対応）
+        if (window.opener && !window.opener.closed) {
+          console.log('[endDrag] Sending GANTT_DATE_CHANGE via postMessage...');
 
-        if (window.opener && window.opener.updateTaskDates) {
-          console.log('[endDrag] Calling window.opener.updateTaskDates...');
-          try {
-            window.opener.updateTaskDates(dragState.wbsNo, newStartDate, newEndDate);
-            console.log('[endDrag] updateTaskDates called successfully');
-          } catch (error) {
-            console.error('[endDrag] Error calling updateTaskDates:', error);
-          }
-
-          setTimeout(() => {
-            console.log('[endDrag] Refreshing gantt chart...');
-            if (window.opener && window.opener.getProjectData) {
-              try {
-                projectData = window.opener.getProjectData();
-                console.log('[endDrag] Updated projectData, calling renderGantt()');
-                renderGantt();
-              } catch (error) {
-                console.error('[endDrag] Error getting projectData:', error);
-              }
-            } else {
-              console.error('[endDrag] Cannot access window.opener.getProjectData');
+          window.opener.postMessage({
+            type: 'GANTT_DATE_CHANGE',
+            payload: {
+              wbsNo: dragState.wbsNo,
+              startDate: newStartDate,
+              endDate: newEndDate
             }
+          }, '*');
+
+          // データ再取得を要求
+          setTimeout(() => {
+            console.log('[endDrag] Requesting updated project data...');
+            window.opener.postMessage({ type: 'REQUEST_PROJECT_DATA' }, '*');
           }, 200);
         } else {
           console.error('[endDrag] window.opener or updateTaskDates not available');
@@ -4275,6 +4568,10 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
       }
 
       dragState.barElement.classList.remove('dragging');
+
+      // カーソルをリセット
+      document.body.style.cursor = 'default';
+
       dragState = null;
     }
 
