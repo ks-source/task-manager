@@ -932,8 +932,7 @@
       <button class="icon-button" onclick="openSettingsModal()" title="設定">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="3"></circle>
-          <path d="M12 1v6m0 6v6M1 12h6m6 0h6"></path>
-          <path d="m4.93 4.93 4.24 4.24m5.66 0 4.24-4.24m0 14.14-4.24-4.24m-5.66 0-4.24 4.24"></path>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
         </svg>
       </button>
     </nav>
@@ -3375,6 +3374,13 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
     // ==========================================
 
     /**
+     * ガントチャートウィンドウから現在のprojectDataを取得する関数
+     */
+    function getProjectData() {
+      return projectData;
+    }
+
+    /**
      * ガントチャートから日程変更を受け取る関数
      * @param {string} wbsNo - タスクのWBS番号
      * @param {string} newStartDate - 新開始日 "YYYY/M/D"
@@ -3433,9 +3439,18 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
         return;
       }
 
-      // Generate and write HTML
-      ganttWindow.document.write(generateGanttHTML());
-      ganttWindow.document.close();
+      // Generate HTML as a Blob and load via object URL
+      const ganttHTML = generateGanttHTML();
+      const blob = new Blob([ganttHTML], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+
+      // Navigate to the blob URL
+      ganttWindow.location.href = url;
+
+      // Clean up the URL after a delay
+      setTimeout(() => {
+        URL.revokeObjectURL(url);
+      }, 1000);
     }
 
     function generateGanttHTML() {
@@ -3480,6 +3495,10 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
       maxDate.setDate(maxDate.getDate() + 3);
 
       const dayCount = Math.ceil((maxDate - minDate) / (1000 * 60 * 60 * 24));
+
+      // Prepare date strings for HTML generation
+      const minDateStr = minDate.toISOString().split('T')[0];
+      const maxDateStr = maxDate.toISOString().split('T')[0];
 
       return `
 <!DOCTYPE html>
@@ -3861,15 +3880,23 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
   </div>
 
   <script>
-    let currentViewMode = 'day';
-    const projectData = ${JSON.stringify(projectData)};
-    const minDate = new Date('${minDate.toISOString().split('T')[0]}');
-    const maxDate = new Date('${maxDate.toISOString().split('T')[0]}');
+    let currentViewMode = "day";
+    let projectData = ${JSON.stringify(projectData)};
+    const minDate = new Date("${minDateStr}");
+    const maxDate = new Date("${maxDateStr}");
+
+    console.log('[Gantt Window] Loaded projectData:', projectData);
+    console.log('[Gantt Window] Tasks with dates:', projectData.tasks.filter(t => t.start_date && t.finish_date));
 
     function renderGantt() {
       const tasksWithDates = projectData.tasks.filter(task =>
         task.start_date && task.finish_date
       );
+
+      console.log('[renderGantt] Rendering ' + tasksWithDates.length + ' tasks');
+      tasksWithDates.forEach(t => {
+        console.log('[renderGantt] Task ' + t.wbs_no + ': ' + t.start_date + ' ~ ' + t.finish_date + ' (' + t.task_name + ')');
+      });
 
       const ganttTable = document.getElementById('gantt-table');
 
@@ -3883,23 +3910,21 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
       taskListHTML += '<div class="task-list-header">タスク</div>';
 
       tasksWithDates.forEach(task => {
-        const tooltipText = \`WBS: \${task.wbs_no}
-Phase: \${task.phase}
-Type: \${task.task_type || 'N/A'}
-Task: \${task.task_name}
-Duration: \${task.duration_bd || 'N/A'} BD
-Period: \${task.start_date} ~ \${task.finish_date}
-Owner: \${task.primary_owner || 'N/A'}
-Support: \${task.support_owner || 'N/A'}
-Status: \${task.status}
-Predecessors: \${task.predecessors || 'N/A'}\`;
+        const tooltipText = 'WBS: ' + task.wbs_no + '\\n' +
+          'Phase: ' + task.phase + '\\n' +
+          'Type: ' + (task.task_type || 'N/A') + '\\n' +
+          'Task: ' + task.task_name + '\\n' +
+          'Duration: ' + (task.duration_bd || 'N/A') + ' BD\\n' +
+          'Period: ' + task.start_date + ' ~ ' + task.finish_date + '\\n' +
+          'Owner: ' + (task.primary_owner || 'N/A') + '\\n' +
+          'Support: ' + (task.support_owner || 'N/A') + '\\n' +
+          'Status: ' + task.status + '\\n' +
+          'Predecessors: ' + (task.predecessors || 'N/A');
 
-        taskListHTML += \`
-          <div class="task-row" title="\${tooltipText}" onclick="openTaskInMainWindow('\${task.wbs_no}')" style="cursor: pointer;">
-            <div class="task-wbs">\${task.wbs_no} | \${task.phase}</div>
-            <div class="task-name">\${task.task_name}</div>
-          </div>
-        \`;
+        taskListHTML += '<div class="task-row" title="' + tooltipText + '" onclick="openTaskInMainWindow(\\'' + task.wbs_no + '\\')" style="cursor: pointer;">' +
+          '<div class="task-wbs">' + task.wbs_no + ' | ' + task.phase + '</div>' +
+          '<div class="task-name">' + task.task_name + '</div>' +
+          '</div>';
       });
       taskListHTML += '<div class="column-resizer" id="column-resizer"></div>';
       taskListHTML += '</div>';
@@ -3908,12 +3933,12 @@ Predecessors: \${task.predecessors || 'N/A'}\`;
       const totalTimelineWidth = cells.length * cellWidth;
 
       // Timeline column
-      let timelineHTML = \`<div class="timeline" style="min-width: \${totalTimelineWidth}px; width: \${totalTimelineWidth}px;">\`;
+      let timelineHTML = '<div class="timeline" style="min-width: ' + totalTimelineWidth + 'px; width: ' + totalTimelineWidth + 'px;">';
 
       // Timeline header
-      timelineHTML += \`<div class="timeline-header"><div class="timeline-grid" style="min-width: \${totalTimelineWidth}px; width: \${totalTimelineWidth}px;">\`;
+      timelineHTML += '<div class="timeline-header"><div class="timeline-grid" style="min-width: ' + totalTimelineWidth + 'px; width: ' + totalTimelineWidth + 'px;">';
       cells.forEach(cell => {
-        timelineHTML += \`<div class="timeline-cell" style="min-width: \${cellWidth}px; width: \${cellWidth}px; flex: none;">\${cell.label}</div>\`;
+        timelineHTML += '<div class="timeline-cell" style="min-width: ' + cellWidth + 'px; width: ' + cellWidth + 'px; flex: none;">' + cell.label + '</div>';
       });
       timelineHTML += '</div></div>';
 
@@ -3930,35 +3955,33 @@ Predecessors: \${task.predecessors || 'N/A'}\`;
         timelineHTML += '<div class="timeline-row">';
 
         // Background grid
-        timelineHTML += \`<div class="timeline-bg" style="min-width: \${totalTimelineWidth}px; width: \${totalTimelineWidth}px;">\`;
+        timelineHTML += '<div class="timeline-bg" style="min-width: ' + totalTimelineWidth + 'px; width: ' + totalTimelineWidth + 'px;">';
         cells.forEach(cell => {
           const isToday = cell.date &&
             cell.date.getFullYear() === today.getFullYear() &&
             cell.date.getMonth() === today.getMonth() &&
             cell.date.getDate() === today.getDate();
-          timelineHTML += \`<div class="timeline-bg-cell \${isToday ? 'today' : ''}" style="min-width: \${cellWidth}px; width: \${cellWidth}px; flex: none;"></div>\`;
+          timelineHTML += '<div class="timeline-bg-cell ' + (isToday ? 'today' : '') + '" style="min-width: ' + cellWidth + 'px; width: ' + cellWidth + 'px; flex: none;"></div>';
         });
         timelineHTML += '</div>';
 
         // Task bar
-        const barTooltipText = \`WBS: \${task.wbs_no}
-Phase: \${task.phase}
-Type: \${task.task_type || 'N/A'}
-Task: \${task.task_name}
-Duration: \${task.duration_bd || 'N/A'} BD
-Period: \${task.start_date} ~ \${task.finish_date}
-Owner: \${task.primary_owner || 'N/A'}
-Support: \${task.support_owner || 'N/A'}
-Status: \${task.status}
-Predecessors: \${task.predecessors || 'N/A'}\`;
+        const barTooltipText = 'WBS: ' + task.wbs_no + '\\n' +
+          'Phase: ' + task.phase + '\\n' +
+          'Type: ' + (task.task_type || 'N/A') + '\\n' +
+          'Task: ' + task.task_name + '\\n' +
+          'Duration: ' + (task.duration_bd || 'N/A') + ' BD\\n' +
+          'Period: ' + task.start_date + ' ~ ' + task.finish_date + '\\n' +
+          'Owner: ' + (task.primary_owner || 'N/A') + '\\n' +
+          'Support: ' + (task.support_owner || 'N/A') + '\\n' +
+          'Status: ' + task.status + '\\n' +
+          'Predecessors: ' + (task.predecessors || 'N/A');
 
-        timelineHTML += \`
-          <div class="task-bar \${statusClass}"
-               style="left: \${startOffset}%; width: \${duration}%; cursor: move;"
-               title="\${barTooltipText}"
-               data-wbs="\${task.wbs_no}">
-          </div>
-        \`;
+        timelineHTML += '<div class="task-bar ' + statusClass + '"' +
+          ' style="left: ' + startOffset + '%; width: ' + duration + '%; cursor: move;"' +
+          ' title="' + barTooltipText + '"' +
+          ' data-wbs="' + task.wbs_no + '">' +
+          '</div>';
 
         timelineHTML += '</div>';
       });
@@ -3976,7 +3999,7 @@ Predecessors: \${task.predecessors || 'N/A'}\`;
         let current = new Date(minDate);
         while (current <= maxDate) {
           cells.push({
-            label: \`\${current.getMonth() + 1}/\${current.getDate()}\`,
+            label: (current.getMonth() + 1) + '/' + current.getDate(),
             date: new Date(current)
           });
           current.setDate(current.getDate() + 1);
@@ -3991,7 +4014,7 @@ Predecessors: \${task.predecessors || 'N/A'}\`;
           weekEnd.setDate(weekEnd.getDate() + 6);
 
           cells.push({
-            label: \`W\${weekNum} (\${weekStart.getMonth() + 1}/\${weekStart.getDate()})\`,
+            label: 'W' + weekNum + ' (' + (weekStart.getMonth() + 1) + '/' + weekStart.getDate() + ')',
             date: weekStart
           });
           current.setDate(current.getDate() + 7);
@@ -4002,11 +4025,11 @@ Predecessors: \${task.predecessors || 'N/A'}\`;
         let current = new Date(minDate);
         const seen = new Set();
         while (current <= maxDate) {
-          const key = \`\${current.getFullYear()}-\${current.getMonth()}\`;
+          const key = current.getFullYear() + '-' + current.getMonth();
           if (!seen.has(key)) {
             seen.add(key);
             cells.push({
-              label: \`\${current.getFullYear()}/\${current.getMonth() + 1}\`,
+              label: current.getFullYear() + '/' + (current.getMonth() + 1),
               date: new Date(current)
             });
           }
@@ -4068,9 +4091,6 @@ Predecessors: \${task.predecessors || 'N/A'}\`;
         renderGantt();
       }
     }, 5000);
-
-    // Initial render
-    renderGantt();
 
     // ==========================================
     // Column Resizer
@@ -4139,8 +4159,6 @@ Predecessors: \${task.predecessors || 'N/A'}\`;
       localStorage.setItem('gantt_task_column_width', parseInt(currentWidth, 10));
     });
 
-    // Initialize resizer after initial render
-    setTimeout(initResizer, 100);
 
     // ==========================================
     // Drag & Drop Functionality
@@ -4212,14 +4230,42 @@ Predecessors: \${task.predecessors || 'N/A'}\`;
         console.log('[endDrag] Original: ' + dragState.originalStartDate + ' ~ ' + dragState.originalEndDate);
         console.log('[endDrag] New: ' + newStartDate + ' ~ ' + newEndDate);
 
+        console.log('[endDrag] window.opener:', window.opener);
+        console.log('[endDrag] window.opener.updateTaskDates:', window.opener ? window.opener.updateTaskDates : 'no opener');
+
         if (window.opener && window.opener.updateTaskDates) {
-          window.opener.updateTaskDates(dragState.wbsNo, newStartDate, newEndDate);
+          console.log('[endDrag] Calling window.opener.updateTaskDates...');
+          try {
+            window.opener.updateTaskDates(dragState.wbsNo, newStartDate, newEndDate);
+            console.log('[endDrag] updateTaskDates called successfully');
+          } catch (error) {
+            console.error('[endDrag] Error calling updateTaskDates:', error);
+          }
+
           setTimeout(() => {
-            if (window.opener && window.opener.projectData) {
-              projectData.tasks = window.opener.projectData.tasks;
-              renderGantt();
+            console.log('[endDrag] Refreshing gantt chart...');
+            if (window.opener && window.opener.getProjectData) {
+              try {
+                projectData = window.opener.getProjectData();
+                console.log('[endDrag] Updated projectData, calling renderGantt()');
+                renderGantt();
+              } catch (error) {
+                console.error('[endDrag] Error getting projectData:', error);
+              }
+            } else {
+              console.error('[endDrag] Cannot access window.opener.getProjectData');
             }
           }, 200);
+        } else {
+          console.error('[endDrag] window.opener or updateTaskDates not available');
+        }
+      }
+
+      // Remove preview element
+      if (dragState.barElement && dragState.barElement.parentElement) {
+        const preview = dragState.barElement.parentElement.querySelector('.task-bar-preview');
+        if (preview) {
+          preview.remove();
         }
       }
 
@@ -4248,8 +4294,12 @@ Predecessors: \${task.predecessors || 'N/A'}\`;
       attachDragToTaskBars();
     };
 
-    // Initial attach
-    attachDragToTaskBars();
+    // Initialize when DOM is ready
+    window.addEventListener('DOMContentLoaded', function() {
+      console.log('[Gantt Window] DOM ready, starting initial render...');
+      renderGantt();
+      initResizer();
+    });
 
   <\/script>
 </body>
