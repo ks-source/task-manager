@@ -7672,6 +7672,32 @@ ${metadataJson}
     }
 
     /**
+     * エッジのクリック範囲矩形を更新
+     */
+    function updateEdgeHitRect(hitRect, x1, y1, x2, y2) {
+      const RECT_WIDTH = 40; // 矩形の幅（px）
+
+      // エッジの長さと角度を計算
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+      const length = Math.sqrt(dx * dx + dy * dy);
+      const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+
+      // 矩形の中心点
+      const centerX = (x1 + x2) / 2;
+      const centerY = (y1 + y2) / 2;
+
+      // 矩形の属性を更新
+      hitRect.setAttribute('x', -length / 2);
+      hitRect.setAttribute('y', -RECT_WIDTH / 2);
+      hitRect.setAttribute('width', length);
+      hitRect.setAttribute('height', RECT_WIDTH);
+      hitRect.setAttribute('transform', `translate(${centerX}, ${centerY}) rotate(${angle})`);
+
+      console.log('✅ クリック範囲矩形を更新:', { centerX, centerY, length, angle });
+    }
+
+    /**
      * エッジのビジュアル要素を更新
      */
     function updateEdgeVisual(edgeId) {
@@ -7691,9 +7717,11 @@ ${metadataJson}
       }
 
       // クリック範囲の矩形を更新
-      const hitRect = edgeElement.querySelector('rect[fill="transparent"]');
+      const hitRect = edgeElement.querySelector('.edge-hit-rect');
       if (hitRect) {
         updateEdgeHitRect(hitRect, edge.startX, edge.startY, edge.endX, edge.endY);
+      } else {
+        console.warn('⚠️ クリック範囲矩形が見つかりません:', edgeId);
       }
 
       // ラベル位置を更新
