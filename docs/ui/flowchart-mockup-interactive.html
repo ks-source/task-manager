@@ -3628,33 +3628,23 @@
         return;
       }
 
-      const minimapContent = minimap.querySelector('.minimap-content');
-      const minimapZoomControls = minimap.querySelector('.minimap-zoom-controls');
-
-      console.log('🔍 toggleMinimap - 要素チェック:', {
-        minimap: !!minimap,
-        minimapContent: !!minimapContent,
-        minimapZoomControls: !!minimapZoomControls,
-        contentCurrentDisplay: minimapContent ? minimapContent.style.display : 'N/A',
-        zoomCurrentDisplay: minimapZoomControls ? minimapZoomControls.style.display : 'N/A'
-      });
-
       isMinimapMinimized = !isMinimapMinimized;
 
+      console.log('🔍 toggleMinimap:', {
+        isMinimized: isMinimapMinimized,
+        hasMinimizedClass: minimap.classList.contains('minimized')
+      });
+
       if (isMinimapMinimized) {
-        console.log('📦 最小化中...');
-        if (minimapContent) minimapContent.style.display = 'none';
-        if (minimapZoomControls) minimapZoomControls.style.display = 'none';
+        console.log('📦 最小化: minimizedクラスを追加');
+        minimap.classList.add('minimized');
       } else {
-        console.log('📖 展開中...');
-        if (minimapContent) minimapContent.style.display = 'block';
-        if (minimapZoomControls) minimapZoomControls.style.display = 'flex';
+        console.log('📖 展開: minimizedクラスを削除');
+        minimap.classList.remove('minimized');
       }
 
-      console.log('✅ toggleMinimap完了 - 新しい状態:', {
-        isMinimized: isMinimapMinimized,
-        contentDisplay: minimapContent ? minimapContent.style.display : 'N/A',
-        zoomDisplay: minimapZoomControls ? minimapZoomControls.style.display : 'N/A'
+      console.log('✅ 完了:', {
+        hasMinimizedClass: minimap.classList.contains('minimized')
       });
     }
 
