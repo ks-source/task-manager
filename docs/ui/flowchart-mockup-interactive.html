@@ -6977,11 +6977,44 @@ ${metadataJson}
         g.appendChild(text);
       }
 
-      // ★ Phase 2: クリックで編集モードに入る
-      g.addEventListener('click', (e) => {
-        if (!edgeAddMode && !nodeAddMode) {
+      // ★ Phase 2: クリックで編集モードに入る（ドラッグと区別するためmousedown/upで判定）
+      let clickStartX, clickStartY;
+      let clickStartTime;
+
+      g.addEventListener('mousedown', (e) => {
+        if (edgeAddMode || nodeAddMode) return;
+
+        // 編集モード中は、attachEdgeDragBehaviorのイベントに任せる
+        if (edgeEditMode && editingEdgeId === edge.id) return;
+
+        // クリック開始位置を記録
+        clickStartX = e.clientX;
+        clickStartY = e.clientY;
+        clickStartTime = Date.now();
+      });
+
+      g.addEventListener('mouseup', (e) => {
+        if (edgeAddMode || nodeAddMode) return;
+
+        // 編集モード中は、attachEdgeDragBehaviorのイベントに任せる
+        if (edgeEditMode && editingEdgeId === edge.id) return;
+
+        // ドラッグモード中は編集モードに入らない
+        const edgeElement = document.querySelector(`[data-id="${edge.id}"]`);
+        if (edgeElement && edgeElement.classList.contains('dragging')) {
+          return;
+        }
+
+        // 移動距離が小さく、時間も短ければクリックと判定
+        const dx = Math.abs(e.clientX - clickStartX);
+        const dy = Math.abs(e.clientY - clickStartY);
+        const dt = Date.now() - clickStartTime;
+
+        if (dx < 5 && dy < 5 && dt < 300) {
+          // クリックとして処理（編集モードに入る）
           enterEdgeEditMode(edge.id);
         }
+
         e.stopPropagation();
       });
 
@@ -7600,11 +7633,8 @@ ${metadataJson}
       };
 
       // イベントリスナーを追加
-      // line要素はpointer-events: noneなので、クリック範囲の矩形にイベントを設定
-      const hitRect = edgeElement.querySelector('rect[fill="transparent"]');
-      if (hitRect) {
-        hitRect.addEventListener('mousedown', onMouseDown);
-      }
+      // エッジグループ全体にmousedownイベントを設定（編集モード中のみ有効）
+      edgeElement.addEventListener('mousedown', onMouseDown);
 
       // グローバルイベント
       document.addEventListener('mousemove', onMouseMove);
@@ -7615,9 +7645,7 @@ ${metadataJson}
         edgeElement._dragCleanup = () => {
           document.removeEventListener('mousemove', onMouseMove);
           document.removeEventListener('mouseup', onMouseUp);
-          if (hitRect) {
-            hitRect.removeEventListener('mousedown', onMouseDown);
-          }
+          edgeElement.removeEventListener('mousedown', onMouseDown);
         };
       }
     }
