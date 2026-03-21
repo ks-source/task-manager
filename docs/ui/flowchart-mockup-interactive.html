@@ -27,7 +27,7 @@
      * Header
      * ========================================== */
     .header {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #1a2332 0%, #2c3e50 100%);
       color: white;
       padding: 0.5rem;
       display: flex;
@@ -511,14 +511,14 @@
 
     .status-icon-btn:hover {
       background-color: #f8f9fa;
-      border-color: #007bff;
-      color: #007bff;
+      border-color: #2c3e50;
+      color: #2c3e50;
     }
 
     .status-icon-btn.active {
-      background-color: #007bff;
+      background-color: #2c3e50;
       color: white;
-      border-color: #007bff;
+      border-color: #2c3e50;
     }
 
     .status-icon-btn svg {
@@ -1119,7 +1119,7 @@
       position: fixed;
       width: 280px;
       background: white;
-      border: 2px solid #007bff;
+      border: 2px solid #2c3e50;
       border-radius: 8px;
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
       z-index: 10001;
@@ -1135,7 +1135,7 @@
     }
 
     .panel-header {
-      background: linear-gradient(135deg, #007bff, #0056b3);
+      background: linear-gradient(135deg, #1a2332 0%, #2c3e50 100%);
       color: white;
       padding: 4px 8px;
       font-size: 11px;
@@ -1478,7 +1478,7 @@
 
     .manual-edge-label {
       font-family: Arial, sans-serif;
-      font-size: 12px;
+      font-size: 14px;
       fill: #666;
       pointer-events: none;
     }
@@ -1566,7 +1566,7 @@
     }
 
     .minimap-header {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #1a2332 0%, #2c3e50 100%);
       color: white;
       padding: 4px 8px;
       font-size: 11px;
@@ -2153,10 +2153,11 @@
 
   <script>
     // ========================================
-    // ビルドバージョン識別子（Phase C-CTM修正）
+    // ビルドバージョン識別子
     // ========================================
-    const DEBUG_BUILD = 'phase2-fix-2026-03-21-v3-ctm-coordinate-transform';
+    const DEBUG_BUILD = 'phase2-reverted-free-placement-2026-03-21';
     console.log('🔧 [BUILD]', DEBUG_BUILD);
+    console.log('ℹ️  Phase 2 ノード吸着機能は一時的に無効化されています（自由配置モード）');
 
     // ========================================
     // モックデータ定義
@@ -5379,76 +5380,78 @@
 
       if (!edgeStartPoint) {
         // 開始点を設定
-        // ★ノード吸着判定（Phase 2）
-        const nearestNode = findNearestNode(x, y);
+        // ★Phase 2 - ノード吸着機能（一時無効化：自由配置モード）
+        // const nearestNode = findNearestNode(x, y);
+        const nearestNode = null;  // 自由配置モード
 
-        if (nearestNode) {
-          // ノードに吸着（要素情報も保存）
-          edgeStartPoint = {
-            x: nearestNode.centerX,
-            y: nearestNode.centerY,
-            nodeId: nearestNode.nodeId,
-            element: nearestNode.element,
-            clickX: x,
-            clickY: y
-          };
-          showStartMarker(nearestNode.centerX, nearestNode.centerY);
-          highlightNodeForSnap(nearestNode.element); // ★ビジュアルフィードバック
-          showNotification(`ノード "${nearestNode.nodeId}" から開始 - 終点をクリックしてください`);
-        } else {
+        // if (nearestNode) {
+        //   // ノードに吸着（要素情報も保存）
+        //   edgeStartPoint = {
+        //     x: nearestNode.centerX,
+        //     y: nearestNode.centerY,
+        //     nodeId: nearestNode.nodeId,
+        //     element: nearestNode.element,
+        //     clickX: x,
+        //     clickY: y
+        //   };
+        //   showStartMarker(nearestNode.centerX, nearestNode.centerY);
+        //   highlightNodeForSnap(nearestNode.element); // ★ビジュアルフィードバック
+        //   showNotification(`ノード "${nearestNode.nodeId}" から開始 - 終点をクリックしてください`);
+        // } else {
           // 自由位置
           edgeStartPoint = { x: x, y: y, nodeId: null, element: null };
           showStartMarker(x, y);
-          clearNodeSnapHighlight(); // ★ハイライトクリア
+          // clearNodeSnapHighlight(); // ★ハイライトクリア（吸着無効時は不要）
           showNotification('終点をクリックしてください');
-        }
+        // }
       } else {
         // 終了点を設定してエッジ作成
-        // ★ノード吸着判定（Phase 2）
-        const nearestNode = findNearestNode(x, y);
+        // ★Phase 2 - ノード吸着機能（一時無効化：自由配置モード）
+        // const nearestNode = findNearestNode(x, y);
+        const nearestNode = null;  // 自由配置モード
 
-        // ★エッジ接続点を境界線（perimeter）に計算
+        // ★エッジ接続点を境界線（perimeter）に計算 → 自由配置では不要
         let startX, startY, endX, endY;
 
-        if (edgeStartPoint.element) {
-          // 開始点がノードに吸着している場合、境界線上の点を計算
-          const startBBox = getBBoxInSVGCoordinates(edgeStartPoint.element);
-          const endPoint = nearestNode ? { x: nearestNode.centerX, y: nearestNode.centerY } : { x, y };
-          const perimeterStart = getPerimeterPoint(
-            edgeStartPoint.x,
-            edgeStartPoint.y,
-            startBBox,
-            endPoint.x,
-            endPoint.y
-          );
-          startX = perimeterStart.x;
-          startY = perimeterStart.y;
-        } else {
+        // if (edgeStartPoint.element) {
+        //   // 開始点がノードに吸着している場合、境界線上の点を計算
+        //   const startBBox = getBBoxInSVGCoordinates(edgeStartPoint.element);
+        //   const endPoint = nearestNode ? { x: nearestNode.centerX, y: nearestNode.centerY } : { x, y };
+        //   const perimeterStart = getPerimeterPoint(
+        //     edgeStartPoint.x,
+        //     edgeStartPoint.y,
+        //     startBBox,
+        //     endPoint.x,
+        //     endPoint.y
+        //   );
+        //   startX = perimeterStart.x;
+        //   startY = perimeterStart.y;
+        // } else {
           // 自由位置
           startX = edgeStartPoint.x;
           startY = edgeStartPoint.y;
-        }
+        // }
 
-        if (nearestNode) {
-          // 終点がノードに吸着している場合、境界線上の点を計算
-          const endBBox = getBBoxInSVGCoordinates(nearestNode.element);
-          const perimeterEnd = getPerimeterPoint(
-            nearestNode.centerX,
-            nearestNode.centerY,
-            endBBox,
-            edgeStartPoint.x,
-            edgeStartPoint.y
-          );
-          endX = perimeterEnd.x;
-          endY = perimeterEnd.y;
-          highlightNodeForSnap(nearestNode.element); // ★ビジュアルフィードバック
-          createManualEdge(startX, startY, endX, endY, edgeStartPoint.nodeId, nearestNode.nodeId);
-        } else {
+        // if (nearestNode) {
+        //   // 終点がノードに吸着している場合、境界線上の点を計算
+        //   const endBBox = getBBoxInSVGCoordinates(nearestNode.element);
+        //   const perimeterEnd = getPerimeterPoint(
+        //     nearestNode.centerX,
+        //     nearestNode.centerY,
+        //     endBBox,
+        //     edgeStartPoint.x,
+        //     edgeStartPoint.y
+        //   );
+        //   endX = perimeterEnd.x;
+        //   endY = perimeterEnd.y;
+        //   highlightNodeForSnap(nearestNode.element); // ★ビジュアルフィードバック
+        //   createManualEdge(startX, startY, endX, endY, edgeStartPoint.nodeId, nearestNode.nodeId);
+        // } else {
           // 終点が自由位置
           endX = x;
           endY = y;
-          createManualEdge(startX, startY, endX, endY, edgeStartPoint.nodeId, null);
-        }
+          createManualEdge(startX, startY, endX, endY, null, null);  // nodeId は常に null
+        // }
         // エッジ作成後、ハイライトはクリア（toggleEdgeAddMode内で処理）
       }
 
@@ -5476,16 +5479,16 @@
       let x = (event.clientX - rect.left) * scaleX + viewBox.x;
       let y = (event.clientY - rect.top) * scaleY + viewBox.y;
 
-      // ★ノード吸着判定（Phase 2 - プレビュー時）
-      const nearestNode = findNearestNode(x, y, 50);
-      if (nearestNode) {
-        // ノードに吸着
-        x = nearestNode.centerX;
-        y = nearestNode.centerY;
-        highlightNodeForSnap(nearestNode.element); // ★ビジュアルフィードバック
-      } else {
-        clearNodeSnapHighlight(); // ★ハイライトクリア
-      }
+      // ★Phase 2 - ノード吸着機能（一時無効化：自由配置モード）
+      // const nearestNode = findNearestNode(x, y, 50);
+      // if (nearestNode) {
+      //   // ノードに吸着
+      //   x = nearestNode.centerX;
+      //   y = nearestNode.centerY;
+      //   highlightNodeForSnap(nearestNode.element); // ★ビジュアルフィードバック
+      // } else {
+      //   clearNodeSnapHighlight(); // ★ハイライトクリア
+      // }
 
       if (!edgePreviewLine) {
         // プレビュー線を作成
@@ -5711,16 +5714,23 @@
             });
           }
 
-          // 最も近いノードを記録
-          if (distance < minDistance && distance <= adjustedRadius) {
-            minDistance = distance;
-            nearestNode = {
-              nodeId: node.getAttribute('data-id') || node.id,
-              centerX: centerX,
-              centerY: centerY,
-              element: node,
-              distance: distance
-            };
+          // 最も近いノードを記録（同じ距離なら面積の小さい方を優先）
+          if (distance <= adjustedRadius) {
+            const area = bbox.width * bbox.height;
+            const shouldUpdate = distance < minDistance ||
+                                (distance === minDistance && nearestNode && area < (nearestNode.bbox.width * nearestNode.bbox.height));
+
+            if (shouldUpdate) {
+              minDistance = distance;
+              nearestNode = {
+                nodeId: node.getAttribute('data-id') || node.id,
+                centerX: centerX,
+                centerY: centerY,
+                element: node,
+                distance: distance,
+                bbox: bbox  // 面積比較用に保存
+              };
+            }
           }
         } catch (err) {
           console.warn('getBBox failed for node:', node, err);
@@ -5731,7 +5741,8 @@
       if (closestDistances.length > 0) {
         console.log(`🎯 ${passName} - Top 3 closest:`);
         closestDistances.slice(0, 3).forEach((n, i) => {
-          console.log(`  ${i+1}. ${n.nodeId}: ${n.distance}px (boundary) - bbox:(${n.bbox.x}, ${n.bbox.y}) ${n.bbox.w}x${n.bbox.h}`);
+          const area = (parseFloat(n.bbox.w) * parseFloat(n.bbox.h)).toFixed(0);
+          console.log(`  ${i+1}. ${n.nodeId}: ${n.distance}px (boundary) - bbox:(${n.bbox.x}, ${n.bbox.y}) ${n.bbox.w}x${n.bbox.h} [area: ${area}]`);
         });
       } else {
         console.log(`⚠️ ${passName} - No nodes within radius`);
@@ -5776,7 +5787,8 @@
       const result = findNearestInSet(allElements, x, y, adjustedRadius, 'All-Elements');
 
       if (result) {
-        console.log(`🎯 ノード吸着: ${result.nodeId} (境界距離: ${result.distance.toFixed(1)}px)`);
+        const area = (result.bbox.width * result.bbox.height).toFixed(0);
+        console.log(`🎯 ノード吸着: ${result.nodeId} (境界距離: ${result.distance.toFixed(1)}px, 面積: ${area})`);
       } else {
         console.log(`❌ 吸着対象なし (半径: ${adjustedRadius.toFixed(1)}px)`);
       }
