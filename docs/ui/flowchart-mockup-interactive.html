@@ -5076,8 +5076,12 @@
         // ★ エッジ編集モード中で、編集中のエッジ以外をクリックした場合は編集終了
         if (edgeEditMode && !e.target.closest('.edge-edit-handle')) {
           const clickedEdgeId = manualEdge ? manualEdge.getAttribute('data-id') : null;
+          console.log('🔍 setupElementSelection: click detected', { edgeEditMode, editingEdgeId, clickedEdgeId });
           if (clickedEdgeId !== editingEdgeId) {
+            console.log('⚠️ setupElementSelection: 別の要素がクリックされたため編集モード終了');
             exitEdgeEditMode();
+          } else {
+            console.log('✅ setupElementSelection: 同じエッジがクリックされたため編集モード継続');
           }
         }
 
@@ -6982,6 +6986,7 @@ ${metadataJson}
       let clickStartTime;
 
       g.addEventListener('mousedown', (e) => {
+        console.log('🔵 Edge mousedown:', edge.id, { edgeAddMode, nodeAddMode, edgeEditMode, editingEdgeId });
         if (edgeAddMode || nodeAddMode) return;
 
         // 編集モード中は、attachEdgeDragBehaviorのイベントに任せる
@@ -6991,9 +6996,11 @@ ${metadataJson}
         clickStartX = e.clientX;
         clickStartY = e.clientY;
         clickStartTime = Date.now();
+        console.log('✅ Edge mousedown: クリック開始位置を記録', { clickStartX, clickStartY });
       });
 
       g.addEventListener('mouseup', (e) => {
+        console.log('🔵 Edge mouseup:', edge.id, { edgeAddMode, nodeAddMode, edgeEditMode, editingEdgeId });
         if (edgeAddMode || nodeAddMode) return;
 
         // 編集モード中は、attachEdgeDragBehaviorのイベントに任せる
@@ -7002,6 +7009,7 @@ ${metadataJson}
         // ドラッグモード中は編集モードに入らない
         const edgeElement = document.querySelector(`[data-id="${edge.id}"]`);
         if (edgeElement && edgeElement.classList.contains('dragging')) {
+          console.log('⚠️ Edge mouseup: dragging中のためスキップ');
           return;
         }
 
@@ -7010,9 +7018,14 @@ ${metadataJson}
         const dy = Math.abs(e.clientY - clickStartY);
         const dt = Date.now() - clickStartTime;
 
+        console.log('🔍 Edge mouseup: クリック判定', { dx, dy, dt, clickStartX, clickStartY });
+
         if (dx < 5 && dy < 5 && dt < 300) {
           // クリックとして処理（編集モードに入る）
+          console.log('✅ Edge mouseup: クリックと判定、編集モードに入ります');
           enterEdgeEditMode(edge.id);
+        } else {
+          console.log('⚠️ Edge mouseup: クリックと判定されませんでした');
         }
 
         e.stopPropagation();
