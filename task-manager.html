@@ -4274,16 +4274,62 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
     }
 
     function shiftDateByDays(dateStr, days) {
-      const normalized = dateStr.split('/').join('-');
-      const date = new Date(normalized);
+      // Parse date string "YYYY/M/D" to avoid timezone issues
+      const parts = dateStr.split('/');
+      const year = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1; // Month is 0-indexed
+      const day = parseInt(parts[2], 10);
+
+      // Create date using UTC to avoid timezone shifts
+      const date = new Date(year, month, day);
       date.setDate(date.getDate() + days);
-      const year = date.getFullYear();
-      const month = date.getMonth() + 1;
-      const day = date.getDate();
-      return year + '/' + month + '/' + day;
+
+      const newYear = date.getFullYear();
+      const newMonth = date.getMonth() + 1;
+      const newDay = date.getDate();
+      return newYear + '/' + newMonth + '/' + newDay;
     }
 
     function updatePreview(newStartDate, newEndDate) {
+      if (!dragState || !dragState.barElement) return;
+
+      const originalBar = dragState.barElement;
+      const timelineRow = originalBar.parentElement;
+
+      // Remove existing preview if any
+      const existingPreview = timelineRow.querySelector('.task-bar-preview');
+      if (existingPreview) {
+        existingPreview.remove();
+      }
+
+      // Calculate position for preview using the SAME logic as renderGantt()
+      // Parse date strings to Date objects
+      const parts1 = newStartDate.split('/');
+      const parts2 = newEndDate.split('/');
+      const startDate = new Date(parseInt(parts1[0]), parseInt(parts1[1]) - 1, parseInt(parts1[2]));
+      const endDate = new Date(parseInt(parts2[0]), parseInt(parts2[1]) - 1, parseInt(parts2[2]));
+
+      // Use percentage-based positioning (same as task bars in renderGantt)
+      const startOffset = Math.max(0, (startDate - minDate) / (maxDate - minDate) * 100);
+      const duration = Math.max(3, (endDate - startDate) / (maxDate - minDate) * 100);
+
+      // Create preview element
+      const preview = document.createElement('div');
+      preview.className = 'task-bar task-bar-preview';
+      preview.style.position = 'absolute';
+      preview.style.left = startOffset + '%';
+      preview.style.width = duration + '%';
+      preview.style.height = '30px';
+      preview.style.top = '50%';
+      preview.style.transform = 'translateY(-50%)';
+      preview.style.backgroundColor = 'rgba(52, 152, 219, 0.3)';
+      preview.style.border = '2px dashed #3498db';
+      preview.style.borderRadius = '4px';
+      preview.style.pointerEvents = 'none';
+      preview.style.zIndex = '5';
+
+      timelineRow.appendChild(preview);
+
       console.log('Preview: ' + newStartDate + ' ~ ' + newEndDate);
     }
 
