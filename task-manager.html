@@ -2171,9 +2171,11 @@
       });
 
       markDirty();
+      saveToLocalStorage();
       updateStatusButtonStates();
       document.getElementById('current-status').textContent = newStatus;
       renderDashboard();
+      renderTaskTable();
 
       console.log(`Status changed: ${currentTask.wbs_no} ${oldStatus} → ${newStatus}`);
     }
@@ -2195,9 +2197,11 @@
       });
 
       markDirty();
+      saveToLocalStorage();
       updatePriorityButtonStates();
       document.getElementById('current-priority').textContent = newPriority;
       renderDashboard();
+      renderTaskTable();
 
       console.log(`Priority changed: ${currentTask.wbs_no} ${oldPriority} → ${newPriority}`);
     }
@@ -2243,8 +2247,10 @@
       }
 
       markDirty();
+      saveToLocalStorage();
       renderTaskDetails();
       renderCommentHistory();
+      renderTaskTable();
 
       console.log(`Date changed: ${currentTask.wbs_no} ${dateType} → ${formattedDate}`);
     }
