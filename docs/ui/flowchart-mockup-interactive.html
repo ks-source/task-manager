@@ -1819,6 +1819,21 @@
       filter: drop-shadow(0 0 4px rgba(0, 123, 255, 0.5));
     }
 
+    /* 手動エッジ: ドラッグ中の視覚的フィードバック */
+    .manual-edge.dragging {
+      opacity: 0.7;
+      filter: drop-shadow(0 0 6px rgba(13, 148, 136, 0.6));
+    }
+
+    .manual-edge.dragging line {
+      stroke-width: 3;
+    }
+
+    .manual-edge.dragging .manual-edge-label {
+      fill: #0d9488;
+      font-weight: bold;
+    }
+
     /* ==========================================
      * Context Menu (右クリックメニュー)
      * ========================================== */
@@ -7260,7 +7275,8 @@ ${metadataJson}
       const edge = manualEdges[edgeId];
       createEdgeHandles(edge);
 
-      // 編集中の通知
+      // エッジ本体のドラッグ機能を追加
+      attachEdgeDragBehavior(edgeId);
 
       console.log('✅ エッジ編集モード開始:', edgeId);
     }
@@ -7276,6 +7292,13 @@ ${metadataJson}
         const edgeElement = document.querySelector(`[data-id="${editingEdgeId}"]`);
         if (edgeElement) {
           edgeElement.classList.remove('editing');
+          edgeElement.classList.remove('dragging');
+
+          // ドラッグイベントのクリーンアップ
+          if (edgeElement._dragCleanup) {
+            edgeElement._dragCleanup();
+            delete edgeElement._dragCleanup;
+          }
         }
       }
 
@@ -7315,10 +7338,10 @@ ${metadataJson}
       attachHandleDrag(startHandle, edge.id, 'start');
       attachHandleDrag(endHandle, edge.id, 'end');
 
-      // SVGに追加（エッジの後ろに追加して見えるように）
-      const target = findCorrectAppendTarget(svg);
-      target.appendChild(startHandle);
-      target.appendChild(endHandle);
+      // SVGの最後に追加（常に最前面に表示）
+      // エッジレイヤーの後に配置して、ハンドルが常に見えるようにする
+      svg.appendChild(startHandle);
+      svg.appendChild(endHandle);
 
       // ハンドル配列に保存
       edgeHandles = [startHandle, endHandle];
@@ -7482,6 +7505,164 @@ ${metadataJson}
       rect.setAttribute('width', length);
       rect.setAttribute('height', RECT_WIDTH);
       rect.setAttribute('transform', `translate(${centerX}, ${centerY}) rotate(${angle})`);
+    }
+
+    /**
+     * エッジ本体のドラッグ移動機能を追加
+     */
+    function attachEdgeDragBehavior(edgeId) {
+      const edgeElement = document.querySelector(`[data-id="${edgeId}"]`);
+      if (!edgeElement) return;
+
+      const lineElement = edgeElement.querySelector('line');
+      if (!lineElement) return;
+
+      let isDragging = false;
+      let startMouseX, startMouseY;
+      let originalStartX, originalStartY, originalEndX, originalEndY;
+
+      const onMouseDown = (e) => {
+        // 端点ハンドルのドラッグではないことを確認
+        if (e.target.classList.contains('edge-edit-handle')) return;
+
+        isDragging = true;
+        edgeElement.classList.add('dragging');
+
+        // 初期マウス座標を保存（SVG座標系）
+        const svg = document.querySelector('.svg-content-wrapper svg') || document.querySelector('svg');
+        const pt = svg.createSVGPoint();
+        pt.x = e.clientX;
+        pt.y = e.clientY;
+        const svgPt = pt.matrixTransform(svg.getScreenCTM().inverse());
+
+        startMouseX = svgPt.x;
+        startMouseY = svgPt.y;
+
+        // エッジの元の座標を保存
+        const edge = manualEdges[edgeId];
+        originalStartX = edge.startX;
+        originalStartY = edge.startY;
+        originalEndX = edge.endX;
+        originalEndY = edge.endY;
+
+        e.preventDefault();
+        e.stopPropagation();
+      };
+
+      const onMouseMove = (e) => {
+        if (!isDragging) return;
+
+        // 現在のマウス座標を取得（SVG座標系）
+        const svg = document.querySelector('.svg-content-wrapper svg') || document.querySelector('svg');
+        const pt = svg.createSVGPoint();
+        pt.x = e.clientX;
+        pt.y = e.clientY;
+        const svgPt = pt.matrixTransform(svg.getScreenCTM().inverse());
+
+        // 移動量を計算
+        const dx = svgPt.x - startMouseX;
+        const dy = svgPt.y - startMouseY;
+
+        // エッジ全体を移動
+        const edge = manualEdges[edgeId];
+        edge.startX = originalStartX + dx;
+        edge.startY = originalStartY + dy;
+        edge.endX = originalEndX + dx;
+        edge.endY = originalEndY + dy;
+
+        // ノード接続を解除
+        if (edge.startNodeId || edge.endNodeId) {
+          console.log('⚠️ ドラッグ移動によりノード接続を解除:', { startNodeId: edge.startNodeId, endNodeId: edge.endNodeId });
+          edge.startNodeId = null;
+          edge.endNodeId = null;
+        }
+
+        // SVGを更新
+        updateEdgeVisual(edgeId);
+
+        e.preventDefault();
+      };
+
+      const onMouseUp = () => {
+        if (!isDragging) return;
+
+        isDragging = false;
+        edgeElement.classList.remove('dragging');
+
+        // 自動保存
+        if (currentFileHandle) {
+          saveToFileAuto().catch(err => {
+            console.warn('自動保存に失敗:', err);
+          });
+        }
+
+        console.log('✅ エッジ移動完了:', edgeId);
+      };
+
+      // イベントリスナーを追加
+      // line要素はpointer-events: noneなので、クリック範囲の矩形にイベントを設定
+      const hitRect = edgeElement.querySelector('rect[fill="transparent"]');
+      if (hitRect) {
+        hitRect.addEventListener('mousedown', onMouseDown);
+      }
+
+      // グローバルイベント
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('mouseup', onMouseUp);
+
+      // クリーンアップ用にイベントリスナーを保存（編集モード終了時に削除）
+      if (!edgeElement._dragCleanup) {
+        edgeElement._dragCleanup = () => {
+          document.removeEventListener('mousemove', onMouseMove);
+          document.removeEventListener('mouseup', onMouseUp);
+          if (hitRect) {
+            hitRect.removeEventListener('mousedown', onMouseDown);
+          }
+        };
+      }
+    }
+
+    /**
+     * エッジのビジュアル要素を更新
+     */
+    function updateEdgeVisual(edgeId) {
+      const edge = manualEdges[edgeId];
+      if (!edge) return;
+
+      const edgeElement = document.querySelector(`[data-id="${edgeId}"]`);
+      if (!edgeElement) return;
+
+      // line要素を更新
+      const line = edgeElement.querySelector('line');
+      if (line) {
+        line.setAttribute('x1', edge.startX);
+        line.setAttribute('y1', edge.startY);
+        line.setAttribute('x2', edge.endX);
+        line.setAttribute('y2', edge.endY);
+      }
+
+      // クリック範囲の矩形を更新
+      const hitRect = edgeElement.querySelector('rect[fill="transparent"]');
+      if (hitRect) {
+        updateEdgeHitRect(hitRect, edge.startX, edge.startY, edge.endX, edge.endY);
+      }
+
+      // ラベル位置を更新
+      const label = edgeElement.querySelector('.manual-edge-label');
+      if (label) {
+        const midX = (edge.startX + edge.endX) / 2;
+        const midY = (edge.startY + edge.endY) / 2;
+        label.setAttribute('x', midX);
+        label.setAttribute('y', midY);
+      }
+
+      // 編集モード中の端点ハンドルを更新
+      if (edgeEditMode && editingEdgeId === edgeId && edgeHandles.length > 0) {
+        edgeHandles[0].setAttribute('cx', edge.startX);
+        edgeHandles[0].setAttribute('cy', edge.startY);
+        edgeHandles[1].setAttribute('cx', edge.endX);
+        edgeHandles[1].setAttribute('cy', edge.endY);
+      }
     }
 
     /**
