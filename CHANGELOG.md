@@ -5,7 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.12.0] - 2026-03-21
+## [2.12.0] - 2026-03-22
+
+### Added
+- **データ連携機能（Phase 1）**: flowchart-editor.htmlからtask-manager.htmlへのデータ連携
+  - メモ・カスタムラベル・手動エッジを自動送信
+  - LocalStorage経由でシームレスに統合
+  - `publishFlowchartAttributes()`関数: フローチャート属性をtask-manager.htmlへ送信
+  - `loadTaskManagerData()`関数: タスクマネージャーデータの読み込みと接続確認
+  - 自動保存時（Ctrl+S）にデータ送信を実行
+- **UI改善**: タスク詳細・新規作成画面にMermaid IDs入力フィールド追加
+  - flowchart-editor.htmlとの連携が容易に
+  - UIから直接`mermaid_ids`を設定可能（従来はJSON直接編集が必要だった）
+  - `updateMermaidIds()`関数: mermaid_idsの更新と変更履歴の記録
+
+### Documentation
+- データ連携ロードマップ（Phase 0～3）: `docs/specs/data-integration/future-roadmap.md`
+- Phase 1実装完了レポートと検証シナリオ: `docs/specs/data-integration/phase1-implementation-summary.md`
+
+### Technical Details
+- **データフロー**: flowchart-editor.html → LocalStorage (flowchart-attributes) → task-manager.html
+- **通信方式**: LocalStorage + storage eventによるクロスHTML通信
+- **対象データ**: 各タスクの`mermaid_ids`に紐づくノード情報（メモ、カスタムラベル、関連手動エッジ）
+
+---
+
+## [2.11.1] - 2026-03-21
 
 ### Added
 - **Flowchart Mockup: Enhanced Minimap Zoom Controls**
