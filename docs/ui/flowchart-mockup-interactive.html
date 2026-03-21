@@ -7550,6 +7550,12 @@ ${metadataJson}
       const lineElement = edgeElement.querySelector('line');
       if (!lineElement) return;
 
+      // 既存のクリーンアップがあれば先に実行（重複登録防止）
+      if (edgeElement._dragCleanup) {
+        console.log('⚠️ 既存のドラッグイベントをクリーンアップします:', edgeId);
+        edgeElement._dragCleanup();
+      }
+
       let isDragging = false;
       let startMouseX, startMouseY;
       let originalStartX, originalStartY, originalEndX, originalEndY;
@@ -7641,13 +7647,15 @@ ${metadataJson}
       document.addEventListener('mouseup', onMouseUp);
 
       // クリーンアップ用にイベントリスナーを保存（編集モード終了時に削除）
-      if (!edgeElement._dragCleanup) {
-        edgeElement._dragCleanup = () => {
-          document.removeEventListener('mousemove', onMouseMove);
-          document.removeEventListener('mouseup', onMouseUp);
-          edgeElement.removeEventListener('mousedown', onMouseDown);
-        };
-      }
+      // 関数参照を保存することで確実に削除できるようにする
+      edgeElement._dragCleanup = () => {
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+        edgeElement.removeEventListener('mousedown', onMouseDown);
+        console.log('✅ ドラッグイベントクリーンアップ完了:', edgeId);
+      };
+
+      console.log('✅ エッジドラッグ機能を追加:', edgeId);
     }
 
     /**
