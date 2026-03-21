@@ -3644,21 +3644,25 @@
         console.log('📦 最小化実行');
         // CSSクラスを追加
         minimap.classList.add('minimized');
-        // 念のため直接スタイルも設定
+        // インラインスタイルの高さと幅を削除してCSSに任せる
+        minimap.style.width = '';
+        minimap.style.height = '';
+        // コンテンツを非表示
         minimapContent.style.display = 'none';
         minimapZoomControls.style.display = 'none';
       } else {
         console.log('📖 展開実行');
         // CSSクラスを削除
         minimap.classList.remove('minimized');
-        // 直接スタイルをリセット
+        // スタイルをリセット
         minimapContent.style.display = '';
         minimapZoomControls.style.display = '';
+        // サイズはinitMinimapで再計算されるため削除のまま
       }
 
       console.log('✅ toggleMinimap完了 - クラス:', minimap.classList.contains('minimized'));
-      console.log('   - content display:', minimapContent.style.display);
-      console.log('   - zoom display:', minimapZoomControls.style.display);
+      console.log('   - minimap width:', minimap.style.width);
+      console.log('   - minimap height:', minimap.style.height);
     }
 
     /**
