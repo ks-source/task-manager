@@ -5621,6 +5621,16 @@
         return null;
       }
 
+      // ★スケールに応じた閾値調整（SVG座標系での閾値を計算）
+      const rect = svg.getBoundingClientRect();
+      const viewBox = svg.viewBox.baseVal;
+      const scaleX = viewBox.width / rect.width;
+      const scaleY = viewBox.height / rect.height;
+      const scale = Math.max(scaleX, scaleY);
+      const adjustedRadius = radius * scale; // スクリーン上の50px → SVG座標系での適切な距離
+      
+      console.log(`📏 Scale: ${scale.toFixed(2)}x, Screen radius: ${radius}px, SVG radius: ${adjustedRadius.toFixed(1)}px`);
+
       // 全ノードを取得（Mermaidノード + クラスター）
       const nodes = svg.querySelectorAll('[data-et="node"], [data-et="cluster"]');
       console.log(`🔍 findNearestNode: Found ${nodes.length} nodes with [data-et="node|cluster"]`);
@@ -5679,7 +5689,7 @@
           }
 
           // 最も近いノードを記録
-          if (distance < minDistance && distance <= radius) {
+          if (distance < minDistance && distance <= adjustedRadius) {
             minDistance = distance;
             nearestNode = {
               nodeId: node.getAttribute('data-id') || node.id,
@@ -5696,7 +5706,7 @@
       });
 
       // デバッグ: クリック座標と最も近い3ノードを表示
-      console.log(`📍 Click at (${x.toFixed(1)}, ${y.toFixed(1)}), radius: ${radius}px`);
+      console.log(`📍 Click at (${x.toFixed(1)}, ${y.toFixed(1)}), screen radius: ${radius}px, adjusted: ${adjustedRadius.toFixed(1)}px`);
       if (closestDistances.length > 0) {
         console.log(`🎯 Top 5 closest nodes:`);
         closestDistances.slice(0, 5).forEach((n, i) => {
