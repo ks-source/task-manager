@@ -989,29 +989,7 @@
     .preview-text {
       font-style: italic;
     }
-    .notification {
-      position: fixed;
-      top: 120px;
-      right: 20px;
-      padding: 1rem 1.5rem;
-      background: #28a745;
-      color: white;
-      border-radius: 6px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      z-index: 1100;
-      animation: slideIn 0.3s ease-out;
-    }
-
-    @keyframes slideIn {
-      from {
-        transform: translateX(400px);
-        opacity: 0;
-      }
-      to {
-        transform: translateX(0);
-        opacity: 1;
-      }
-    }
+    /* 通知機能は削除されました */
 
     /* ==========================================
      * Tooltip for Flowchart Elements
@@ -3594,7 +3572,6 @@
 
         if (!elementId) {
           console.warn('Target element has no ID');
-          showNotification('⚠️ この要素にはIDがありません', 'warning');
           return;
         }
 
@@ -3611,7 +3588,6 @@
           (elementType === 'edge') && task.flowchartLinks.edges.includes(elementId);
 
         if (isAlreadyLinked) {
-          showNotification('ℹ️ このタスクは既にリンク済みです', 'info');
           return;
         }
 
@@ -3627,13 +3603,11 @@
         updatePanelInfo(targetElement);
 
         // 成功通知
-        showNotification(`✅ タスク ${wbs} を ${elementType} [${elementId}] にリンクしました`);
 
         console.log('Task linked:', { wbs, elementType, elementId });
 
       } catch (error) {
         console.error('Failed to handle task drop:', error);
-        showNotification('❌ リンクの作成に失敗しました', 'error');
       }
     }
 
@@ -3648,18 +3622,40 @@
      */
     function toggleMinimap() {
       const minimap = document.getElementById('minimap');
+
+      if (!minimap) {
+        console.error('❌ minimap要素が見つかりません');
+        return;
+      }
+
       const minimapContent = minimap.querySelector('.minimap-content');
       const minimapZoomControls = minimap.querySelector('.minimap-zoom-controls');
+
+      console.log('🔍 toggleMinimap - 要素チェック:', {
+        minimap: !!minimap,
+        minimapContent: !!minimapContent,
+        minimapZoomControls: !!minimapZoomControls,
+        contentCurrentDisplay: minimapContent ? minimapContent.style.display : 'N/A',
+        zoomCurrentDisplay: minimapZoomControls ? minimapZoomControls.style.display : 'N/A'
+      });
 
       isMinimapMinimized = !isMinimapMinimized;
 
       if (isMinimapMinimized) {
-        minimapContent.style.display = 'none';
-        minimapZoomControls.style.display = 'none';
+        console.log('📦 最小化中...');
+        if (minimapContent) minimapContent.style.display = 'none';
+        if (minimapZoomControls) minimapZoomControls.style.display = 'none';
       } else {
-        minimapContent.style.display = 'block';
-        minimapZoomControls.style.display = 'flex';
+        console.log('📖 展開中...');
+        if (minimapContent) minimapContent.style.display = 'block';
+        if (minimapZoomControls) minimapZoomControls.style.display = 'flex';
       }
+
+      console.log('✅ toggleMinimap完了 - 新しい状態:', {
+        isMinimized: isMinimapMinimized,
+        contentDisplay: minimapContent ? minimapContent.style.display : 'N/A',
+        zoomDisplay: minimapZoomControls ? minimapZoomControls.style.display : 'N/A'
+      });
     }
 
     /**
@@ -4235,7 +4231,6 @@
           container.style.display = 'block';
 
           console.log('Mermaid SVG loaded successfully from file:', file.name);
-          showNotification(`フローチャートを読み込みました: ${file.name}`);
 
           // ノード一覧を再読み込み
           populateNodeSelector();
@@ -4819,7 +4814,6 @@
         // SVG DOMを更新（元に戻す）
         updateSvgLabel(selectedElement, '');
 
-        showNotification('カスタムラベルをリセットしました');
 
         // File System Access APIで自動保存
         if (currentFileHandle) {
@@ -4877,7 +4871,6 @@
         document.getElementById('element-memo').value = '';
         document.getElementById('clear-memo-btn').style.display = 'none';
 
-        showNotification('メモをクリアしました');
 
         // File System Access APIで自動保存
         if (currentFileHandle) {
@@ -4992,7 +4985,6 @@
         // ファイルハンドルを保存（今後の自動保存用）
         currentFileHandle = handle;
 
-        showNotification(`メモを保存しました: ${handle.name}`);
         console.log('メモを保存しました:', handle.name);
 
       } catch (err) {
@@ -5119,7 +5111,6 @@
         currentFileHandle = handle;
 
         const totalCount = loadedMemoCount + loadedLabelCount + loadedEdgeCount;
-        showNotification(`データを読み込みました: メモ${loadedMemoCount}件, ラベル${loadedLabelCount}件, エッジ${loadedEdgeCount}件 (${handle.name})`);
         console.log('データを読み込みました:', {
           file: handle.name,
           memoCount: loadedMemoCount,
@@ -5178,7 +5169,6 @@
         await writable.write(svgString);
         await writable.close();
 
-        showNotification(`編集済みSVGをエクスポートしました: ${handle.name}`);
         console.log('編集済みSVGをエクスポートしました:', handle.name);
 
       } catch (err) {
@@ -5385,7 +5375,6 @@
 
       renderTaskList();
       closeTaskEditModal();
-      showNotification('✅ タスクを保存しました');
     }
 
     function renderLinkedNodesInModal(nodes) {
@@ -5626,7 +5615,6 @@
 
       renderLinkedNodesInModal(currentEditingTask.flowchartLinks.nodes);
       updateModalPreview();
-      showNotification(`ノード ${nodeId} との紐付けを削除しました`);
     }
 
     function onRemoveEdge(edgeId) {
@@ -5639,7 +5627,6 @@
 
       renderLinkedEdgesInModal(currentEditingTask.flowchartLinks.edges);
       updateModalPreview();
-      showNotification(`エッジ ${edgeId} との紐付けを削除しました`);
     }
 
     function updateModalPreview() {
@@ -5699,16 +5686,7 @@
     // 通知
     // ========================================
 
-    function showNotification(message) {
-      const notification = document.createElement('div');
-      notification.className = 'notification';
-      notification.textContent = message;
-      document.body.appendChild(notification);
-
-      setTimeout(() => {
-        notification.remove();
-      }, 3000);
-    }
+    // showNotification関数は削除されました（通知表示機能を無効化）
 
     // ========================================
     // 手動エッジ追加機能
@@ -5760,7 +5738,6 @@
         btn.classList.add('active');
         container.classList.add('edge-add-mode');
         console.log('✅ Button and container classes added');
-        showNotification('エッジ追加モード: 開始点をクリック');
       } else {
         btn.classList.remove('active');
         container.classList.remove('edge-add-mode');
@@ -5852,13 +5829,11 @@
         //   };
         //   showStartMarker(nearestNode.centerX, nearestNode.centerY);
         //   highlightNodeForSnap(nearestNode.element); // ★ビジュアルフィードバック
-        //   showNotification(`ノード "${nearestNode.nodeId}" から開始 - 終点をクリックしてください`);
         // } else {
           // 自由位置
           edgeStartPoint = { x: x, y: y, nodeId: null, element: null };
           showStartMarker(x, y);
           // clearNodeSnapHighlight(); // ★ハイライトクリア（吸着無効時は不要）
-          showNotification('終点をクリックしてください');
         // }
       } else {
         // 終了点を設定してエッジ作成
@@ -6262,20 +6237,10 @@
      * @param {string|null} endNodeId - 終点ノードID
      */
     function createManualEdge(startX, startY, endX, endY, startNodeId = null, endNodeId = null) {
-      // ラベル入力ダイアログ
-      const label = prompt('エッジラベルを入力してください（省略可）:', '');
-
-      if (label === null) {
-        // キャンセル時
-        clearEdgePreview();
-        edgeStartPoint = null;
-        return;
-      }
-
       // エッジIDを生成
       const edgeId = `manual-edge-${Date.now()}`;
 
-      // エッジデータを作成
+      // エッジデータを作成（ラベルは後からダブルクリックで編集可能）
       const edge = {
         id: edgeId,
         startX: startX,
@@ -6284,7 +6249,7 @@
         endX: endX,
         endY: endY,
         endNodeId: endNodeId,
-        label: label.trim(),
+        label: '', // 初期値は空
         style: {
           color: '#666',
           width: 2,
@@ -6313,7 +6278,6 @@
         });
       }
 
-      showNotification('エッジを追加しました');
     }
 
     /**
@@ -6433,7 +6397,6 @@
         });
       }
 
-      showNotification('エッジを削除しました');
     }
 
     /**
@@ -6641,7 +6604,6 @@
       createEdgeHandles(edge);
 
       // 編集中の通知
-      showNotification('エッジ編集モード: 端点をドラッグして調整、Deleteキーで削除、ESC/他クリックで終了');
 
       console.log('✅ エッジ編集モード開始:', edgeId);
     }
@@ -6910,7 +6872,6 @@
       if (nodeAddMode) {
         btn.classList.add('active');
         container.classList.add('node-add-mode');
-        showNotification('メモノード追加モード: 配置したい位置をクリック');
       } else {
         btn.classList.remove('active');
         container.classList.remove('node-add-mode');
@@ -6938,7 +6899,6 @@
       // モードを終了
       toggleNodeAddMode();
 
-      showNotification('メモノードを作成しました（ドラッグで移動可能）');
     }
 
     /**
