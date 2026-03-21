@@ -1847,7 +1847,7 @@
 
     .minimap-container.minimized .minimap-content,
     .minimap-container.minimized .minimap-zoom-controls {
-      display: none;
+      display: none !important;
     }
 
     /* ミニマップズームコントロール */
@@ -2463,11 +2463,11 @@
     // ========================================
     // ビルドバージョン識別子
     // ========================================
-    const DEBUG_BUILD = 'phase2-ux-improvements-2026-03-21';
+    const DEBUG_BUILD = 'phase2-inline-edit-2026-03-21';
     console.log('🔧 [BUILD]', DEBUG_BUILD);
     console.log('✅ Phase 1: メモノード追加・ドラッグ移動機能を実装');
     console.log('✅ Phase 2: エッジ編集機能を実装（端点ドラッグ、削除）');
-    console.log('✅ UX改善: ダブルクリック編集、ヒット矩形修正、保存確認ログ');
+    console.log('✅ UX改善: インライン編集、ヒット矩形修正、保存確認ログ');
 
     // ========================================
     // モックデータ定義
@@ -3648,12 +3648,17 @@
      */
     function toggleMinimap() {
       const minimap = document.getElementById('minimap');
+      const minimapContent = minimap.querySelector('.minimap-content');
+      const minimapZoomControls = minimap.querySelector('.minimap-zoom-controls');
+
       isMinimapMinimized = !isMinimapMinimized;
 
       if (isMinimapMinimized) {
-        minimap.classList.add('minimized');
+        minimapContent.style.display = 'none';
+        minimapZoomControls.style.display = 'none';
       } else {
-        minimap.classList.remove('minimized');
+        minimapContent.style.display = 'block';
+        minimapZoomControls.style.display = 'flex';
       }
     }
 
@@ -6385,34 +6390,10 @@
         text.setAttribute('cursor', 'text');
         text.textContent = edge.label;
 
-        // ★ ダブルクリックでラベル編集
+        // ★ ダブルクリックでインライン編集
         text.addEventListener('dblclick', (e) => {
           e.stopPropagation();
-          const currentLabel = edge.label || '';
-          const newLabel = prompt('エッジラベルを編集:', currentLabel);
-
-          if (newLabel !== null) {
-            edge.label = newLabel;
-            manualEdges[edge.id].label = newLabel;
-            manualEdges[edge.id].updatedAt = new Date().toISOString();
-
-            // SVG上のラベルを更新
-            text.textContent = newLabel;
-
-            // ラベルが空になった場合は削除
-            if (newLabel.trim() === '') {
-              text.remove();
-            }
-
-            // 自動保存
-            if (currentFileHandle) {
-              saveToFileAuto().catch(err => {
-                console.warn('自動保存に失敗:', err);
-              });
-            }
-
-            console.log('✅ エッジラベル更新:', edge.id, newLabel);
-          }
+          startInlineEditEdgeLabel(g, text, edge);
         });
 
         g.appendChild(text);
@@ -6453,6 +6434,181 @@
       }
 
       showNotification('エッジを削除しました');
+    }
+
+    /**
+     * エッジラベルのインライン編集を開始
+     */
+    function startInlineEditEdgeLabel(edgeGroup, textElement, edge) {
+      const currentLabel = edge.label || '';
+
+      // テキスト要素を非表示
+      textElement.style.display = 'none';
+
+      // foreignObject + input を作成
+      const x = parseFloat(textElement.getAttribute('x'));
+      const y = parseFloat(textElement.getAttribute('y'));
+
+      const fo = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject');
+      fo.setAttribute('x', x - 100);
+      fo.setAttribute('y', y - 15);
+      fo.setAttribute('width', '200');
+      fo.setAttribute('height', '30');
+      fo.setAttribute('class', 'inline-edit-fo');
+
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.value = currentLabel;
+      input.style.cssText = `
+        width: 100%;
+        height: 100%;
+        font-family: Arial, sans-serif;
+        font-size: 16px;
+        text-align: center;
+        border: 2px solid #00aaff;
+        border-radius: 4px;
+        background: white;
+        padding: 4px;
+        box-sizing: border-box;
+        outline: none;
+      `;
+
+      fo.appendChild(input);
+      edgeGroup.appendChild(fo);
+
+      // フォーカスしてテキスト選択
+      setTimeout(() => {
+        input.focus();
+        input.select();
+      }, 10);
+
+      // 確定処理
+      const finishEdit = (save) => {
+        const newLabel = input.value.trim();
+
+        if (save && newLabel !== '') {
+          edge.label = newLabel;
+          manualEdges[edge.id].label = newLabel;
+          manualEdges[edge.id].updatedAt = new Date().toISOString();
+          textElement.textContent = newLabel;
+
+          // 自動保存
+          if (currentFileHandle) {
+            saveToFileAuto().catch(err => {
+              console.warn('自動保存に失敗:', err);
+            });
+          }
+
+          console.log('✅ エッジラベル更新:', edge.id, newLabel);
+        }
+
+        // foreignObjectを削除してテキストを表示
+        fo.remove();
+        textElement.style.display = '';
+      };
+
+      // Enterで確定、Escapeでキャンセル
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          finishEdit(true);
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          finishEdit(false);
+        }
+      });
+
+      // フォーカスを失ったら確定
+      input.addEventListener('blur', () => {
+        finishEdit(true);
+      });
+    }
+
+    /**
+     * メモノードラベルのインライン編集を開始
+     */
+    function startInlineEditNodeLabel(nodeGroup, textElement, nodeData) {
+      const currentLabel = nodeData.label || '';
+
+      // テキスト要素を非表示
+      textElement.style.display = 'none';
+
+      // foreignObject + textarea を作成
+      const fo = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject');
+      fo.setAttribute('x', '5');
+      fo.setAttribute('y', '5');
+      fo.setAttribute('width', '170');
+      fo.setAttribute('height', '50');
+      fo.setAttribute('class', 'inline-edit-fo');
+
+      const textarea = document.createElement('textarea');
+      textarea.value = currentLabel;
+      textarea.style.cssText = `
+        width: 100%;
+        height: 100%;
+        font-family: Arial, sans-serif;
+        font-size: 14px;
+        border: 2px solid #00aaff;
+        border-radius: 4px;
+        background: white;
+        padding: 4px;
+        box-sizing: border-box;
+        outline: none;
+        resize: none;
+      `;
+
+      fo.appendChild(textarea);
+      nodeGroup.appendChild(fo);
+
+      // フォーカスしてテキスト選択
+      setTimeout(() => {
+        textarea.focus();
+        textarea.select();
+      }, 10);
+
+      // 確定処理
+      const finishEdit = (save) => {
+        const newLabel = textarea.value.trim();
+
+        if (save && newLabel !== '') {
+          nodeData.label = newLabel;
+          manualNodes[nodeData.id].label = newLabel;
+          manualNodes[nodeData.id].updatedAt = new Date().toISOString();
+          textElement.textContent = newLabel;
+
+          // 元のラベルも更新（要素情報パネルとの整合性）
+          originalLabels[nodeData.id] = newLabel;
+
+          // 自動保存
+          if (currentFileHandle) {
+            saveToFileAuto().catch(err => {
+              console.warn('自動保存に失敗:', err);
+            });
+          }
+
+          console.log('✅ メモノードラベル更新:', nodeData.id, newLabel);
+        }
+
+        // foreignObjectを削除してテキストを表示
+        fo.remove();
+        textElement.style.display = '';
+      };
+
+      // Ctrl+Enterで確定、Escapeでキャンセル
+      textarea.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && e.ctrlKey) {
+          e.preventDefault();
+          finishEdit(true);
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          finishEdit(false);
+        }
+      });
+
+      // フォーカスを失ったら確定
+      textarea.addEventListener('blur', () => {
+        finishEdit(true);
+      });
     }
 
     // ========================================
@@ -6873,32 +7029,10 @@
       text.setAttribute('cursor', 'text');
       text.textContent = nodeData.label;
 
-      // ★ ダブルクリックでラベル編集
+      // ★ ダブルクリックでインライン編集
       text.addEventListener('dblclick', (e) => {
         e.stopPropagation();
-        const currentLabel = nodeData.label || '';
-        const newLabel = prompt('メモ内容を編集:', currentLabel);
-
-        if (newLabel !== null && newLabel.trim() !== '') {
-          nodeData.label = newLabel;
-          manualNodes[nodeData.id].label = newLabel;
-          manualNodes[nodeData.id].updatedAt = new Date().toISOString();
-
-          // SVG上のラベルを更新
-          text.textContent = newLabel;
-
-          // 元のラベルも更新（要素情報パネルとの整合性）
-          originalLabels[nodeData.id] = newLabel;
-
-          // 自動保存
-          if (currentFileHandle) {
-            saveToFileAuto().catch(err => {
-              console.warn('自動保存に失敗:', err);
-            });
-          }
-
-          console.log('✅ メモノードラベル更新:', nodeData.id, newLabel);
-        }
+        startInlineEditNodeLabel(g, text, nodeData);
       });
 
       g.appendChild(rect);
