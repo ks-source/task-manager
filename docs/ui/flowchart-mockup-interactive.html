@@ -1880,6 +1880,28 @@
     }
 
     /* ==========================================
+     * Inline Edit (インライン編集)
+     * ========================================== */
+    .inline-edit-input {
+      width: 100%;
+      height: 100%;
+      font-size: 12px;
+      font-family: Arial, sans-serif;
+      padding: 4px 8px;
+      border: 2px solid #0d9488;
+      border-radius: 4px;
+      background: white;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      outline: none;
+      box-sizing: border-box;
+    }
+
+    .inline-edit-input:focus {
+      border-color: #0f766e;
+      box-shadow: 0 2px 12px rgba(13, 148, 136, 0.3);
+    }
+
+    /* ==========================================
      * ミニマップ
      * ========================================== */
     .minimap-container {
@@ -7818,10 +7840,10 @@ ${metadataJson}
         showMemoNodeContextMenu(e.clientX, e.clientY, target, svgX, svgY);
       } else if (elementType === 'manual-edge' || target?.classList.contains('manual-edge')) {
         showMemoEdgeContextMenu(e.clientX, e.clientY, target, svgX, svgY);
-      } else if (elementType === 'node' || elementType === 'cluster') {
+      } else if (elementType === 'node') {
         showNodeContextMenu(e.clientX, e.clientY, target, svgX, svgY);
       } else {
-        // 空白エリア
+        // 空白エリアまたはサブグラフ（cluster）
         showSvgContextMenu(e.clientX, e.clientY, svgX, svgY);
       }
     }
@@ -8009,52 +8031,145 @@ ${metadataJson}
     // ==========================================
 
     /**
-     * プロンプトでラベルを入力してメモノードを作成
+     * デフォルトラベルでメモノードを作成し、即座にインライン編集モードに移行
      */
     function promptAndCreateMemoNode(x, y) {
-      const label = prompt('メモノードのラベルを入力してください:', '新規メモ');
-      if (label !== null && label.trim() !== '') {
-        createManualNode(x, y, label.trim());
-        console.log('✅ メモノード作成:', { x, y, label: label.trim() });
-      }
+      // デフォルトラベルでノードを即座に作成
+      const nodeId = createManualNode(x, y, '新規メモ');
+      console.log('✅ メモノード作成（インライン編集開始）:', { x, y, nodeId });
+
+      // DOM更新を待ってインライン編集モードに移行
+      setTimeout(() => {
+        startInlineEditForNode(nodeId);
+      }, 100);
     }
 
     /**
-     * メモノードのラベルを編集
+     * メモノードのラベルをインライン編集
      */
     function editMemoNodeLabel(nodeId) {
+      startInlineEditForNode(nodeId);
+    }
+
+    /**
+     * ノードのインライン編集を開始
+     */
+    function startInlineEditForNode(nodeId) {
       const nodeData = manualNodes[nodeId];
       if (!nodeData) {
         console.error('❌ ノードが見つかりません:', nodeId);
         return;
       }
 
-      const newLabel = prompt('新しいラベルを入力してください:', nodeData.label);
-      if (newLabel !== null && newLabel.trim() !== '') {
-        nodeData.label = newLabel.trim();
-
-        // SVG要素を更新
-        const svg = document.querySelector('.svg-content-wrapper svg') || document.querySelector('svg');
-        const nodeElement = svg.querySelector(`[data-id="${nodeId}"]`);
-        if (nodeElement) {
-          const labelElement = nodeElement.querySelector('.manual-node-label');
-          if (labelElement) {
-            labelElement.textContent = newLabel.trim();
-          }
-        }
-
-        // originalLabelsも更新
-        originalLabels[nodeId] = newLabel.trim();
-
-        // 自動保存
-        if (currentFileHandle) {
-          saveToFileAuto().catch(err => {
-            console.warn('自動保存に失敗:', err);
-          });
-        }
-
-        console.log('✅ メモノードラベル更新:', { nodeId, newLabel: newLabel.trim() });
+      const svg = document.querySelector('.svg-content-wrapper svg') || document.querySelector('svg');
+      const nodeElement = svg.querySelector(`[data-id="${nodeId}"]`);
+      if (!nodeElement) {
+        console.error('❌ ノード要素が見つかりません:', nodeId);
+        return;
       }
+
+      const labelElement = nodeElement.querySelector('.manual-node-label');
+      if (!labelElement) {
+        console.error('❌ ラベル要素が見つかりません:', nodeId);
+        return;
+      }
+
+      // 既にインライン編集中の場合は何もしない
+      if (nodeElement.querySelector('.inline-edit-foreign')) {
+        console.log('⚠️ 既にインライン編集中です');
+        return;
+      }
+
+      // 既存のテキスト要素を一時的に非表示
+      labelElement.style.display = 'none';
+
+      // foreignObject + input を作成
+      const bbox = labelElement.getBBox();
+      const foreignObject = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject');
+      foreignObject.setAttribute('x', bbox.x - 10);
+      foreignObject.setAttribute('y', bbox.y - 5);
+      foreignObject.setAttribute('width', 160);
+      foreignObject.setAttribute('height', 30);
+      foreignObject.setAttribute('class', 'inline-edit-foreign');
+
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.value = labelElement.textContent;
+      input.className = 'inline-edit-input';
+
+      foreignObject.appendChild(input);
+      nodeElement.appendChild(foreignObject);
+
+      // フォーカスと全選択
+      requestAnimationFrame(() => {
+        input.focus();
+        input.select();
+      });
+
+      console.log('✅ インライン編集開始:', { nodeId, currentLabel: input.value });
+
+      // Enter確定、Escキャンセル
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          const newLabel = input.value.trim() || '新規メモ';
+          finishInlineEdit(nodeId, newLabel, foreignObject, labelElement);
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          cancelInlineEdit(foreignObject, labelElement);
+        }
+      });
+
+      // フォーカスアウトで確定
+      input.addEventListener('blur', () => {
+        // blur時にEnter/Escで既に処理されている場合はforeignObjectが削除済み
+        if (foreignObject.parentElement) {
+          const newLabel = input.value.trim() || '新規メモ';
+          finishInlineEdit(nodeId, newLabel, foreignObject, labelElement);
+        }
+      });
+    }
+
+    /**
+     * インライン編集を確定
+     */
+    function finishInlineEdit(nodeId, newLabel, foreignObject, labelElement) {
+      const nodeData = manualNodes[nodeId];
+      if (!nodeData) {
+        console.error('❌ ノードが見つかりません:', nodeId);
+        return;
+      }
+
+      // データを更新
+      nodeData.label = newLabel;
+      originalLabels[nodeId] = newLabel;
+
+      // ラベル要素を更新
+      labelElement.textContent = newLabel;
+
+      // foreignObjectを削除
+      foreignObject.remove();
+
+      // ラベル要素を再表示
+      labelElement.style.display = '';
+
+      // 自動保存
+      if (currentFileHandle) {
+        saveToFileAuto().catch(err => {
+          console.warn('自動保存に失敗:', err);
+        });
+      }
+
+      console.log('✅ インライン編集確定:', { nodeId, newLabel });
+    }
+
+    /**
+     * インライン編集をキャンセル
+     */
+    function cancelInlineEdit(foreignObject, labelElement) {
+      foreignObject.remove();
+      labelElement.style.display = '';
+      console.log('✅ インライン編集キャンセル');
     }
 
     /**
