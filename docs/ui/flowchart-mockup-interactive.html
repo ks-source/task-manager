@@ -39,6 +39,14 @@
     .header h1 {
       font-size: 18px;
       font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .header h1 svg {
+      width: 24px;
+      height: 24px;
     }
 
     .header-actions {
@@ -1343,6 +1351,14 @@
 
     #panel-title {
       flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    #panel-title svg {
+      width: 14px;
+      height: 14px;
     }
 
     /* ==========================================
@@ -1478,9 +1494,60 @@
 
     .manual-edge-label {
       font-family: Arial, sans-serif;
-      font-size: 14px;
+      font-size: 18px;
       fill: #666;
       pointer-events: none;
+    }
+
+    /* メモノード (Phase 1) */
+    .manual-memo-node {
+      cursor: grab;
+      transition: filter 0.2s;
+    }
+
+    .manual-memo-node:hover {
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+    }
+
+    .manual-memo-node:active {
+      cursor: grabbing;
+    }
+
+    /* Phase 2: エッジ編集用スタイル */
+    .manual-edge.editing {
+      outline: 2px solid #00aaff;
+      outline-offset: 2px;
+    }
+
+    .edge-edit-handle {
+      fill: #00aaff;
+      stroke: #0088dd;
+      stroke-width: 2;
+      cursor: move;
+      transition: all 0.2s;
+    }
+
+    .edge-edit-handle:hover {
+      fill: #00ddff;
+      r: 10;
+    }
+
+    .edge-start-handle {
+      fill: #4ade80;
+      stroke: #22c55e;
+    }
+
+    .edge-end-handle {
+      fill: #f87171;
+      stroke: #ef4444;
+    }
+
+    .manual-node-label {
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+      fill: #333;
+      pointer-events: none;
+      user-select: none;
     }
 
     /* エッジ追加モードボタンのアクティブ状態 */
@@ -1586,6 +1653,11 @@
       display: flex;
       align-items: center;
       gap: 4px;
+    }
+
+    .minimap-header-title svg {
+      width: 14px;
+      height: 14px;
     }
 
     .minimap-controls {
@@ -1711,7 +1783,15 @@
 
   <!-- Header -->
   <div class="header">
-    <h1>🎯 フローチャート - 手動連携デモ（インタラクティブ版）</h1>
+    <h1>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="9" width="6" height="6" rx="1"></rect>
+        <rect x="15" y="3" width="6" height="6" rx="1"></rect>
+        <rect x="15" y="15" width="6" height="6" rx="1"></rect>
+        <path d="M9 12h2a2 2 0 0 0 2-2V6h2"></path>
+        <path d="M9 12h2a2 2 0 0 1 2 2v4h2"></path>
+      </svg>
+    </h1>
   </div>
 
   <!-- Toolbar -->
@@ -1787,23 +1867,25 @@
     <div class="toolbar-divider"></div>
 
     <!-- Edit Group -->
-    <button class="icon-button disabled" id="edge-add-btn" onclick="toggleEdgeAddMode()" title="エッジ追加">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="12" y1="5" x2="12" y2="19"></line>
-        <line x1="5" y1="12" x2="19" y2="12"></line>
-      </svg>
-    </button>
-
-    <div class="toolbar-divider"></div>
-
     <!-- Edge Add Mode Button -->
     <button class="icon-button disabled" id="edge-add-mode-btn" onclick="toggleEdgeAddMode()" title="手動エッジ追加" style="display: none;">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M12 2v20M2 12h20"></path>
-        <circle cx="7" cy="12" r="2"></circle>
-        <circle cx="17" cy="12" r="2"></circle>
-        <line x1="9" y1="12" x2="15" y2="12"></line>
-      </svg>
+  <circle cx="6" cy="18" r="3"></circle>
+  <circle cx="18" cy="6" r="3"></circle>
+  <path d="M8.1 15.9L15.9 8.1"></path>
+  <path d="M19 14v6"></path>
+  <path d="M16 17h6"></path>
+</svg>
+    </button>
+
+    <!-- Memo Node Add Mode Button (Phase 1) -->
+    <button class="icon-button disabled" id="node-add-mode-btn" onclick="toggleNodeAddMode()" title="メモノード追加" style="display: none;">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
+  <polyline points="14 2 14 8 20 8"></polyline>
+  <line x1="12" y1="18" x2="12" y2="12"></line>
+  <line x1="9" y1="15" x2="15" y2="15"></line>
+</svg>
     </button>
 
     <div class="toolbar-divider" id="zoom-divider" style="display: none;"></div>
@@ -1840,10 +1922,9 @@
     <!-- Settings -->
     <button class="icon-button" onclick="alert('設定機能は未実装です')" title="設定">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="3"></circle>
-        <path d="M12 1v6m0 6v6M1 12h6m6 0h6"></path>
-        <path d="m4.93 4.93 4.24 4.24m5.66 0 4.24-4.24m0 14.14-4.24-4.24m-5.66 0-4.24 4.24"></path>
-      </svg>
+  <circle cx="12" cy="12" r="3"></circle>
+  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+</svg>
     </button>
 
     <!-- Legend (moved to right) -->
@@ -1911,7 +1992,12 @@
           <div id="minimap" class="minimap-container" style="display: none;">
             <div class="minimap-header">
               <div class="minimap-header-title">
-                <span>🗺️</span>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21 3 6"></polygon>
+                  <!-- 縦線を枠の内側に収めるため、座標を調整 -->
+                  <line x1="9" y1="4" x2="9" y2="17"></line>
+                  <line x1="15" y1="7" x2="15" y2="20"></line>
+                </svg>
                 <span>マップ</span>
               </div>
               <div class="minimap-controls">
@@ -1983,7 +2069,13 @@
   <!-- Floating Panel (Element Info) -->
   <div id="element-info-panel" class="floating-panel" style="display: none;">
     <div class="panel-header" id="panel-header">
-      <span id="panel-title">📊 要素情報</span>
+      <span id="panel-title">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="9" y1="3" x2="9" y2="21"></line>
+        </svg>
+        <span>要素情報</span>
+      </span>
       <span id="panel-save-indicator" class="save-indicator"></span>
       <div class="panel-controls">
         <button class="panel-btn" onclick="togglePanelMinimize()" title="最小化">━</button>
@@ -2155,9 +2247,10 @@
     // ========================================
     // ビルドバージョン識別子
     // ========================================
-    const DEBUG_BUILD = 'phase2-reverted-free-placement-2026-03-21';
+    const DEBUG_BUILD = 'phase2-edge-edit-2026-03-21';
     console.log('🔧 [BUILD]', DEBUG_BUILD);
-    console.log('ℹ️  Phase 2 ノード吸着機能は一時的に無効化されています（自由配置モード）');
+    console.log('✅ Phase 1: メモノード追加・ドラッグ移動機能を実装');
+    console.log('✅ Phase 2: エッジ編集機能を実装（端点ドラッグ、削除）');
 
     // ========================================
     // モックデータ定義
@@ -2787,6 +2880,15 @@
     let edgePreviewLine = null; // プレビュー線のSVG要素への参照
     let manualEdges = {}; // 手動エッジのマップ { edgeId: edgeData }
 
+    // ========== メモノード追加機能用の変数 (Phase 1) ==========
+    let nodeAddMode = false; // ノード追加モードON/OFF
+    let manualNodes = {}; // メモノードのマップ { nodeId: nodeData }
+
+    // ========== エッジ編集機能用の変数 (Phase 2) ==========
+    let edgeEditMode = false; // エッジ編集モードON/OFF
+    let editingEdgeId = null; // 編集中のエッジID
+    let edgeHandles = []; // 端点ハンドルのSVG要素配列
+
     // ========================================
     // Dropdown Menu Functions
     // ========================================
@@ -3003,6 +3105,11 @@
         if (labelElement) {
           label = labelElement.textContent.trim();
         }
+      } else if (type === 'manual-node') {
+        const labelElement = element.querySelector('.manual-node-label');
+        if (labelElement) {
+          label = labelElement.textContent.trim();
+        }
       }
 
       // パネルの情報を更新
@@ -3163,7 +3270,7 @@
       while (element && element !== document.body && depth < 10) {
         if (element.hasAttribute('data-et')) {
           const et = element.getAttribute('data-et');
-          if (et === 'node' || et === 'edge' || et === 'cluster') {
+          if (et === 'node' || et === 'edge' || et === 'cluster' || et === 'manual-node') {
             return element;
           }
         }
@@ -3183,7 +3290,7 @@
       }
 
       // マウス直下に要素がない場合、近接検索にフォールバック
-      const svgElements = document.querySelectorAll('[data-et="node"], [data-et="edge"], [data-et="cluster"]');
+      const svgElements = document.querySelectorAll('[data-et="node"], [data-et="edge"], [data-et="cluster"], [data-et="manual-node"]');
 
       let nearestElement = null;
       let minDistance = PROXIMITY_THRESHOLD;
@@ -3195,7 +3302,7 @@
         let distance;
         const elementType = element.getAttribute('data-et');
 
-        if (elementType === 'node' || elementType === 'cluster') {
+        if (elementType === 'node' || elementType === 'cluster' || elementType === 'manual-node') {
           const centerX = rect.left + rect.width / 2;
           const centerY = rect.top + rect.height / 2;
           distance = Math.sqrt(
@@ -3916,6 +4023,8 @@
           document.getElementById('export-dropdown-btn').classList.remove('disabled');
           document.getElementById('edge-add-mode-btn').classList.remove('disabled');
           document.getElementById('edge-add-mode-btn').style.display = ''; // ボタンを表示
+          document.getElementById('node-add-mode-btn').classList.remove('disabled'); // ★Phase 1
+          document.getElementById('node-add-mode-btn').style.display = ''; // ★Phase 1: ボタンを表示
 
           // ズームコントロールを表示・有効化
           showZoomControls();
@@ -3926,6 +4035,12 @@
           // ★手動エッジ機能を初期化
           setupManualEdgeFeature();
 
+          // ★Phase 1: メモノード機能を初期化
+          setupManualNodeFeature();
+
+          // ★ Phase 2: エッジ編集用キーボードハンドラを設定
+          setupEdgeEditKeyboardHandlers();
+
           // ★全エッジのクリック感度を向上（ルールベース自動適用）
           setTimeout(() => {
             enhanceAllEdgeClickability();
@@ -3934,6 +4049,38 @@
           // ミニマップを初期化
           setTimeout(() => {
             initMinimap();
+
+            // SVGの中央が画面中央に来るようにスクロール位置を初期化（初回ズーム問題の根本解決）
+            setTimeout(() => {
+              const container = document.getElementById('flowchart-container');
+              const svg = container.querySelector('svg');
+
+              if (svg) {
+                // SVGサイズを確定
+                applyZoom(null, 1.0);
+
+                // SVGの中央座標を計算
+                const svgRect = svg.getBoundingClientRect();
+                const containerRect = container.getBoundingClientRect();
+
+                // SVG中央が画面中央に来るスクロール位置
+                const targetScrollLeft = (svgRect.width - containerRect.width) / 2;
+                const targetScrollTop = (svgRect.height - containerRect.height) / 2;
+
+                container.scrollLeft = Math.max(0, targetScrollLeft);
+                container.scrollTop = Math.max(0, targetScrollTop);
+
+                console.log('✅ SVG中央を表示するよう初期スクロール位置を設定:', {
+                  scrollLeft: container.scrollLeft,
+                  scrollTop: container.scrollTop
+                });
+
+                // ミニマップのビューポート矩形を更新
+                if (typeof updateMinimapViewport === 'function') {
+                  updateMinimapViewport();
+                }
+              }
+            }, 50);
           }, 100);
 
         } catch (error) {
@@ -4045,9 +4192,9 @@
       const tooltipHeader = document.getElementById('tooltip-header');
       const tooltipContent = document.getElementById('tooltip-content');
 
-      // ノード、エッジ、クラスタにマウスイベントを追加
+      // ノード、エッジ、クラスタ、メモノードにマウスイベントを追加
       document.addEventListener('mouseover', (e) => {
-        const element = e.target.closest('[data-et="node"], [data-et="edge"], [data-et="cluster"]');
+        const element = e.target.closest('[data-et="node"], [data-et="edge"], [data-et="cluster"], [data-et="manual-node"]');
 
         if (element) {
           const elementType = element.getAttribute('data-et');
@@ -4108,6 +4255,13 @@
         }
       }
 
+      if (elementType === 'manual-node') {
+        const labelElement = element.querySelector('.manual-node-label');
+        if (labelElement) {
+          info.label = labelElement.textContent.trim();
+        }
+      }
+
       // data-look属性
       info.dataLook = element.getAttribute('data-look');
 
@@ -4118,7 +4272,8 @@
       const labels = {
         'node': '🔵 ノード',
         'edge': '🔗 エッジ',
-        'cluster': '📦 クラスタ'
+        'cluster': '📦 クラスタ',
+        'manual-node': '📝 メモノード'
       };
       return labels[type] || '❓ 要素';
     }
@@ -4128,7 +4283,7 @@
      */
     function setupElementSelection() {
       document.addEventListener('click', (e) => {
-        const element = e.target.closest('[data-et="node"], [data-et="edge"], [data-et="cluster"]');
+        const element = e.target.closest('[data-et="node"], [data-et="edge"], [data-et="cluster"], [data-et="manual-node"]');
 
         if (element) {
           selectElement(element);
@@ -4211,7 +4366,13 @@
         customLabelInput.placeholder = 'ラベルを編集（SVG上の表示が変更されます）';
 
         // パネルタイトルを戻す
-        document.getElementById('panel-title').textContent = '📊 要素情報';
+        document.getElementById('panel-title').innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="9" y1="3" x2="9" y2="21"></line>
+          </svg>
+          <span>要素情報</span>
+        `;
       }
     }
 
@@ -4235,6 +4396,19 @@
           return text || 'エッジ';
         }
         return 'エッジ';
+      }
+
+      // ★Phase 1: メモノード対応
+      if (elementType === 'manual-node') {
+        const labelElement = element.querySelector('.manual-node-label');
+        if (labelElement) {
+          return labelElement.textContent.trim();
+        }
+        // または内部データから取得
+        const nodeId = element.getAttribute('data-id');
+        if (manualNodes[nodeId]) {
+          return manualNodes[nodeId].label;
+        }
       }
 
       return element.getAttribute('data-id') || element.id || '不明';
@@ -4330,17 +4504,35 @@
         labelElement = element.querySelector('.nodeLabel, .cluster-label');
       } else if (elementType === 'edge') {
         labelElement = element.querySelector('.edgeLabel');
+      } else if (elementType === 'manual-node') {
+        // ★Phase 1: メモノード対応
+        labelElement = element.querySelector('.manual-node-label');
       }
 
       if (labelElement) {
         // カスタムラベルがある場合は設定、なければ元のラベルを取得して設定
         if (customLabel) {
           labelElement.textContent = customLabel;
+
+          // ★Phase 1: メモノードの場合は内部データも更新
+          if (elementType === 'manual-node') {
+            const nodeId = element.getAttribute('data-id');
+            if (manualNodes[nodeId]) {
+              manualNodes[nodeId].label = customLabel;
+              manualNodes[nodeId].updatedAt = new Date().toISOString();
+            }
+          }
         } else {
           // 元のラベルに戻す（データから復元）
           const elementId = element.getAttribute('data-id') || element.id;
           const originalLabel = getOriginalLabel(element);
           labelElement.textContent = originalLabel;
+
+          // ★Phase 1: メモノードの場合は内部データも更新
+          if (elementType === 'manual-node' && manualNodes[elementId]) {
+            manualNodes[elementId].label = originalLabel;
+            manualNodes[elementId].updatedAt = new Date().toISOString();
+          }
         }
       }
     }
@@ -4500,7 +4692,8 @@
         savedAt: new Date().toISOString(),
         elements: elements,
         originalLabels: originalLabels, // すべての元のラベルも保存
-        manualEdges: manualEdges // 手動エッジも保存
+        manualEdges: manualEdges, // 手動エッジも保存
+        manualNodes: manualNodes // ★Phase 1: メモノードも保存
       };
     }
 
@@ -4663,6 +4856,21 @@
           }
 
           console.log('手動エッジを復元しました:', loadedEdgeCount, '件');
+        }
+
+        // ★Phase 1: メモノードを復元
+        let loadedNodeCount = 0;
+        if (data.manualNodes && typeof data.manualNodes === 'object') {
+          manualNodes = data.manualNodes;
+
+          // SVGに再描画
+          for (const node of Object.values(manualNodes)) {
+            drawNodeToSvg(node);
+            attachDragBehavior(node.id);
+            loadedNodeCount++;
+          }
+
+          console.log('メモノードを復元しました:', loadedNodeCount, '件');
         }
 
         // ★全エッジのクリック感度を向上（ルールベース自動適用）
@@ -5936,10 +6144,10 @@
         g.appendChild(text);
       }
 
-      // クリックで削除できるようにする
+      // ★ Phase 2: クリックで編集モードに入る
       g.addEventListener('click', (e) => {
-        if (!edgeAddMode && confirm('このエッジを削除しますか？')) {
-          deleteManualEdge(edge.id);
+        if (!edgeAddMode && !nodeAddMode) {
+          enterEdgeEditMode(edge.id);
         }
         e.stopPropagation();
       });
@@ -5971,6 +6179,523 @@
       }
 
       showNotification('エッジを削除しました');
+    }
+
+    // ========================================
+    // エッジ編集機能 (Phase 2)
+    // ========================================
+
+    /**
+     * エッジ編集モードに入る
+     */
+    function enterEdgeEditMode(edgeId) {
+      // 既に編集中のエッジがあれば終了
+      if (editingEdgeId) {
+        exitEdgeEditMode();
+      }
+
+      const edgeElement = document.querySelector(`[data-id="${edgeId}"]`);
+      if (!edgeElement || !manualEdges[edgeId]) {
+        console.warn('エッジが見つかりません:', edgeId);
+        return;
+      }
+
+      edgeEditMode = true;
+      editingEdgeId = edgeId;
+
+      // エッジ要素にクラスを追加
+      edgeElement.classList.add('editing');
+
+      // 端点ハンドルを作成
+      const edge = manualEdges[edgeId];
+      createEdgeHandles(edge);
+
+      // 編集中の通知
+      showNotification('エッジ編集モード: 端点をドラッグして調整、Deleteキーで削除、ESCで終了');
+
+      console.log('✅ エッジ編集モード開始:', edgeId);
+    }
+
+    /**
+     * エッジ編集モードを終了
+     */
+    function exitEdgeEditMode() {
+      if (!edgeEditMode) return;
+
+      // エッジ要素からクラスを削除
+      if (editingEdgeId) {
+        const edgeElement = document.querySelector(`[data-id="${editingEdgeId}"]`);
+        if (edgeElement) {
+          edgeElement.classList.remove('editing');
+        }
+      }
+
+      // ハンドルを削除
+      removeEdgeHandles();
+
+      edgeEditMode = false;
+      editingEdgeId = null;
+
+      console.log('✅ エッジ編集モード終了');
+    }
+
+    /**
+     * エッジの端点ハンドルを作成
+     */
+    function createEdgeHandles(edge) {
+      const svg = document.querySelector('.svg-content-wrapper svg') || document.querySelector('svg');
+      if (!svg) return;
+
+      // 開始点ハンドル（緑）
+      const startHandle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      startHandle.setAttribute('class', 'edge-edit-handle edge-start-handle');
+      startHandle.setAttribute('cx', edge.startX);
+      startHandle.setAttribute('cy', edge.startY);
+      startHandle.setAttribute('r', '8');
+      startHandle.setAttribute('data-handle-type', 'start');
+
+      // 終点ハンドル（赤）
+      const endHandle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      endHandle.setAttribute('class', 'edge-edit-handle edge-end-handle');
+      endHandle.setAttribute('cx', edge.endX);
+      endHandle.setAttribute('cy', edge.endY);
+      endHandle.setAttribute('r', '8');
+      endHandle.setAttribute('data-handle-type', 'end');
+
+      // ハンドルにドラッグ機能を追加
+      attachHandleDrag(startHandle, edge.id, 'start');
+      attachHandleDrag(endHandle, edge.id, 'end');
+
+      // SVGに追加（エッジの後ろに追加して見えるように）
+      const target = findCorrectAppendTarget(svg);
+      target.appendChild(startHandle);
+      target.appendChild(endHandle);
+
+      // ハンドル配列に保存
+      edgeHandles = [startHandle, endHandle];
+    }
+
+    /**
+     * エッジハンドルを削除
+     */
+    function removeEdgeHandles() {
+      edgeHandles.forEach(handle => {
+        if (handle && handle.parentNode) {
+          handle.parentNode.removeChild(handle);
+        }
+      });
+      edgeHandles = [];
+    }
+
+    /**
+     * ハンドルにドラッグ機能を追加
+     */
+    function attachHandleDrag(handle, edgeId, handleType) {
+      const svg = document.querySelector('.svg-content-wrapper svg') || document.querySelector('svg');
+      if (!svg) return;
+
+      let isDragging = false;
+
+      const onMouseDown = (e) => {
+        isDragging = true;
+        handle.style.cursor = 'grabbing';
+        e.stopPropagation();
+        e.preventDefault();
+      };
+
+      const onMouseMove = (e) => {
+        if (!isDragging) return;
+
+        // マウス位置をSVG座標に変換
+        const pt = svg.createSVGPoint();
+        pt.x = e.clientX;
+        pt.y = e.clientY;
+        const svgPt = pt.matrixTransform(svg.getScreenCTM().inverse());
+
+        // ハンドル位置を更新
+        handle.setAttribute('cx', svgPt.x);
+        handle.setAttribute('cy', svgPt.y);
+
+        // エッジラインとラベルを更新
+        updateEdgeLine(edgeId, handleType, svgPt.x, svgPt.y);
+      };
+
+      const onMouseUp = () => {
+        if (!isDragging) return;
+
+        isDragging = false;
+        handle.style.cursor = 'move';
+
+        // 最終位置をデータに保存
+        const cx = parseFloat(handle.getAttribute('cx'));
+        const cy = parseFloat(handle.getAttribute('cy'));
+
+        if (handleType === 'start') {
+          manualEdges[edgeId].startX = cx;
+          manualEdges[edgeId].startY = cy;
+        } else {
+          manualEdges[edgeId].endX = cx;
+          manualEdges[edgeId].endY = cy;
+        }
+
+        manualEdges[edgeId].updatedAt = new Date().toISOString();
+        manualEdges[edgeId].metadata = manualEdges[edgeId].metadata || {};
+        manualEdges[edgeId].metadata.manuallyAdjusted = true;
+
+        // 自動保存
+        if (currentFileHandle) {
+          saveToFileAuto().catch(err => {
+            console.warn('自動保存に失敗:', err);
+          });
+        }
+      };
+
+      handle.addEventListener('mousedown', onMouseDown);
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('mouseup', onMouseUp);
+    }
+
+    /**
+     * エッジラインとラベルをリアルタイム更新
+     */
+    function updateEdgeLine(edgeId, handleType, newX, newY) {
+      const edgeElement = document.querySelector(`[data-id="${edgeId}"]`);
+      if (!edgeElement) return;
+
+      const line = edgeElement.querySelector('line');
+      const label = edgeElement.querySelector('.manual-edge-label');
+
+      if (!line) return;
+
+      // ライン座標を更新
+      if (handleType === 'start') {
+        line.setAttribute('x1', newX);
+        line.setAttribute('y1', newY);
+      } else {
+        line.setAttribute('x2', newX);
+        line.setAttribute('y2', newY);
+      }
+
+      // ラベル位置を更新（中点）
+      if (label) {
+        const x1 = parseFloat(line.getAttribute('x1'));
+        const y1 = parseFloat(line.getAttribute('y1'));
+        const x2 = parseFloat(line.getAttribute('x2'));
+        const y2 = parseFloat(line.getAttribute('y2'));
+
+        const midX = (x1 + x2) / 2;
+        const midY = (y1 + y2) / 2;
+
+        label.setAttribute('x', midX);
+        label.setAttribute('y', midY);
+      }
+
+      // ヒット矩形も更新
+      const hitRect = edgeElement.querySelector('rect');
+      if (hitRect) {
+        const x1 = parseFloat(line.getAttribute('x1'));
+        const y1 = parseFloat(line.getAttribute('y1'));
+        const x2 = parseFloat(line.getAttribute('x2'));
+        const y2 = parseFloat(line.getAttribute('y2'));
+
+        updateHitRect(hitRect, x1, y1, x2, y2);
+      }
+    }
+
+    /**
+     * ヒット矩形を更新
+     */
+    function updateHitRect(rect, x1, y1, x2, y2) {
+      const minX = Math.min(x1, x2);
+      const maxX = Math.max(x1, x2);
+      const minY = Math.min(y1, y2);
+      const maxY = Math.max(y1, y2);
+
+      const width = maxX - minX;
+      const height = maxY - minY;
+
+      rect.setAttribute('x', minX - 5);
+      rect.setAttribute('y', minY - 5);
+      rect.setAttribute('width', width + 10);
+      rect.setAttribute('height', height + 10);
+    }
+
+    /**
+     * エッジ編集モード用のキーボードハンドラを設定
+     */
+    function setupEdgeEditKeyboardHandlers() {
+      document.addEventListener('keydown', (e) => {
+        // ESCキーで編集モード終了
+        if (e.key === 'Escape' && edgeEditMode) {
+          exitEdgeEditMode();
+          e.preventDefault();
+        }
+
+        // Deleteキーでエッジ削除
+        if ((e.key === 'Delete' || e.key === 'Backspace') && edgeEditMode && editingEdgeId) {
+          if (confirm('このエッジを削除しますか？')) {
+            const edgeId = editingEdgeId;
+            exitEdgeEditMode();
+            deleteManualEdge(edgeId);
+          }
+          e.preventDefault();
+        }
+      });
+    }
+
+    // ========================================
+    // メモノード追加機能 (Phase 1)
+    // ========================================
+
+    /**
+     * メモノード追加モードの切り替え
+     */
+    function toggleNodeAddMode() {
+      nodeAddMode = !nodeAddMode;
+      console.log('🔄 toggleNodeAddMode:', nodeAddMode ? 'ON' : 'OFF');
+
+      const btn = document.getElementById('node-add-mode-btn');
+      const container = document.getElementById('flowchart-container');
+
+      // エッジ追加モードと排他的に動作
+      if (nodeAddMode && edgeAddMode) {
+        toggleEdgeAddMode(); // エッジモードをOFF
+      }
+
+      if (nodeAddMode) {
+        btn.classList.add('active');
+        container.classList.add('node-add-mode');
+        showNotification('メモノード追加モード: 配置したい位置をクリック');
+      } else {
+        btn.classList.remove('active');
+        container.classList.remove('node-add-mode');
+      }
+    }
+
+    /**
+     * SVGクリックでメモノードを作成
+     */
+    function onSvgClickForNodeAdd(event) {
+      if (!nodeAddMode) return;
+
+      const svg = document.querySelector('.svg-content-wrapper svg') || document.querySelector('svg');
+      if (!svg) return;
+
+      // SVG座標を取得
+      const pt = svg.createSVGPoint();
+      pt.x = event.clientX;
+      pt.y = event.clientY;
+      const svgPt = pt.matrixTransform(svg.getScreenCTM().inverse());
+
+      // ノードを作成
+      const nodeId = createManualNode(svgPt.x, svgPt.y, '新しいメモ');
+
+      // モードを終了
+      toggleNodeAddMode();
+
+      showNotification('メモノードを作成しました（ドラッグで移動可能）');
+    }
+
+    /**
+     * メモノードを作成
+     */
+    function createManualNode(x, y, label) {
+      const nodeId = `manual-node-${Date.now()}`;
+      const nodeData = {
+        id: nodeId,
+        type: 'memo',
+        x: x,
+        y: y,
+        width: 180,
+        height: 60,
+        label: label,
+        style: {
+          fill: '#fffacd',
+          stroke: '#daa520',
+          strokeWidth: 2
+        },
+        metadata: {
+          connectedEdges: [],
+          memo: '',
+          createdBy: 'user'
+        },
+        createdAt: new Date().toISOString()
+      };
+
+      // 内部データに保存
+      manualNodes[nodeId] = nodeData;
+
+      // ★Phase 1: 元のラベルも保存（既存ノードと同様の処理）
+      originalLabels[nodeId] = label;
+
+      // SVGに描画
+      drawNodeToSvg(nodeData);
+
+      // ドラッグ機能を追加
+      attachDragBehavior(nodeId);
+
+      // 自動保存
+      if (currentFileHandle) {
+        saveToFileAuto().catch(err => {
+          console.warn('自動保存に失敗:', err);
+        });
+      }
+
+      return nodeId;
+    }
+
+    /**
+     * メモノードをSVGに描画
+     */
+    function drawNodeToSvg(nodeData) {
+      const svg = document.querySelector('.svg-content-wrapper svg') || document.querySelector('svg');
+      if (!svg) return;
+
+      // manual-layerを取得または作成
+      let manualLayer = svg.querySelector('#manual-layer');
+      if (!manualLayer) {
+        manualLayer = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        manualLayer.setAttribute('id', 'manual-layer');
+        svg.appendChild(manualLayer);
+      }
+
+      // グループ要素を作成
+      const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      g.setAttribute('class', 'manual-memo-node');
+      g.setAttribute('data-node-id', nodeData.id);
+      g.setAttribute('data-id', nodeData.id); // ★既存のノード選択機能と統合
+      g.setAttribute('data-et', 'manual-node'); // ★要素タイプ
+      g.setAttribute('transform', `translate(${nodeData.x}, ${nodeData.y})`);
+
+      // 矩形（付箋風）
+      const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      rect.setAttribute('width', nodeData.width);
+      rect.setAttribute('height', nodeData.height);
+      rect.setAttribute('fill', nodeData.style.fill);
+      rect.setAttribute('stroke', nodeData.style.stroke);
+      rect.setAttribute('stroke-width', nodeData.style.strokeWidth);
+      rect.setAttribute('rx', '4'); // 角丸
+
+      // テキスト
+      const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      text.setAttribute('class', 'manual-node-label');
+      text.setAttribute('x', '10');
+      text.setAttribute('y', '35');
+      text.textContent = nodeData.label;
+
+      g.appendChild(rect);
+      g.appendChild(text);
+      manualLayer.appendChild(g);
+    }
+
+    /**
+     * メモノードにドラッグ機能を追加
+     */
+    function attachDragBehavior(nodeId) {
+      const svg = document.querySelector('.svg-content-wrapper svg') || document.querySelector('svg');
+      if (!svg) return;
+
+      const nodeGroup = svg.querySelector(`[data-node-id="${nodeId}"]`);
+      if (!nodeGroup) return;
+
+      let isDragging = false;
+      let hasMoved = false;
+      let startX, startY;
+      let mouseDownX, mouseDownY;
+
+      nodeGroup.style.cursor = 'grab';
+
+      const onMouseDown = (e) => {
+        // ノード追加モード中はドラッグ無効
+        if (nodeAddMode) return;
+
+        isDragging = true;
+        hasMoved = false;
+        mouseDownX = e.clientX;
+        mouseDownY = e.clientY;
+        nodeGroup.style.cursor = 'grabbing';
+
+        const pt = svg.createSVGPoint();
+        pt.x = e.clientX;
+        pt.y = e.clientY;
+        const svgPt = pt.matrixTransform(svg.getScreenCTM().inverse());
+
+        startX = svgPt.x - manualNodes[nodeId].x;
+        startY = svgPt.y - manualNodes[nodeId].y;
+
+        e.stopPropagation();
+        e.preventDefault();
+      };
+
+      const onMouseMove = (e) => {
+        if (!isDragging) return;
+
+        // 移動量が5px以上ならドラッグとみなす
+        const moveDistance = Math.sqrt(
+          Math.pow(e.clientX - mouseDownX, 2) +
+          Math.pow(e.clientY - mouseDownY, 2)
+        );
+
+        if (moveDistance > 5) {
+          hasMoved = true;
+        }
+
+        const pt = svg.createSVGPoint();
+        pt.x = e.clientX;
+        pt.y = e.clientY;
+        const svgPt = pt.matrixTransform(svg.getScreenCTM().inverse());
+
+        const newX = svgPt.x - startX;
+        const newY = svgPt.y - startY;
+
+        nodeGroup.setAttribute('transform', `translate(${newX}, ${newY})`);
+      };
+
+      const onMouseUp = (e) => {
+        if (!isDragging) return;
+
+        isDragging = false;
+        nodeGroup.style.cursor = 'grab';
+
+        // ドラッグせずクリックだけの場合は、通常のクリックイベントに任せる
+        if (!hasMoved) {
+          // stopPropagation を呼ばないことで、クリックイベントが発火する
+          return;
+        }
+
+        // 最終位置をデータに保存
+        const transform = nodeGroup.getAttribute('transform');
+        const match = transform.match(/translate\(([\d.]+),\s*([\d.]+)\)/);
+        if (match) {
+          manualNodes[nodeId].x = parseFloat(match[1]);
+          manualNodes[nodeId].y = parseFloat(match[2]);
+          manualNodes[nodeId].updatedAt = new Date().toISOString();
+
+          // 自動保存
+          if (currentFileHandle) {
+            saveToFileAuto().catch(err => {
+              console.warn('自動保存に失敗:', err);
+            });
+          }
+        }
+
+        e.stopPropagation();
+      };
+
+      nodeGroup.addEventListener('mousedown', onMouseDown);
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('mouseup', onMouseUp);
+    }
+
+    /**
+     * メモノード追加機能の初期化
+     */
+    function setupManualNodeFeature() {
+      const container = document.getElementById('flowchart-container');
+      if (!container) return;
+
+      // クリックイベント
+      container.addEventListener('click', onSvgClickForNodeAdd);
     }
 
     /**
