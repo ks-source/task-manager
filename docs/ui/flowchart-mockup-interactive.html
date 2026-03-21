@@ -3624,6 +3624,7 @@
     // ========================================
 
     let isMinimapMinimized = false;
+    let minimapSavedSize = { width: '', height: '' };
 
     /**
      * ミニマップの表示/非表示を切り替え（最小化/展開）
@@ -3650,6 +3651,11 @@
 
       if (isMinimapMinimized) {
         console.log('📦 最小化実行');
+        // 現在のサイズを保存
+        minimapSavedSize.width = minimap.style.width;
+        minimapSavedSize.height = minimap.style.height;
+        console.log('💾 サイズ保存:', minimapSavedSize);
+
         // CSSクラスを追加
         minimap.classList.add('minimized');
         // インラインスタイルの高さと幅を削除してCSSに任せる
@@ -3662,10 +3668,13 @@
         console.log('📖 展開実行');
         // CSSクラスを削除
         minimap.classList.remove('minimized');
+        // 保存したサイズを復元
+        minimap.style.width = minimapSavedSize.width;
+        minimap.style.height = minimapSavedSize.height;
+        console.log('♻️ サイズ復元:', minimapSavedSize);
         // スタイルをリセット
         minimapContent.style.display = '';
         minimapZoomControls.style.display = '';
-        // サイズはinitMinimapで再計算されるため削除のまま
       }
 
       console.log('✅ toggleMinimap完了 - クラス:', minimap.classList.contains('minimized'));
@@ -4229,6 +4238,28 @@
             console.log('✅ svg-content-wrapper created and inserted');
           }
 
+          // ★ SVG挿入前にメタデータを抽出
+          const metadataMatch = svgText.match(/<!--\s*FLOWCHART-MANUAL-DATA\s*([\s\S]*?)-->/);
+          let extractedMetadata = null;
+
+          if (metadataMatch) {
+            try {
+              extractedMetadata = JSON.parse(metadataMatch[1]);
+              console.log('✅ SVGからメタデータを抽出しました:', {
+                version: extractedMetadata.version,
+                exportedAt: extractedMetadata.exportedAt,
+                manualNodesCount: Object.keys(extractedMetadata.manualNodes || {}).length,
+                manualEdgesCount: Object.keys(extractedMetadata.manualEdges || {}).length,
+                elementsCount: Object.keys(extractedMetadata.elements || {}).length
+              });
+            } catch (e) {
+              console.warn('⚠️ メタデータ解析失敗:', e);
+              extractedMetadata = null;
+            }
+          } else {
+            console.log('ℹ️ メタデータなし（通常のSVGまたは旧形式）');
+          }
+
           // SVGを挿入（ミニマップは削除されない）
           svgWrapper.innerHTML = svgText;
           console.log('✅ SVG content loaded into wrapper');
@@ -4278,6 +4309,102 @@
 
           // ★ Phase 2: エッジ編集用キーボードハンドラを設定
           setupEdgeEditKeyboardHandlers();
+
+          // ★ メタデータを復元（イベントハンドラも再アタッチ）
+          if (extractedMetadata) {
+            // 元のラベル情報を復元
+            if (extractedMetadata.originalLabels && typeof extractedMetadata.originalLabels === 'object') {
+              originalLabels = extractedMetadata.originalLabels;
+              console.log('📝 元のラベル情報を復元:', Object.keys(originalLabels).length, '件');
+            }
+
+            // メモとカスタムラベルを復元
+            if (extractedMetadata.elements && typeof extractedMetadata.elements === 'object') {
+              elementMemos = {};
+              elementCustomLabels = {};
+
+              for (const [elementId, elementData] of Object.entries(extractedMetadata.elements)) {
+                if (elementData.memo) {
+                  elementMemos[elementId] = elementData.memo;
+                }
+                if (elementData.customLabel) {
+                  elementCustomLabels[elementId] = elementData.customLabel;
+                  // SVG DOMに即座に反映
+                  const element = document.querySelector(`[data-id="${elementId}"]`) || document.getElementById(elementId);
+                  if (element) {
+                    updateSvgLabel(element, elementData.customLabel);
+                  }
+                }
+              }
+
+              console.log('📝 メモ/ラベルを復元:', {
+                memoCount: Object.keys(elementMemos).length,
+                labelCount: Object.keys(elementCustomLabels).length
+              });
+            }
+
+            // 手動ノードを復元（データ構造 + イベントハンドラ）
+            if (extractedMetadata.manualNodes && typeof extractedMetadata.manualNodes === 'object') {
+              manualNodes = extractedMetadata.manualNodes;
+
+              // 既存のSVG要素にイベントハンドラを再アタッチ
+              for (const nodeId of Object.keys(manualNodes)) {
+                const nodeGroup = document.querySelector(`[data-node-id="${nodeId}"]`);
+                if (nodeGroup) {
+                  // ドラッグ動作を再アタッチ
+                  attachDragBehavior(nodeId);
+
+                  // ダブルクリックイベントを再アタッチ
+                  const labelElement = nodeGroup.querySelector('.manual-node-label');
+                  if (labelElement) {
+                    labelElement.addEventListener('dblclick', (e) => {
+                      e.stopPropagation();
+                      startInlineEditNodeLabel(nodeGroup, labelElement, manualNodes[nodeId]);
+                    });
+                  }
+                }
+              }
+
+              console.log('📦 メモノードを復元:', Object.keys(manualNodes).length, '件');
+            }
+
+            // 手動エッジを復元（データ構造 + イベントハンドラ）
+            if (extractedMetadata.manualEdges && typeof extractedMetadata.manualEdges === 'object') {
+              manualEdges = extractedMetadata.manualEdges;
+
+              // 既存のSVG要素にイベントハンドラを再アタッチ
+              for (const edgeId of Object.keys(manualEdges)) {
+                const edgeGroup = document.querySelector(`[data-id="${edgeId}"]`);
+                if (edgeGroup) {
+                  // クリックで編集モード
+                  edgeGroup.addEventListener('click', (e) => {
+                    if (!edgeAddMode && !nodeAddMode) {
+                      enterEdgeEditMode(edgeId);
+                    }
+                    e.stopPropagation();
+                  });
+
+                  // グループレベルのダブルクリックでラベル編集
+                  edgeGroup.addEventListener('dblclick', (e) => {
+                    e.stopPropagation();
+                    const textElement = edgeGroup.querySelector('.manual-edge-label');
+                    startInlineEditEdgeLabel(edgeGroup, textElement, manualEdges[edgeId]);
+                  });
+
+                  // テキスト要素のダブルクリック
+                  const labelElement = edgeGroup.querySelector('.manual-edge-label');
+                  if (labelElement) {
+                    labelElement.addEventListener('dblclick', (e) => {
+                      e.stopPropagation();
+                      startInlineEditEdgeLabel(edgeGroup, labelElement, manualEdges[edgeId]);
+                    });
+                  }
+                }
+              }
+
+              console.log('🔗 手動エッジを復元:', Object.keys(manualEdges).length, '件');
+            }
+          }
 
           // ★全エッジのクリック感度を向上（ルールベース自動適用）
           setTimeout(() => {
@@ -5143,7 +5270,7 @@
     }
 
     /**
-     * 編集済みSVGをエクスポート
+     * 編集済みSVGをエクスポート（メタデータ埋め込み版）
      */
     async function exportEditedSvg() {
       try {
@@ -5162,9 +5289,57 @@
           return;
         }
 
+        // SVGをクローン（元のDOMを変更しないため）
+        const svgClone = svg.cloneNode(true);
+
+        // ★ メタデータをJSON形式で準備
+        const metadata = {
+          version: "1.0",
+          exportedAt: new Date().toISOString(),
+          svgFile: currentSvgFileName || 'unknown.svg',
+          elements: {},
+          originalLabels: originalLabels,
+          manualNodes: manualNodes,
+          manualEdges: manualEdges
+        };
+
+        // elementMemos と elementCustomLabels を elements に統合
+        const allElementIds = new Set([
+          ...Object.keys(elementMemos),
+          ...Object.keys(elementCustomLabels)
+        ]);
+
+        for (const elementId of allElementIds) {
+          const element = document.querySelector(`[data-id="${elementId}"]`) || document.getElementById(elementId);
+          if (!element) continue;
+
+          const type = element.getAttribute('data-et') || 'unknown';
+          const displayText = getElementDisplayText(element);
+          const memo = elementMemos[elementId] || '';
+          const customLabel = elementCustomLabels[elementId] || '';
+          const originalLabel = originalLabels[elementId] || '';
+
+          metadata.elements[elementId] = {
+            type: type,
+            displayText: displayText,
+            memo: memo,
+            customLabel: customLabel,
+            originalLabel: originalLabel
+          };
+        }
+
+        // ★ メタデータをSVGコメントとして埋め込み
+        const metadataJson = JSON.stringify(metadata, null, 2);
+        const metadataComment = document.createComment(`
+FLOWCHART-MANUAL-DATA
+${metadataJson}
+`);
+
+        svgClone.insertBefore(metadataComment, svgClone.firstChild);
+
         // SVGをシリアライズ
         const serializer = new XMLSerializer();
-        const svgString = serializer.serializeToString(svg);
+        const svgString = serializer.serializeToString(svgClone);
 
         // ファイル名の提案（カスタムラベルが適用済みであることを明示）
         const baseName = currentSvgFileName ? currentSvgFileName.replace(/\.svg$/i, '') : 'flowchart';
