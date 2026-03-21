@@ -902,69 +902,6 @@
     .preview-text {
       font-style: italic;
     }
-
-    /* ==========================================
-     * Debug Panel
-     * ========================================== */
-    .debug-panel {
-      position: fixed;
-      top: 110px;
-      right: 10px;
-      width: 350px;
-      max-height: calc(100vh - 160px);
-      background: white;
-      border: 2px solid #007bff;
-      border-radius: 6px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      z-index: 900;
-      display: none;
-    }
-
-    .debug-panel.show {
-      display: block;
-    }
-
-    .debug-header {
-      padding: 0.75rem 1rem;
-      background: #007bff;
-      color: white;
-      font-weight: 600;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .debug-body {
-      padding: 1rem;
-      max-height: calc(100vh - 220px);
-      overflow-y: auto;
-      font-size: 12px;
-    }
-
-    .debug-section {
-      margin-bottom: 1rem;
-    }
-
-    .debug-section h4 {
-      font-size: 13px;
-      font-weight: 600;
-      color: #495057;
-      margin-bottom: 0.5rem;
-    }
-
-    .debug-code {
-      background: #f8f9fa;
-      border: 1px solid #dee2e6;
-      border-radius: 4px;
-      padding: 0.5rem;
-      font-family: 'Courier New', monospace;
-      font-size: 11px;
-      white-space: pre-wrap;
-      word-wrap: break-word;
-      max-height: 200px;
-      overflow-y: auto;
-    }
-
     .notification {
       position: fixed;
       top: 120px;
@@ -1775,9 +1712,6 @@
   <!-- Header -->
   <div class="header">
     <h1>🎯 フローチャート - 手動連携デモ（インタラクティブ版）</h1>
-    <div class="header-actions">
-      <button class="btn btn-sm" onclick="toggleDebugPanel()">🔧 デバッグパネル</button>
-    </div>
   </div>
 
   <!-- Toolbar -->
@@ -2217,38 +2151,13 @@
     </div>
   </div>
 
-  <!-- Debug Panel -->
-  <div class="debug-panel" id="debug-panel">
-    <div class="debug-header">
-      🔧 デバッグパネル
-      <button class="btn-close" style="color: white;" onclick="toggleDebugPanel()">×</button>
-    </div>
-    <div class="debug-body">
-      <div class="debug-section">
-        <h4>選択中タスク</h4>
-        <div id="debug-task-info">なし</div>
-      </div>
-
-      <div class="debug-section">
-        <h4>flowchartLinks データ</h4>
-        <div class="debug-code" id="debug-flowchart-links">
-          なし
-        </div>
-      </div>
-
-      <div class="debug-section">
-        <h4>mermaidIds（自動生成）</h4>
-        <div id="debug-mermaid-ids">なし</div>
-      </div>
-
-      <div class="debug-section">
-        <h4>ハイライト状態</h4>
-        <div id="debug-highlight-state">なし</div>
-      </div>
-    </div>
-  </div>
-
   <script>
+    // ========================================
+    // ビルドバージョン識別子（Phase C-CTM修正）
+    // ========================================
+    const DEBUG_BUILD = 'phase2-fix-2026-03-21-v3-ctm-coordinate-transform';
+    console.log('🔧 [BUILD]', DEBUG_BUILD);
+
     // ========================================
     // モックデータ定義
     // ========================================
@@ -4950,7 +4859,6 @@
       });
 
       updateStatusBar(task);
-      updateDebugPanel(task);
     }
 
     function onNodeClick(nodeId) {
@@ -4977,7 +4885,6 @@
 
         if (relatedTasks.length === 1) {
           updateStatusBar(relatedTasks[0]);
-          updateDebugPanel(relatedTasks[0]);
         }
       }
     }
@@ -5306,37 +5213,6 @@
     }
 
     // ========================================
-    // デバッグパネル
-    // ========================================
-
-    function toggleDebugPanel() {
-      const panel = document.getElementById('debug-panel');
-      panel.classList.toggle('show');
-    }
-
-    function updateDebugPanel(task) {
-      if (!task) return;
-
-      document.getElementById('debug-task-info').textContent = `${task.wbs} - ${task.taskName}`;
-
-      document.getElementById('debug-flowchart-links').textContent =
-        JSON.stringify(task.flowchartLinks, null, 2);
-
-      document.getElementById('debug-mermaid-ids').textContent = task.mermaidIds || '（なし）';
-
-      const highlightState = [];
-      task.flowchartLinks.nodes.forEach(n => {
-        highlightState.push(`• ${n.highlightType === 'primary' ? 'Primary' : 'Secondary'}: ${n.id} (ノード)`);
-      });
-      task.flowchartLinks.edges.forEach(e => {
-        highlightState.push(`• ${e.highlightType === 'primary' ? 'Primary' : 'Secondary'}: ${e.id} (エッジ・${e.highlightMode === 'label-only' ? 'ラベルのみ' : '全体'})`);
-      });
-
-      document.getElementById('debug-highlight-state').innerHTML =
-        highlightState.length > 0 ? highlightState.join('<br>') : 'なし';
-    }
-
-    // ========================================
     // ステータスバー
     // ========================================
 
@@ -5504,21 +5380,24 @@
       if (!edgeStartPoint) {
         // 開始点を設定
         // ★ノード吸着判定（Phase 2）
-        const nearestNode = findNearestNode(x, y, 50);
+        const nearestNode = findNearestNode(x, y);
 
         if (nearestNode) {
-          // ノードに吸着
+          // ノードに吸着（要素情報も保存）
           edgeStartPoint = {
             x: nearestNode.centerX,
             y: nearestNode.centerY,
-            nodeId: nearestNode.nodeId
+            nodeId: nearestNode.nodeId,
+            element: nearestNode.element,
+            clickX: x,
+            clickY: y
           };
           showStartMarker(nearestNode.centerX, nearestNode.centerY);
           highlightNodeForSnap(nearestNode.element); // ★ビジュアルフィードバック
           showNotification(`ノード "${nearestNode.nodeId}" から開始 - 終点をクリックしてください`);
         } else {
           // 自由位置
-          edgeStartPoint = { x: x, y: y, nodeId: null };
+          edgeStartPoint = { x: x, y: y, nodeId: null, element: null };
           showStartMarker(x, y);
           clearNodeSnapHighlight(); // ★ハイライトクリア
           showNotification('終点をクリックしてください');
@@ -5526,15 +5405,49 @@
       } else {
         // 終了点を設定してエッジ作成
         // ★ノード吸着判定（Phase 2）
-        const nearestNode = findNearestNode(x, y, 50);
+        const nearestNode = findNearestNode(x, y);
 
-        if (nearestNode) {
-          // ノードに吸着
-          highlightNodeForSnap(nearestNode.element); // ★ビジュアルフィードバック
-          createManualEdge(nearestNode.centerX, nearestNode.centerY, nearestNode.nodeId);
+        // ★エッジ接続点を境界線（perimeter）に計算
+        let startX, startY, endX, endY;
+
+        if (edgeStartPoint.element) {
+          // 開始点がノードに吸着している場合、境界線上の点を計算
+          const startBBox = getBBoxInSVGCoordinates(edgeStartPoint.element);
+          const endPoint = nearestNode ? { x: nearestNode.centerX, y: nearestNode.centerY } : { x, y };
+          const perimeterStart = getPerimeterPoint(
+            edgeStartPoint.x,
+            edgeStartPoint.y,
+            startBBox,
+            endPoint.x,
+            endPoint.y
+          );
+          startX = perimeterStart.x;
+          startY = perimeterStart.y;
         } else {
           // 自由位置
-          createManualEdge(x, y, null);
+          startX = edgeStartPoint.x;
+          startY = edgeStartPoint.y;
+        }
+
+        if (nearestNode) {
+          // 終点がノードに吸着している場合、境界線上の点を計算
+          const endBBox = getBBoxInSVGCoordinates(nearestNode.element);
+          const perimeterEnd = getPerimeterPoint(
+            nearestNode.centerX,
+            nearestNode.centerY,
+            endBBox,
+            edgeStartPoint.x,
+            edgeStartPoint.y
+          );
+          endX = perimeterEnd.x;
+          endY = perimeterEnd.y;
+          highlightNodeForSnap(nearestNode.element); // ★ビジュアルフィードバック
+          createManualEdge(startX, startY, endX, endY, edgeStartPoint.nodeId, nearestNode.nodeId);
+        } else {
+          // 終点が自由位置
+          endX = x;
+          endY = y;
+          createManualEdge(startX, startY, endX, endY, edgeStartPoint.nodeId, null);
         }
         // エッジ作成後、ハイライトはクリア（toggleEdgeAddMode内で処理）
       }
@@ -5608,78 +5521,188 @@
     }
 
     /**
-     * 指定座標から最も近いノードを検索
-     * @param {number} x - SVG座標系のX座標
-     * @param {number} y - SVG座標系のY座標
-     * @param {number} radius - 吸着半径（デフォルト50px）
-     * @returns {Object|null} { nodeId, centerX, centerY, element } または null
+     * ノード中心とターゲット点を結ぶ線と、ノード境界との交点を計算（Gemini推奨アルゴリズム）
+     *
+     * エッジをノードの中心ではなく、境界線（側面）から描画するために使用
+     *
+     * @param {number} centerX - ノードの中心X座標
+     * @param {number} centerY - ノードの中心Y座標
+     * @param {DOMRect} bbox - ノードの境界ボックス
+     * @param {number} targetX - ターゲット点のX座標（クリック位置や接続先ノードの中心）
+     * @param {number} targetY - ターゲット点のY座標
+     * @returns {Object} { x, y } 境界線上の交点座標
      */
-    function findNearestNode(x, y, radius = 50) {
-      const svg = document.querySelector('.svg-content-wrapper svg') || document.querySelector('svg');
-      if (!svg) {
-        console.warn('🚫 findNearestNode: SVG not found');
-        return null;
+    function getPerimeterPoint(centerX, centerY, bbox, targetX, targetY) {
+      // BBoxの4辺の座標
+      const left = bbox.x;
+      const right = bbox.x + bbox.width;
+      const top = bbox.y;
+      const bottom = bbox.y + bbox.height;
+
+      // 中心からターゲットへの方向ベクトル
+      const dx = targetX - centerX;
+      const dy = targetY - centerY;
+
+      // 同じ位置の場合は中心を返す
+      if (dx === 0 && dy === 0) {
+        return { x: centerX, y: centerY };
       }
 
-      // ★スケールに応じた閾値調整（SVG座標系での閾値を計算）
-      const rect = svg.getBoundingClientRect();
-      const viewBox = svg.viewBox.baseVal;
-      const scaleX = viewBox.width / rect.width;
-      const scaleY = viewBox.height / rect.height;
-      const scale = Math.max(scaleX, scaleY);
-      const adjustedRadius = radius * scale; // スクリーン上の50px → SVG座標系での適切な距離
-      
-      console.log(`📏 Scale: ${scale.toFixed(2)}x, Screen radius: ${radius}px, SVG radius: ${adjustedRadius.toFixed(1)}px`);
+      // 傾き
+      const slope = dy / dx;
+      let px, py;
 
-      // 全ノードを取得（Mermaidノード + クラスター）
-      const nodes = svg.querySelectorAll('[data-et="node"], [data-et="cluster"]');
-      console.log(`🔍 findNearestNode: Found ${nodes.length} nodes with [data-et="node|cluster"]`);
-
-      // デバッグ: 最初の5つのノードの属性を出力
-      if (nodes.length === 0) {
-        console.warn('⚠️ No nodes found with [data-et="node|cluster"]. Trying alternative selectors...');
-        
-        // 代替セレクタを試す
-        const altNodes = svg.querySelectorAll('g.node, g[class*="node"], [id*="flowchart"]');
-        console.log(`🔍 Alternative selector found ${altNodes.length} nodes`);
-        
-        if (altNodes.length > 0) {
-          console.log('Sample node attributes:', {
-            tagName: altNodes[0].tagName,
-            className: altNodes[0].className?.baseVal || altNodes[0].className,
-            id: altNodes[0].id,
-            dataEt: altNodes[0].getAttribute('data-et'),
-            allAttributes: Array.from(altNodes[0].attributes || []).map(a => `${a.name}="${a.value}"`).join(', ')
-          });
-        }
+      // ターゲットが中心の右側か左側か
+      if (dx > 0) {
+        // 右側 → 右辺との交点
+        px = right;
+        py = centerY + slope * (right - centerX);
       } else {
-        console.log('Sample node:', {
-          id: nodes[0].id || nodes[0].getAttribute('data-id'),
-          dataEt: nodes[0].getAttribute('data-et')
-        });
+        // 左側 → 左辺との交点
+        px = left;
+        py = centerY + slope * (left - centerX);
       }
 
+      // 上下境界のチェック（交点がbbox外に出る場合）
+      if (py > bottom) {
+        // 下辺との交点に補正
+        py = bottom;
+        px = centerX + (bottom - centerY) / slope;
+      } else if (py < top) {
+        // 上辺との交点に補正
+        py = top;
+        px = centerX + (top - centerY) / slope;
+      }
+
+      return { x: px, y: py };
+    }
+
+    /**
+     * 要素の BBox を SVG 絶対座標系に変換（Phase C-CTM: Gemini推奨アルゴリズム）
+     *
+     * 要素がローカル座標系（transform や親要素の影響）を持つ場合、
+     * CTM（Coordinate Transform Matrix）を使って絶対座標系に変換する
+     *
+     * @param {SVGElement} element - 対象の SVG 要素
+     * @returns {Object} { x, y, width, height } 絶対座標系での BBox
+     */
+    function getBBoxInSVGCoordinates(element) {
+      const bbox = element.getBBox();
+      const ctm = element.getCTM();
+
+      if (!ctm) {
+        // CTM が取得できない場合はそのまま返す（絶対座標系と想定）
+        return {
+          x: bbox.x,
+          y: bbox.y,
+          width: bbox.width,
+          height: bbox.height
+        };
+      }
+
+      // BBox の4つの角を絶対座標に変換
+      const topLeft = transformPoint(bbox.x, bbox.y, ctm);
+      const topRight = transformPoint(bbox.x + bbox.width, bbox.y, ctm);
+      const bottomLeft = transformPoint(bbox.x, bbox.y + bbox.height, ctm);
+      const bottomRight = transformPoint(bbox.x + bbox.width, bbox.y + bbox.height, ctm);
+
+      // 変換後の最小/最大座標を取得（回転を考慮）
+      const minX = Math.min(topLeft.x, topRight.x, bottomLeft.x, bottomRight.x);
+      const maxX = Math.max(topLeft.x, topRight.x, bottomLeft.x, bottomRight.x);
+      const minY = Math.min(topLeft.y, topRight.y, bottomLeft.y, bottomRight.y);
+      const maxY = Math.max(topLeft.y, topRight.y, bottomLeft.y, bottomRight.y);
+
+      return {
+        x: minX,
+        y: minY,
+        width: maxX - minX,
+        height: maxY - minY
+      };
+    }
+
+    /**
+     * CTM を使って座標を変換
+     *
+     * @param {number} x - X座標
+     * @param {number} y - Y座標
+     * @param {DOMMatrix} ctm - 座標変換行列
+     * @returns {Object} { x, y } 変換後の座標
+     */
+    function transformPoint(x, y, ctm) {
+      return {
+        x: ctm.a * x + ctm.c * y + ctm.e,
+        y: ctm.b * x + ctm.d * y + ctm.f
+      };
+    }
+
+    /**
+     * クリック位置からノードのBBox境界までの距離を計算（Phase C: Opus推奨アルゴリズム）
+     *
+     * ノードの内部をクリックした場合は距離0を返す
+     * ノードの外側をクリックした場合は、最寄りの境界線までの距離を返す
+     *
+     * @param {number} x - クリック位置のX座標
+     * @param {number} y - クリック位置のY座標
+     * @param {DOMRect} bbox - ノードの境界ボックス（絶対座標系）
+     * @returns {number} 境界までの距離
+     */
+    function calcBoundaryDistance(x, y, bbox) {
+      const left = bbox.x;
+      const right = bbox.x + bbox.width;
+      const top = bbox.y;
+      const bottom = bbox.y + bbox.height;
+
+      // ノードの内部にいる場合は距離0
+      if (x >= left && x <= right && y >= top && y <= bottom) {
+        return 0;
+      }
+
+      // 最寄りの境界線までの距離を計算
+      let dx = 0;
+      let dy = 0;
+
+      if (x < left) {
+        dx = left - x;
+      } else if (x > right) {
+        dx = x - right;
+      }
+
+      if (y < top) {
+        dy = top - y;
+      } else if (y > bottom) {
+        dy = y - bottom;
+      }
+
+      return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    /**
+     * ノード集合の中から境界距離で最寄りのノードを検索（Phase C: Opus推奨アルゴリズム）
+     *
+     * @param {NodeList} nodes - 検索対象のSVGノード群
+     * @param {number} x - クリック位置のX座標
+     * @param {number} y - クリック位置のY座標
+     * @param {number} adjustedRadius - 吸着半径（SVG座標系）
+     * @param {string} passName - デバッグ用のパス名（例: "Pass1-Node"）
+     * @returns {Object|null} { nodeId, centerX, centerY, element, distance } または null
+     */
+    function findNearestInSet(nodes, x, y, adjustedRadius, passName) {
       let nearestNode = null;
       let minDistance = Infinity;
-
       let closestDistances = [];
-      
+
       nodes.forEach((node, index) => {
         try {
-          // ノードの境界ボックスを取得
-          const bbox = node.getBBox();
-
-          // ノードの中心座標を計算
+          // ★CTM を使って絶対座標系に変換（Phase C-CTM修正）
+          const bbox = getBBoxInSVGCoordinates(node);
           const centerX = bbox.x + bbox.width / 2;
           const centerY = bbox.y + bbox.height / 2;
 
-          // クリック位置との距離を計算
-          const dx = x - centerX;
-          const dy = y - centerY;
-          const distance = Math.sqrt(dx * dx + dy * dy);
+          // ★境界距離を計算（中心距離ではなく）
+          const distance = calcBoundaryDistance(x, y, bbox);
 
-          // デバッグ: 最初の3ノードと、50px以内のノードの距離を記録
-          if (index < 3 || distance <= radius) {
+          // デバッグ: 最初の3ノードと、半径以内のノードの距離を記録
+          if (index < 3 || distance <= adjustedRadius) {
             closestDistances.push({
               nodeId: node.getAttribute('data-id') || node.id,
               distance: distance.toFixed(1),
@@ -5700,36 +5723,77 @@
             };
           }
         } catch (err) {
-          // getBBox()が失敗する場合があるのでスキップ
           console.warn('getBBox failed for node:', node, err);
         }
       });
 
-      // デバッグ: クリック座標と最も近い3ノードを表示
-      console.log(`📍 Click at (${x.toFixed(1)}, ${y.toFixed(1)}), screen radius: ${radius}px, adjusted: ${adjustedRadius.toFixed(1)}px`);
+      // デバッグログ
       if (closestDistances.length > 0) {
-        console.log(`🎯 Top 5 closest nodes:`);
-        closestDistances.slice(0, 5).forEach((n, i) => {
-          console.log(`  ${i+1}. ${n.nodeId}: ${n.distance}px - center:(${n.center.x}, ${n.center.y}) bbox:(${n.bbox.x}, ${n.bbox.y}) ${n.bbox.w}x${n.bbox.h}`);
+        console.log(`🎯 ${passName} - Top 3 closest:`);
+        closestDistances.slice(0, 3).forEach((n, i) => {
+          console.log(`  ${i+1}. ${n.nodeId}: ${n.distance}px (boundary) - bbox:(${n.bbox.x}, ${n.bbox.y}) ${n.bbox.w}x${n.bbox.h}`);
         });
       } else {
-        console.log('⚠️ No nodes within range');
-      }
-
-      if (nearestNode) {
-        console.log(`🎯 ノード吸着: ${nearestNode.nodeId} (距離: ${nearestNode.distance.toFixed(1)}px)`);
+        console.log(`⚠️ ${passName} - No nodes within radius`);
       }
 
       return nearestNode;
     }
 
     /**
-     * 手動エッジを作成
-     * @param {number} endX - 終点X座標
-     * @param {number} endY - 終点Y座標
-     * @param {string|null} endNodeId - 終点ノードID（Phase 2で追加）
+     * 指定座標から最も近い要素を検索（Phase C修正: すべての要素を平等に扱う）
+     *
+     * アルゴリズム:
+     *   すべての要素（ノード、サブグラフ、クラスタ）を境界距離で検索し、最も近いものを返す
+     *
+     * @param {number} x - SVG座標系のX座標
+     * @param {number} y - SVG座標系のY座標
+     * @param {number} radius - 吸着半径（デフォルト1000px、スクリーン座標）
+     * @returns {Object|null} { nodeId, centerX, centerY, element, distance } または null
      */
-    function createManualEdge(endX, endY, endNodeId = null) {
+    function findNearestNode(x, y, radius = 1000) {
+      const svg = document.querySelector('.svg-content-wrapper svg') || document.querySelector('svg');
+      if (!svg) {
+        console.warn('🚫 findNearestNode: SVG not found');
+        return null;
+      }
+
+      // ★スケールに応じた閾値調整（SVG座標系での閾値を計算）
+      const rect = svg.getBoundingClientRect();
+      const viewBox = svg.viewBox.baseVal;
+      const scaleX = viewBox.width / rect.width;
+      const scaleY = viewBox.height / rect.height;
+      const scale = Math.max(scaleX, scaleY);
+      const adjustedRadius = radius * scale;
+
+      console.log(`📏 Scale: ${scale.toFixed(2)}x, Screen radius: ${radius}px, SVG radius: ${adjustedRadius.toFixed(1)}px`);
+      console.log(`📍 Click at (${x.toFixed(1)}, ${y.toFixed(1)})`);
+
+      // ======== すべての要素を平等に検索 ========
+      const allElements = svg.querySelectorAll('[data-et="node"], [data-et="cluster"]');
+      console.log(`🔍 Found ${allElements.length} elements (nodes + clusters)`);
+
+      const result = findNearestInSet(allElements, x, y, adjustedRadius, 'All-Elements');
+
+      if (result) {
+        console.log(`🎯 ノード吸着: ${result.nodeId} (境界距離: ${result.distance.toFixed(1)}px)`);
+      } else {
+        console.log(`❌ 吸着対象なし (半径: ${adjustedRadius.toFixed(1)}px)`);
+      }
+
+      return result;
+    }
+
+    /**
+     * 手動エッジを作成（Phase C修正: perimeter points対応）
+     * @param {number} startX - 開始点X座標（境界線上の点）
+     * @param {number} startY - 開始点Y座標（境界線上の点）
+     * @param {number} endX - 終点X座標（境界線上の点）
+     * @param {number} endY - 終点Y座標（境界線上の点）
+     * @param {string|null} startNodeId - 開始点ノードID
+     * @param {string|null} endNodeId - 終点ノードID
+     */
+    function createManualEdge(startX, startY, endX, endY, startNodeId = null, endNodeId = null) {
       // ラベル入力ダイアログ
       const label = prompt('エッジラベルを入力してください（省略可）:', '');
 
@@ -5746,12 +5810,12 @@
       // エッジデータを作成
       const edge = {
         id: edgeId,
-        startX: edgeStartPoint.x,
-        startY: edgeStartPoint.y,
-        startNodeId: edgeStartPoint.nodeId,
+        startX: startX,
+        startY: startY,
+        startNodeId: startNodeId,
         endX: endX,
         endY: endY,
-        endNodeId: endNodeId, // ★Phase 2で実装完了
+        endNodeId: endNodeId,
         label: label.trim(),
         style: {
           color: '#666',
@@ -5782,6 +5846,37 @@
       }
 
       showNotification('エッジを追加しました');
+    }
+
+    /**
+     * 手動エッジを追加する正しいSVG親要素を取得（Phase B: エッジ表示問題の修正）
+     *
+     * Z-order問題を解決するため、<g class="root"> 内に追加する
+     * これにより、Mermaidのノードやエッジと同じレイヤーに表示される
+     *
+     * @param {SVGElement} svg - ルートのSVG要素
+     * @returns {SVGElement} 追加先の親要素
+     */
+    function findCorrectAppendTarget(svg) {
+      console.log('🔧 [BUILD] findCorrectAppendTarget called');
+
+      // 優先度1: <g class="root"> に追加（Mermaidのすべてのコンテンツの親）
+      const root = svg.querySelector('g.root');
+      if (root) {
+        console.log('✅ Target: <g class="root">');
+        return root;
+      }
+
+      // 優先度2: <g class="output"> に追加（rootがない場合）
+      const output = svg.querySelector('g.output');
+      if (output) {
+        console.log('⚠️ Target: <g class="output"> (root not found)');
+        return output;
+      }
+
+      // 優先度3: SVGルート直下（最悪の場合）
+      console.warn('⚠️ Target: SVG root (fallback, may have Z-order issues)');
+      return svg;
     }
 
     /**
@@ -5837,7 +5932,10 @@
         e.stopPropagation();
       });
 
-      svg.appendChild(g);
+      // ★ Phase B修正: 正しい親要素に追加（Z-order問題を解決）
+      const target = findCorrectAppendTarget(svg);
+      target.appendChild(g);
+      console.log(`✅ Edge ${edge.id} added to:`, target.tagName, target.className?.baseVal || target.className);
     }
 
     /**
