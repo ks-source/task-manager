@@ -1820,6 +1820,66 @@
     }
 
     /* ==========================================
+     * Context Menu (右クリックメニュー)
+     * ========================================== */
+    .context-menu {
+      position: fixed;
+      background: white;
+      border: 1px solid #cbd5e0;
+      border-radius: 6px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      min-width: 180px;
+      z-index: 10002;
+      display: none;
+      padding: 4px 0;
+      font-size: 13px;
+    }
+
+    .context-menu.show {
+      display: block;
+    }
+
+    .context-menu-item {
+      padding: 8px 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #2d3748;
+      user-select: none;
+      transition: background-color 0.15s ease;
+    }
+
+    .context-menu-item:hover {
+      background-color: #edf2f7;
+    }
+
+    .context-menu-item.disabled {
+      color: #a0aec0;
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+
+    .context-menu-item.disabled:hover {
+      background-color: transparent;
+    }
+
+    .context-menu-separator {
+      height: 1px;
+      background-color: #e2e8f0;
+      margin: 4px 0;
+    }
+
+    .context-menu-icon {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ==========================================
      * ミニマップ
      * ========================================== */
     .minimap-container {
@@ -3375,6 +3435,10 @@
     let editingEdgeId = null; // 編集中のエッジID
     let edgeHandles = []; // 端点ハンドルのSVG要素配列
 
+    // ========== 右クリックメニュー用の変数 ==========
+    let contextMenuElement = null; // コンテキストメニュー要素への参照
+    let contextMenuTarget = null; // 右クリックされた要素の情報 { type, element, x, y }
+
     // ========================================
     // Dropdown Menu Functions
     // ========================================
@@ -4622,6 +4686,9 @@
 
           // ★ Phase 2: エッジ編集用キーボードハンドラを設定
           setupEdgeEditKeyboardHandlers();
+
+          // ★ 右クリックメニューを初期化
+          setupContextMenu();
 
           // ★ メタデータを復元（イベントハンドラも再アタッチ）
           if (extractedMetadata) {
@@ -7686,6 +7753,484 @@ ${metadataJson}
       createArrowMarkerDef();
     }
 
+    // ==========================================
+    // Context Menu Functions (右クリックメニュー)
+    // ==========================================
+
+    /**
+     * コンテキストメニューの初期化
+     */
+    function setupContextMenu() {
+      contextMenuElement = document.getElementById('context-menu');
+      if (!contextMenuElement) {
+        console.error('❌ context-menu要素が見つかりません');
+        return;
+      }
+
+      const container = document.getElementById('flowchart-container');
+      if (!container) return;
+
+      // SVGエリアでの右クリックイベント
+      container.addEventListener('contextmenu', onContextMenu);
+
+      // メニュー外クリックで閉じる
+      document.addEventListener('click', hideContextMenu);
+
+      // Escキーで閉じる
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          hideContextMenu();
+        }
+      });
+
+      console.log('✅ コンテキストメニューを初期化しました');
+    }
+
+    /**
+     * 右クリックイベントハンドラー
+     */
+    function onContextMenu(e) {
+      e.preventDefault();
+
+      // モード中は右クリックメニューを無効化
+      if (edgeAddMode || nodeAddMode || edgeEditMode) {
+        console.log('⚠️ モード中のため右クリックメニューを無効化');
+        return;
+      }
+
+      // クリック位置のSVG座標を取得
+      const svg = e.currentTarget.querySelector('svg');
+      if (!svg) return;
+
+      const rect = svg.getBoundingClientRect();
+      const svgX = e.clientX - rect.left;
+      const svgY = e.clientY - rect.top;
+
+      // クリックされた要素を判定
+      const target = e.target.closest('[data-et], [data-id]');
+      const elementType = target?.dataset.et;
+      const elementId = target?.dataset.id || target?.id;
+
+      console.log('🖱️ 右クリック:', { elementType, elementId, svgX, svgY });
+
+      // コンテキストに応じたメニューを表示
+      if (elementType === 'manual-node' || target?.classList.contains('manual-memo-node')) {
+        showMemoNodeContextMenu(e.clientX, e.clientY, target, svgX, svgY);
+      } else if (elementType === 'manual-edge' || target?.classList.contains('manual-edge')) {
+        showMemoEdgeContextMenu(e.clientX, e.clientY, target, svgX, svgY);
+      } else if (elementType === 'node' || elementType === 'cluster') {
+        showNodeContextMenu(e.clientX, e.clientY, target, svgX, svgY);
+      } else {
+        // 空白エリア
+        showSvgContextMenu(e.clientX, e.clientY, svgX, svgY);
+      }
+    }
+
+    /**
+     * 空白エリアでの右クリックメニューを表示
+     */
+    function showSvgContextMenu(clientX, clientY, svgX, svgY) {
+      contextMenuTarget = { type: 'svg', x: svgX, y: svgY };
+
+      const menuItems = [
+        {
+          icon: '➕',
+          label: 'メモノードを追加',
+          action: () => {
+            hideContextMenu();
+            promptAndCreateMemoNode(svgX, svgY);
+          }
+        },
+        {
+          icon: '↗️',
+          label: 'エッジ描画を開始',
+          action: () => {
+            hideContextMenu();
+            startOneShotEdgeMode(svgX, svgY);
+          }
+        }
+      ];
+
+      renderContextMenu(menuItems, clientX, clientY);
+    }
+
+    /**
+     * ノード上での右クリックメニューを表示
+     */
+    function showNodeContextMenu(clientX, clientY, element, svgX, svgY) {
+      contextMenuTarget = { type: 'node', element, x: svgX, y: svgY };
+
+      const menuItems = [
+        {
+          icon: '🔗',
+          label: 'ここからエッジを描画',
+          action: () => {
+            hideContextMenu();
+            startOneShotEdgeModeFromNode(element);
+          }
+        }
+      ];
+
+      renderContextMenu(menuItems, clientX, clientY);
+    }
+
+    /**
+     * メモノード上での右クリックメニューを表示
+     */
+    function showMemoNodeContextMenu(clientX, clientY, element, svgX, svgY) {
+      contextMenuTarget = { type: 'manual-node', element, x: svgX, y: svgY };
+
+      const nodeId = element.dataset.id || element.id;
+
+      const menuItems = [
+        {
+          icon: '✏️',
+          label: 'ラベルを編集',
+          action: () => {
+            hideContextMenu();
+            editMemoNodeLabel(nodeId);
+          }
+        },
+        {
+          icon: '🔗',
+          label: 'ここからエッジを描画',
+          action: () => {
+            hideContextMenu();
+            startOneShotEdgeModeFromNode(element);
+          }
+        },
+        { separator: true },
+        {
+          icon: '🗑️',
+          label: '削除',
+          action: () => {
+            hideContextMenu();
+            deleteMemoNode(nodeId);
+          }
+        }
+      ];
+
+      renderContextMenu(menuItems, clientX, clientY);
+    }
+
+    /**
+     * メモエッジ上での右クリックメニューを表示
+     */
+    function showMemoEdgeContextMenu(clientX, clientY, element, svgX, svgY) {
+      contextMenuTarget = { type: 'manual-edge', element, x: svgX, y: svgY };
+
+      const edgeId = element.dataset.id || element.id;
+
+      const menuItems = [
+        {
+          icon: '✏️',
+          label: 'ラベルを編集',
+          action: () => {
+            hideContextMenu();
+            editMemoEdgeLabel(edgeId);
+          }
+        },
+        { separator: true },
+        {
+          icon: '🗑️',
+          label: '削除',
+          action: () => {
+            hideContextMenu();
+            deleteMemoEdge(edgeId);
+          }
+        }
+      ];
+
+      renderContextMenu(menuItems, clientX, clientY);
+    }
+
+    /**
+     * コンテキストメニューを描画
+     */
+    function renderContextMenu(menuItems, clientX, clientY) {
+      if (!contextMenuElement) return;
+
+      // メニューHTMLを生成
+      const html = menuItems.map(item => {
+        if (item.separator) {
+          return '<div class="context-menu-separator"></div>';
+        }
+
+        const disabledClass = item.disabled ? 'disabled' : '';
+        return `
+          <div class="context-menu-item ${disabledClass}" data-action="${menuItems.indexOf(item)}">
+            <span class="context-menu-icon">${item.icon}</span>
+            <span>${item.label}</span>
+          </div>
+        `;
+      }).join('');
+
+      contextMenuElement.innerHTML = html;
+
+      // イベントリスナーを追加
+      contextMenuElement.querySelectorAll('.context-menu-item').forEach((item, index) => {
+        const menuItem = menuItems.filter(m => !m.separator)[index];
+        if (menuItem && !menuItem.disabled) {
+          item.addEventListener('click', (e) => {
+            e.stopPropagation();
+            menuItem.action();
+          });
+        }
+      });
+
+      // 位置を調整（画面外に出ないように）
+      const menuWidth = 200;
+      const menuHeight = menuItems.length * 35;
+      const adjustedX = Math.min(clientX, window.innerWidth - menuWidth - 10);
+      const adjustedY = Math.min(clientY, window.innerHeight - menuHeight - 10);
+
+      contextMenuElement.style.left = adjustedX + 'px';
+      contextMenuElement.style.top = adjustedY + 'px';
+
+      // 表示
+      contextMenuElement.classList.add('show');
+
+      console.log('✅ コンテキストメニューを表示:', { x: adjustedX, y: adjustedY });
+    }
+
+    /**
+     * コンテキストメニューを非表示
+     */
+    function hideContextMenu() {
+      if (contextMenuElement) {
+        contextMenuElement.classList.remove('show');
+        contextMenuElement.innerHTML = '';
+      }
+      contextMenuTarget = null;
+    }
+
+    // ==========================================
+    // Context Menu Actions (メニューアクション)
+    // ==========================================
+
+    /**
+     * プロンプトでラベルを入力してメモノードを作成
+     */
+    function promptAndCreateMemoNode(x, y) {
+      const label = prompt('メモノードのラベルを入力してください:', '新規メモ');
+      if (label !== null && label.trim() !== '') {
+        createManualNode(x, y, label.trim());
+        console.log('✅ メモノード作成:', { x, y, label: label.trim() });
+      }
+    }
+
+    /**
+     * メモノードのラベルを編集
+     */
+    function editMemoNodeLabel(nodeId) {
+      const nodeData = manualNodes[nodeId];
+      if (!nodeData) {
+        console.error('❌ ノードが見つかりません:', nodeId);
+        return;
+      }
+
+      const newLabel = prompt('新しいラベルを入力してください:', nodeData.label);
+      if (newLabel !== null && newLabel.trim() !== '') {
+        nodeData.label = newLabel.trim();
+
+        // SVG要素を更新
+        const svg = document.querySelector('.svg-content-wrapper svg') || document.querySelector('svg');
+        const nodeElement = svg.querySelector(`[data-id="${nodeId}"]`);
+        if (nodeElement) {
+          const labelElement = nodeElement.querySelector('.manual-node-label');
+          if (labelElement) {
+            labelElement.textContent = newLabel.trim();
+          }
+        }
+
+        // originalLabelsも更新
+        originalLabels[nodeId] = newLabel.trim();
+
+        // 自動保存
+        if (currentFileHandle) {
+          saveToFileAuto().catch(err => {
+            console.warn('自動保存に失敗:', err);
+          });
+        }
+
+        console.log('✅ メモノードラベル更新:', { nodeId, newLabel: newLabel.trim() });
+      }
+    }
+
+    /**
+     * メモノードを削除
+     */
+    function deleteMemoNode(nodeId) {
+      const nodeData = manualNodes[nodeId];
+      if (!nodeData) {
+        console.error('❌ ノードが見つかりません:', nodeId);
+        return;
+      }
+
+      if (!confirm(`メモノード「${nodeData.label}」を削除しますか？`)) {
+        return;
+      }
+
+      // SVG要素を削除
+      const svg = document.querySelector('.svg-content-wrapper svg') || document.querySelector('svg');
+      const nodeElement = svg.querySelector(`[data-id="${nodeId}"]`);
+      if (nodeElement) {
+        nodeElement.remove();
+      }
+
+      // データから削除
+      delete manualNodes[nodeId];
+      delete originalLabels[nodeId];
+
+      // このノードに接続されているエッジを削除
+      Object.keys(manualEdges).forEach(edgeId => {
+        const edge = manualEdges[edgeId];
+        if (edge.startNodeId === nodeId || edge.endNodeId === nodeId) {
+          deleteMemoEdge(edgeId, false); // 確認なしで削除
+        }
+      });
+
+      // 自動保存
+      if (currentFileHandle) {
+        saveToFileAuto().catch(err => {
+          console.warn('自動保存に失敗:', err);
+        });
+      }
+
+      console.log('✅ メモノード削除:', { nodeId, label: nodeData.label });
+    }
+
+    /**
+     * メモエッジのラベルを編集
+     */
+    function editMemoEdgeLabel(edgeId) {
+      const edgeData = manualEdges[edgeId];
+      if (!edgeData) {
+        console.error('❌ エッジが見つかりません:', edgeId);
+        return;
+      }
+
+      const newLabel = prompt('新しいラベルを入力してください:', edgeData.label || '');
+      if (newLabel !== null) {
+        edgeData.label = newLabel.trim();
+
+        // SVG要素を更新
+        const svg = document.querySelector('.svg-content-wrapper svg') || document.querySelector('svg');
+        const edgeElement = svg.querySelector(`[data-id="${edgeId}"]`);
+        if (edgeElement) {
+          const labelElement = edgeElement.querySelector('.manual-edge-label');
+          if (labelElement) {
+            labelElement.textContent = newLabel.trim();
+            // ラベルが空の場合は非表示
+            labelElement.style.display = newLabel.trim() ? '' : 'none';
+          }
+        }
+
+        // 自動保存
+        if (currentFileHandle) {
+          saveToFileAuto().catch(err => {
+            console.warn('自動保存に失敗:', err);
+          });
+        }
+
+        console.log('✅ メモエッジラベル更新:', { edgeId, newLabel: newLabel.trim() });
+      }
+    }
+
+    /**
+     * メモエッジを削除
+     */
+    function deleteMemoEdge(edgeId, confirm = true) {
+      const edgeData = manualEdges[edgeId];
+      if (!edgeData) {
+        console.error('❌ エッジが見つかりません:', edgeId);
+        return;
+      }
+
+      if (confirm && !window.confirm('このエッジを削除しますか？')) {
+        return;
+      }
+
+      // SVG要素を削除
+      const svg = document.querySelector('.svg-content-wrapper svg') || document.querySelector('svg');
+      const edgeElement = svg.querySelector(`[data-id="${edgeId}"]`);
+      if (edgeElement) {
+        edgeElement.remove();
+      }
+
+      // データから削除
+      delete manualEdges[edgeId];
+
+      // 自動保存
+      if (currentFileHandle) {
+        saveToFileAuto().catch(err => {
+          console.warn('自動保存に失敗:', err);
+        });
+      }
+
+      console.log('✅ メモエッジ削除:', { edgeId });
+    }
+
+    /**
+     * 空白エリアからワンショットエッジモードを開始
+     */
+    function startOneShotEdgeMode(x, y) {
+      console.log('🎯 ワンショットエッジモード開始 (空白から):', { x, y });
+
+      // edgeAddModeをONにする
+      if (!edgeAddMode) {
+        edgeAddMode = true;
+        const container = document.getElementById('flowchart-container');
+        if (container) {
+          container.classList.add('edge-add-mode');
+        }
+      }
+
+      // 開始点を設定
+      edgeStartPoint = { x, y, nodeId: null };
+
+      // 開始点マーカーを表示
+      showStartMarker(x, y);
+
+      console.log('✅ ワンショットモード: 開始点設定完了。次のクリックで終点を決定します。');
+    }
+
+    /**
+     * ノードからワンショットエッジモードを開始
+     */
+    function startOneShotEdgeModeFromNode(nodeElement) {
+      console.log('🎯 ワンショットエッジモード開始 (ノードから):', nodeElement);
+
+      // ノードIDを取得
+      const nodeId = nodeElement.dataset.id || nodeElement.id;
+      if (!nodeId) {
+        console.error('❌ ノードIDが見つかりません');
+        return;
+      }
+
+      // ノードの中心座標を取得
+      const bbox = getBBoxInSVGCoordinates(nodeElement);
+      const centerX = bbox.x + bbox.width / 2;
+      const centerY = bbox.y + bbox.height / 2;
+
+      // edgeAddModeをONにする
+      if (!edgeAddMode) {
+        edgeAddMode = true;
+        const container = document.getElementById('flowchart-container');
+        if (container) {
+          container.classList.add('edge-add-mode');
+        }
+      }
+
+      // 開始点を設定（中心座標。実際のエッジ作成時に境界線上の点に変換される）
+      edgeStartPoint = { x: centerX, y: centerY, nodeId: nodeId, element: nodeElement };
+
+      // 開始点マーカーを表示（ノードの中心に）
+      showStartMarker(centerX, centerY);
+
+      console.log('✅ ワンショットモード: ノードから開始。次のクリックで終点を決定します。', { nodeId, centerX, centerY });
+    }
+
     /**
      * 全エッジのクリック感度を向上（ルールベース自動適用）
      * SVG読み込み時・JSON読み込み時に呼び出される
@@ -7850,6 +8395,11 @@ ${metadataJson}
     }
 
   </script>
+
+  <!-- Context Menu (右クリックメニュー) -->
+  <div class="context-menu" id="context-menu">
+    <!-- メニュー項目はJavaScriptで動的に生成 -->
+  </div>
 
   <!-- Warning Modal -->
   <div class="warning-modal-overlay" id="warning-modal">
