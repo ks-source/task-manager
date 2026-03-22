@@ -5,6 +5,60 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.18.0] - 2026-03-22
+
+### Changed
+- **🔍 フィルター & 検索パネルをヘッダーに移動（ドロップダウン方式）**
+  - **ヘッダーに検索フィルターアイコンを追加**: 虫眼鏡マークにフィルター線が入ったSVGアイコン
+  - **ドロップダウンパネル**: アイコンクリックでヘッダー下部に展開/折りたたみ
+    - パネルには検索ボックス、フェーズ/ステータス/優先度フィルター、クリアボタン、削除済み表示チェックボックスを配置
+    - `max-height` トランジションで滑らかなアニメーション
+    - アイコンクリック時に `.active` クラスでボタンの状態変化
+  - **タスク一覧画面から削除**: 「タスク一覧」見出しとフィルターバーを削除
+  - **テーブルヘッダーのみをスティッキー表示**: 「WBS No」「優先度」「フェーズ」「タスク名」「担当」「期限」「ステータス」「操作」のみを固定表示
+  - **画面領域の最適化**: コンテナ余白を2rem → 1remに縮小、タスク一覧カードのパディングを削除
+
+### Added
+- **新規CSS** (lines 897-992):
+  - `.filter-panel`: ドロップダウンパネル（position: absolute, top: 60px, z-index: 999）
+  - `.filter-panel.active`: パネル展開時（max-height: 100px）
+  - `.filter-panel-content`: フィルターコントロールのレイアウト（flexbox）
+  - `.checkbox-label`: チェックボックスラベルのスタイル
+  - `.task-list-card`: タスク一覧カードのパディングを0に設定
+  - `.task-table thead`: スティッキーテーブルヘッダー（position: sticky, top: 60px, z-index: 100）
+  - `.task-table thead th`: テーブルヘッダーのスタイル強化（背景色、ボックスシャドウ）
+- **新規JavaScript** (lines 2210-2225):
+  - `toggleFilterPanel()`: フィルターパネルの開閉を制御
+  - `filterPanelOpen` グローバル変数: パネルの開閉状態を管理
+
+### Removed
+- タスク一覧画面から削除:
+  - `.card-title` 見出し「タスク一覧」
+  - `.filter-bar` フィルターバー全体
+- 既存CSS `.filter-bar` を `.filter-panel` に置き換え
+
+### Technical Details
+- **HTML変更**:
+  - ヘッダーに検索フィルターアイコンボタン追加（line 1034-1042）
+  - ヘッダー直後にドロップダウンパネル追加（lines 1053-1092）
+  - タスク一覧カードから見出しとフィルターバーを削除（元 lines 1052, 1054-1089）
+  - `.task-list-card` クラスをカードに追加
+- **CSS変更**:
+  - `.container` パディング: 2rem → 1rem (line 210)
+  - `.filter-bar` セクションを `.filter-panel` ドロップダウンスタイルに置き換え (lines 894-992)
+- **JavaScript変更**:
+  - `filterPanelOpen` グローバル変数追加 (line 1694)
+  - `toggleFilterPanel()` 関数追加 (lines 2213-2225)
+
+### User Experience
+- **画面領域の拡大**: フィルターバーが常時表示されないため、タスク一覧表示領域が大幅に拡大
+- **必要な時だけ表示**: フィルターが必要な時だけアイコンクリックでパネルを展開
+- **スティッキーヘッダー**: テーブルヘッダーのみが固定されるため、スクロール時もカラム名が常に見える
+- **余白最適化**: コンテナとカードのパディング削減により、コンテンツ表示領域を最大化
+- **Gmail/Google Sheets風**: 業界標準のUIパターンで直感的な操作
+
+---
+
 ## [2.17.0] - 2026-03-22
 
 ### Changed

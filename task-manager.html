@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Task Manager - WBS Visualizer v2.17.0</title>
+  <title>Task Manager - WBS Visualizer v2.18.0</title>
   <meta name="description" content="A lightweight, browser-based Work Breakdown Structure (WBS) visualization and management tool">
   <meta name="keywords" content="task manager, WBS, project management, task tracking">
   <meta name="author" content="ks-source">
@@ -207,7 +207,7 @@
     .container {
       max-width: 1400px;
       margin: 0 auto;
-      padding: 2rem;
+      padding: 1rem;
       padding-bottom: 4rem; /* Space for fixed footer */
     }
 
@@ -892,13 +892,33 @@
     }
 
     /* ==========================================
-     * Filter Bar
+     * Filter Panel (Dropdown)
      * ========================================== */
-    .filter-bar {
+    .filter-panel {
+      position: absolute;
+      top: 60px;
+      left: 0;
+      right: 0;
+      background-color: white;
+      border-bottom: 1px solid var(--color-border);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      z-index: 999;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+
+    .filter-panel.active {
+      max-height: 100px;
+      overflow: visible;
+    }
+
+    .filter-panel-content {
       display: flex;
       gap: 0.75rem;
-      margin-bottom: 1rem;
+      padding: 1rem 1.5rem;
       flex-wrap: wrap;
+      align-items: center;
     }
 
     .search-input {
@@ -929,6 +949,46 @@
     .filter-select:focus {
       outline: none;
       border-color: var(--color-primary);
+    }
+
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.875rem;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .checkbox-label input[type="checkbox"] {
+      cursor: pointer;
+    }
+
+    /* Task List Card - No Padding */
+    .task-list-card {
+      padding: 0;
+    }
+
+    /* Sticky Table Header */
+    .task-table-container {
+      position: relative;
+    }
+
+    .task-table thead {
+      position: sticky;
+      top: 60px;
+      z-index: 100;
+      background-color: white;
+    }
+
+    .task-table thead th {
+      background-color: var(--color-gray-light);
+      font-weight: 600;
+      text-align: left;
+      padding: 0.75rem;
+      color: var(--color-gray-dark);
+      border-bottom: 2px solid var(--color-border);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
     }
 
     /* ==========================================
@@ -1031,6 +1091,15 @@
           <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
         </svg>
       </button>
+      <button class="icon-button" id="filter-panel-toggle" onclick="toggleFilterPanel()" title="フィルター & 検索">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="16.65" y1="16.65" x2="22" y2="22"></line>
+          <line x1="8" y1="8" x2="14" y2="8"></line>
+          <line x1="9" y1="11" x2="13" y2="11"></line>
+          <line x1="10.5" y1="14" x2="11.5" y2="14"></line>
+        </svg>
+      </button>
       <button class="icon-button" onclick="openCreateTaskDialog()" title="新規タスク作成" style="background-color: var(--color-primary); color: white; border-color: var(--color-primary);">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <rect x="3" y="3" width="18" height="18" rx="2"></rect>
@@ -1042,52 +1111,54 @@
   </header>
 
   <!-- ==========================================
+   * Filter Dropdown Panel
+   * ========================================== -->
+  <div class="filter-panel" id="filter-panel">
+    <div class="filter-panel-content">
+      <input type="text" id="search-input" class="search-input" placeholder="タスク名、WBS番号で検索...">
+      <select id="phase-filter" class="filter-select" onchange="applyFilters()">
+        <option value="">全フェーズ</option>
+        <option value="WBS0">WBS0</option>
+        <option value="WBS1">WBS1</option>
+        <option value="PH1">PH1</option>
+        <option value="PH2">PH2</option>
+        <option value="PH3">PH3</option>
+        <option value="TEST">TEST</option>
+        <option value="RELEASE">RELEASE</option>
+      </select>
+      <select id="status-filter" class="filter-select" onchange="applyFilters()">
+        <option value="">全ステータス</option>
+        <option value="未着手">未着手</option>
+        <option value="進行中">進行中</option>
+        <option value="完了">完了</option>
+        <option value="保留">保留</option>
+        <option value="延期">延期</option>
+        <option value="中止">中止</option>
+        <option value="不明">不明</option>
+      </select>
+      <select id="priority-filter" class="filter-select" onchange="applyFilters()">
+        <option value="">全優先度</option>
+        <option value="最高">最高</option>
+        <option value="高">高</option>
+        <option value="中">中</option>
+        <option value="低">低</option>
+      </select>
+      <button class="btn-secondary" onclick="clearFilters()">フィルタクリア</button>
+      <label class="checkbox-label">
+        <input type="checkbox" id="show-deleted-checkbox" onchange="toggleShowDeleted()">
+        <span>削除済みタスクを表示</span>
+      </label>
+    </div>
+  </div>
+
+  <!-- ==========================================
    * Main Container
    * ========================================== -->
   <div class="container">
     <!-- Dashboard -->
     <div class="dashboard" id="dashboard">
       <!-- Task List Card -->
-      <div class="card">
-        <h2 class="card-title">タスク一覧</h2>
-
-        <!-- Search and Filter Bar -->
-        <div class="filter-bar">
-          <input type="text" id="search-input" class="search-input" placeholder="タスク名、WBS番号で検索...">
-          <select id="phase-filter" class="filter-select" onchange="applyFilters()">
-            <option value="">全フェーズ</option>
-            <option value="WBS0">WBS0</option>
-            <option value="WBS1">WBS1</option>
-            <option value="PH1">PH1</option>
-            <option value="PH2">PH2</option>
-            <option value="PH3">PH3</option>
-            <option value="TEST">TEST</option>
-            <option value="RELEASE">RELEASE</option>
-          </select>
-          <select id="status-filter" class="filter-select" onchange="applyFilters()">
-            <option value="">全ステータス</option>
-            <option value="未着手">未着手</option>
-            <option value="進行中">進行中</option>
-            <option value="完了">完了</option>
-            <option value="保留">保留</option>
-            <option value="延期">延期</option>
-            <option value="中止">中止</option>
-            <option value="不明">不明</option>
-          </select>
-          <select id="priority-filter" class="filter-select" onchange="applyFilters()">
-            <option value="">全優先度</option>
-            <option value="最高">最高</option>
-            <option value="高">高</option>
-            <option value="中">中</option>
-            <option value="低">低</option>
-          </select>
-          <button class="btn-secondary" onclick="clearFilters()">フィルタクリア</button>
-          <label style="margin-left: 15px;">
-            <input type="checkbox" id="show-deleted-checkbox" onchange="toggleShowDeleted()">
-            <span style="margin-left: 5px;">削除済みタスクを表示</span>
-          </label>
-        </div>
-
+      <div class="card task-list-card">
         <div class="task-table-container">
           <table class="task-table">
             <thead>
@@ -1620,6 +1691,7 @@
     let currentFileName = '(新規ファイル)';
     let isEditingTaskInfo = false;
     let showDeleted = false; // 削除済みタスク表示フラグ
+    let filterPanelOpen = false; // フィルターパネル表示フラグ
 
     // Status mapping (Japanese to English keys)
     const STATUS_MAP = {
@@ -2133,6 +2205,23 @@
 
     function closeProgressModal() {
       document.getElementById('progress-modal').classList.remove('active');
+    }
+
+    // ==========================================
+    // Filter Panel Toggle
+    // ==========================================
+    function toggleFilterPanel() {
+      filterPanelOpen = !filterPanelOpen;
+      const panel = document.getElementById('filter-panel');
+      const toggleBtn = document.getElementById('filter-panel-toggle');
+
+      if (filterPanelOpen) {
+        panel.classList.add('active');
+        toggleBtn.classList.add('active');
+      } else {
+        panel.classList.remove('active');
+        toggleBtn.classList.remove('active');
+      }
     }
 
     function renderProgressModal() {
@@ -4409,11 +4498,168 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
       border-top-color: #2c3e50;
     }
 
+    .security-indicator {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.3rem 0.6rem;
+      background: #f0f9ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-left: auto;
+      margin-right: 1rem;
+      flex-shrink: 0;
+    }
+
+    .security-indicator:hover {
+      background: #dbeafe;
+      border-color: #93c5fd;
+    }
+
+    .security-indicator svg {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+
+    .security-indicator span {
+      font-size: 0.8rem;
+      color: #1e40af;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .security-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .security-modal.active {
+      display: flex;
+    }
+
+    .security-modal-content {
+      background: white;
+      border-radius: 8px;
+      padding: 2rem;
+      max-width: 500px;
+      width: 90%;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .security-modal-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid #e5e7eb;
+    }
+
+    .security-modal-header svg {
+      width: 32px;
+      height: 32px;
+      color: #3b82f6;
+    }
+
+    .security-modal-header h2 {
+      font-size: 1.25rem;
+      color: #1f2937;
+      margin: 0;
+    }
+
+    .security-modal-body {
+      line-height: 1.8;
+    }
+
+    .security-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .security-item svg {
+      width: 20px;
+      height: 20px;
+      color: #10b981;
+      flex-shrink: 0;
+      margin-top: 0.1rem;
+    }
+
+    .security-item p {
+      margin: 0;
+      color: #374151;
+      font-size: 0.95rem;
+    }
+
+    .security-warning {
+      background: #fef3c7;
+      border: 1px solid #fbbf24;
+      border-radius: 4px;
+      padding: 1rem;
+      margin-top: 1.5rem;
+    }
+
+    .security-warning-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .security-warning-header svg {
+      width: 18px;
+      height: 18px;
+      color: #d97706;
+    }
+
+    .security-warning-header strong {
+      color: #92400e;
+      font-size: 0.9rem;
+    }
+
+    .security-warning p {
+      margin: 0;
+      color: #78350f;
+      font-size: 0.85rem;
+      line-height: 1.6;
+    }
+
+    .security-modal-footer {
+      margin-top: 1.5rem;
+      text-align: right;
+    }
+
+    .security-close-btn {
+      padding: 0.5rem 1.5rem;
+      background: #3b82f6;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    .security-close-btn:hover {
+      background: #2563eb;
+    }
+
     .legend {
       display: flex;
       gap: 0.75rem;
       align-items: center;
-      margin-left: auto;
       flex-shrink: 0;
     }
 
@@ -4476,6 +4722,13 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
         </svg>
       </button>
     </div>
+    <div class="security-indicator" onclick="openSecurityModal()" title="セキュリティポリシーを確認">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+        <path d="M9 12l2 2 4-4"></path>
+      </svg>
+      <span>完全オフライン動作</span>
+    </div>
     <div class="legend">
       <div class="legend-item">
         <div class="legend-color" style="background: #27ae60;"></div>
@@ -4496,6 +4749,59 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
       <div class="legend-item">
         <div class="legend-color" style="background: #e74c3c;"></div>
         <span>中止</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Security Policy Modal -->
+  <div class="security-modal" id="securityModal" onclick="closeSecurityModal(event)">
+    <div class="security-modal-content" onclick="event.stopPropagation()">
+      <div class="security-modal-header">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          <path d="M9 12l2 2 4-4"></path>
+        </svg>
+        <h2>セキュリティポリシー</h2>
+      </div>
+      <div class="security-modal-body">
+        <div class="security-item">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          <p>このガントチャートはあなたのPC内でのみ動作しています</p>
+        </div>
+        <div class="security-item">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          <p>インターネット接続は一切使用していません</p>
+        </div>
+        <div class="security-item">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          <p>データが外部サーバーへ送信されることはありません</p>
+        </div>
+        <div class="security-item">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          <p>画面共有や配布時も安全です</p>
+        </div>
+        <div class="security-warning">
+          <div class="security-warning-header">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+              <line x1="12" y1="9" x2="12" y2="13"></line>
+              <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+            <strong>ブラウザの「保護されていない通信」警告について:</strong>
+          </div>
+          <p>この警告はHTTPSを使用していないことを示していますが、本ツールは外部通信を一切行わないため、情報漏洩のリスクはありません。</p>
+        </div>
+      </div>
+      <div class="security-modal-footer">
+        <button class="security-close-btn" onclick="closeSecurityModal()">閉じる</button>
       </div>
     </div>
   </div>
@@ -4688,6 +4994,20 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
       document.getElementById('btn-' + mode).classList.add('active');
 
       renderGantt();
+    }
+
+    // セキュリティモーダルを開く
+    function openSecurityModal() {
+      document.getElementById('securityModal').classList.add('active');
+    }
+
+    // セキュリティモーダルを閉じる
+    function closeSecurityModal(event) {
+      // イベントが渡された場合（背景クリック）、イベントが背景かボタンからのものか確認
+      if (event && event.target !== event.currentTarget && event.type === 'click') {
+        return; // モーダルコンテンツ内のクリックは無視
+      }
+      document.getElementById('securityModal').classList.remove('active');
     }
 
     // 🔧 postMessage APIを使用したデータ受信（file://プロトコル対応）
