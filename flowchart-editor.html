@@ -2912,6 +2912,73 @@
       }
     ];
 
+    /**
+     * mermaid_ids文字列をflowchartLinks形式に変換
+     * Phase 2-A: タスク一覧同期（A→B）
+     */
+    function parseMermaidIds(mermaidIds) {
+      if (!mermaidIds || mermaidIds.trim() === "") {
+        return { nodes: [], edges: [] };
+      }
+
+      const ids = mermaidIds.split(',').map(id => id.trim()).filter(id => id);
+      const nodes = [];
+      const edges = [];
+
+      ids.forEach(id => {
+        // ノードIDかエッジIDかを判定
+        if (id.startsWith('E_')) {
+          // エッジの場合（簡易実装：詳細情報は取得しない）
+          edges.push({
+            id: id,
+            from: "",  // 実際のエッジ情報はSVGから取得が必要
+            to: "",
+            label: "",
+            highlightType: "primary",
+            highlightMode: "full"
+          });
+        } else {
+          // ノードの場合
+          nodes.push({
+            id: id,
+            label: "",  // ラベルはSVGから取得が必要
+            highlightType: "primary"
+          });
+        }
+      });
+
+      return { nodes, edges };
+    }
+
+    /**
+     * タスクマネージャーのデータをmockTasks形式に変換
+     * Phase 2-A: タスク一覧同期（A→B）
+     */
+    function initializeTasksFromTaskManager() {
+      const taskManagerData = loadTaskManagerData();
+
+      if (!taskManagerData || !taskManagerData.tasks) {
+        console.log('[FlowchartEditor] Task Manager not connected - using empty task list');
+        mockTasks = [];
+        return;
+      }
+
+      // A側のタスクをmockTasks形式に変換
+      mockTasks = taskManagerData.tasks.map(task => {
+        const mermaidIds = task.mermaid_ids || "";
+
+        return {
+          wbs: task.wbs_no,
+          taskName: task.task_name || task.taskName || "（名前なし）",
+          status: task.status || "Not Started",
+          mermaidIds: mermaidIds,
+          flowchartLinks: parseMermaidIds(mermaidIds)
+        };
+      });
+
+      console.log(`[FlowchartEditor] Initialized ${mockTasks.length} tasks from Task Manager`);
+    }
+
     const mockFlowchart = {
       nodes: [
         {
@@ -2998,6 +3065,23 @@
         const shouldBe = header.offsetHeight + toolbar.offsetHeight + statusBar.offsetHeight;
         console.log('メインコンテナの正しい高さ: calc(100vh - ' + shouldBe + 'px)');
       }, 500);
+    });
+
+    /**
+     * タスクマネージャーの更新を監視
+     * Phase 2-A: A側でタスク追加・削除・編集時にB側を自動更新
+     */
+    window.addEventListener('storage', function(e) {
+      // task-manager-update-trigger の変更を監視
+      if (e.key === 'task-manager-update-trigger') {
+        console.log('[FlowchartEditor] Task Manager data updated, reloading tasks...');
+
+        // タスクリストを再読み込み
+        initializeTasksFromTaskManager();
+        renderTaskList();
+
+        console.log('[FlowchartEditor] ✓ Task list updated:', mockTasks.length, 'tasks');
+      }
     });
 
     // ========================================
@@ -5017,8 +5101,9 @@
             }, 50);
           }, 100);
 
-          // ★ task-manager.htmlとの接続確認（データ連携Phase 1）
-          loadTaskManagerData();
+          // ★ Phase 2-A: タスクマネージャーからタスク一覧を読み込み
+          initializeTasksFromTaskManager();
+          renderTaskList();  // タスク一覧を表示
 
         } catch (error) {
           console.error('Failed to load SVG:', error);
