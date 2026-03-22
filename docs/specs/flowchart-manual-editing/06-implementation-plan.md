@@ -402,6 +402,319 @@ manualEdges = {
 - ✅ manualNodesとmanualEdgesを含む統合JSONを出力できる
 - ✅ 出力したJSONをAI（Claude等）で解析し、有用な回答を得られる
 
+### Phase 4: ステータス色分け機能
+
+- ✅ 正規ノード・サブグラフ・メモノードにステータスを設定できる
+- ✅ task-manager.htmlと同一の7種類のステータス色が適用される
+- ✅ 右クリックメニューでステータス変更できる
+- ✅ ステータス情報がSVGメタデータに保存・復元される
+
+---
+
+## Phase 4: ステータス色分け機能（6-9h）
+
+### 概要
+
+フローチャート要素（正規ノード・サブグラフ・メモノード）に対して、視覚的なステータス（完了・進行中・未着手等）を設定し、task-manager.htmlと同一の色で色分け表示する機能。
+
+**重要な設計原則**:
+- フローチャートステータスとタスクステータスは**完全に独立**
+- フローチャートステータス = 視覚的な状態管理（SVGに保存）
+- タスクステータス = 実タスク進捗管理（JSONに保存）
+- 両者のデータ連携は行わない
+
+---
+
+### Phase 4-1: 基本実装（3-4h）
+
+#### 実装内容
+
+1. **ステータス色定義**（30分）
+   - `STATUS_COLORS`定数をtask-manager.htmlからコピー
+   - 7種類のステータス（未着手・進行中・完了・保留・延期・中止・不明）
+   - 各ステータスの背景色・テキスト色・ボーダー色を定義
+
+2. **データ構造追加**（30分）
+   - グローバル変数`elementStatuses = {}`を追加
+   - `buildMemoData()`に`elementStatuses`フィールドを追加
+   - `exportSystemSvg()`のメタデータに`elementStatuses`を追加
+   - バージョンを`"1.0"` → `"2.0"`に更新
+
+3. **右クリックメニューUI**（1.5-2h）
+   - コンテキストメニューHTML構造
+   - CSS（白背景、影、ホバー効果）
+   - メニュー表示ロジック（要素タイプ判定）
+   - ステータス選択イベント
+
+4. **正規ノードへのステータス適用**（1-1.5h）
+   - `applyStatusToNode(nodeId, status)`関数
+   - SVG要素の`fill`、`stroke`、`text`色を変更
+   - `data-status`属性を設定
+
+#### 成功基準
+
+- ✅ 正規ノードを右クリックでステータスメニューが表示される
+- ✅ ステータス選択でノードの色が変わる
+- ✅ SVG保存・読み込みでステータスが復元される
+
+---
+
+### Phase 4-2: 拡張機能（2-3h）
+
+#### 実装内容
+
+1. **サブグラフへのステータス適用**（1h）
+   - `applyStatusToSubgraph(clusterId, status)`関数
+   - 背景色を30%透明化（視認性確保）
+   - ボーダー色・ストローク幅の調整
+
+2. **メモノードへのステータス適用**（30分）
+   - `applyStatusToMemoNode(memoId, status)`関数
+   - `.memo-content`の背景色・ボーダー色を変更
+
+3. **ステータスクリア機能**（30分）
+   - 右クリックメニューに「ステータスをクリア」項目を追加
+   - `clearStatus(elementId)`関数
+   - `elementStatuses`からキーを削除
+   - デフォルト色に戻す
+
+4. **ヘッダー凡例削除**（15分）
+   - デモ用凡例（完了・進行中・未着手）を削除
+   - ヘッダーをシンプル化
+
+5. **マイグレーション処理**（30分）
+   - `migrateMetadata(data)`関数
+   - v1.0 → v2.0の自動マイグレーション
+   - `elementStatuses`を空オブジェクトで初期化
+
+#### 成功基準
+
+- ✅ サブグラフとメモノードにもステータスを設定できる
+- ✅ ステータスクリアで元の色に戻る
+- ✅ v1.0ファイルをv2.0実装で開いても正常動作する
+
+---
+
+### Phase 4-3: UX改善（1-2h）
+
+#### 実装内容
+
+1. **ステータスアイコンバッジ**（45分）
+   - ノード右上に小さいステータスバッジを表示
+   - SVG `<circle>`要素でステータス色を表示
+   - ホバー時にステータス名を表示
+
+2. **フィルタリング機能拡張**（45分）
+   - 既存の「完了済みを隠す」を拡張
+   - 「ステータスでフィルタ」ドロップダウン
+   - 複数ステータスの同時非表示
+
+3. **一括ステータス設定**（オプション、30分）
+   - 複数要素を選択してステータス一括設定
+   - Ctrl+クリックで複数選択
+   - 右クリックメニューで一括変更
+
+#### 成功基準
+
+- ✅ ステータスバッジで一目でステータスが分かる
+- ✅ フィルタリングで特定ステータスを非表示にできる
+
+---
+
+### 実装順序
+
+```
+Phase 4-1: 基本実装（3-4h）
+  ↓
+ユーザー検証（正規ノードのみ）
+  ↓
+Phase 4-2: 拡張機能（2-3h）
+  ↓
+ユーザー検証（全要素対応）
+  ↓
+Phase 4-3: UX改善（1-2h）
+  ↓
+総合テスト・リリース
+```
+
+---
+
+### 技術的考慮事項
+
+#### 1. タスクステータスとの独立性
+
+```
+┌─────────────────────────┐         ┌─────────────────────────┐
+│ flowchart-editor.html   │         │ task-manager.html       │
+│                         │         │                         │
+│ elementStatuses {       │         │ projectData.tasks [{    │
+│   'F_01': 'completed'   │         │   wbs_no: "WBS1.1.0",   │
+│ }                       │         │   status: "進行中"      │
+│                         │ 🚫 連携なし │ }]                      │
+│ 用途: 視覚的な状態管理    │         │ 用途: 実タスク進捗管理   │
+│ 保存: SVGファイル         │         │ 保存: JSONファイル       │
+└─────────────────────────┘         └─────────────────────────┘
+```
+
+**理由**:
+1. フローチャートとタスクは1:Nの関係（1つのノードに複数タスク）
+2. フローチャートステータスは「工程全体」の状態を表す
+3. タスクステータスは「個別作業」の状態を表す
+4. データ同期による複雑性を回避
+
+#### 2. ステータス色の統一
+
+- task-manager.htmlの`STATUS_COLORS`定義をそのままコピー
+- 視覚的一貫性を確保
+- 7種類すべてサポート
+
+#### 3. 既存機能との整合性
+
+- カスタムラベル・メモと同じデータ構造パターン
+- 右クリックメニューの既存UIパターン踏襲
+- `buildMemoData()`への追加のみ（既存コード影響最小化）
+
+#### 4. バージョン管理
+
+- メタデータバージョンを`"1.0"` → `"2.0"`に更新
+- v1.0ファイルの自動マイグレーション
+- 後方互換性の確保
+
+---
+
+### データフロー
+
+```javascript
+// 1. ユーザー操作
+要素を右クリック
+  ↓
+メニューでステータス選択（例: "完了"）
+  ↓
+
+// 2. 内部処理
+elementStatuses['F_01'] = 'completed';
+  ↓
+applyStatusToNode('F_01', 'completed');
+  ↓
+SVG要素のfill/stroke/text色を変更
+  ↓
+
+// 3. 保存
+Ctrl+S または自動保存
+  ↓
+buildMemoData()でelementStatusesを含める
+  ↓
+exportSystemSvg()でSVGコメントに埋め込み
+  ↓
+
+// 4. 復元
+SVGファイルを読み込み
+  ↓
+メタデータからelementStatusesを抽出
+  ↓
+restoreStatusesFromMetadata()でスタイル適用
+```
+
+---
+
+### コード例
+
+#### 右クリックメニューHTML
+
+```html
+<div id="status-context-menu" class="status-context-menu" style="display: none;">
+  <div class="status-menu-header">ステータス設定</div>
+  <div class="status-menu-item" data-status="not-started">
+    <span class="status-dot" style="background: #6c757d;"></span>
+    <span>未着手</span>
+  </div>
+  <div class="status-menu-item" data-status="in-progress">
+    <span class="status-dot" style="background: #ffc107;"></span>
+    <span>進行中</span>
+  </div>
+  <div class="status-menu-item" data-status="completed">
+    <span class="status-dot" style="background: #28a745;"></span>
+    <span>完了</span>
+  </div>
+  <div class="status-menu-item" data-status="on-hold">
+    <span class="status-dot" style="background: #fd7e14;"></span>
+    <span>保留</span>
+  </div>
+  <div class="status-menu-item" data-status="postponed">
+    <span class="status-dot" style="background: #dc3545;"></span>
+    <span>延期</span>
+  </div>
+  <div class="status-menu-item" data-status="cancelled">
+    <span class="status-dot" style="background: #999;"></span>
+    <span>中止</span>
+  </div>
+  <div class="status-menu-item" data-status="unknown">
+    <span class="status-dot" style="background: #adb5bd;"></span>
+    <span>不明</span>
+  </div>
+  <div class="status-menu-divider"></div>
+  <div class="status-menu-item status-clear">
+    <span>✗ ステータスをクリア</span>
+  </div>
+</div>
+```
+
+#### イベントハンドラ
+
+```javascript
+// 右クリックでメニュー表示
+svg.addEventListener('contextmenu', (e) => {
+  const target = e.target.closest('[data-id], [data-cluster-id], [data-memo-id]');
+  if (!target) return;
+
+  e.preventDefault();
+
+  const elementId = target.getAttribute('data-id') ||
+                    target.getAttribute('data-cluster-id') ||
+                    target.getAttribute('data-memo-id');
+
+  showStatusContextMenu(e.clientX, e.clientY, elementId);
+});
+
+// メニュー項目クリック
+document.querySelectorAll('.status-menu-item').forEach(item => {
+  item.addEventListener('click', () => {
+    const status = item.getAttribute('data-status');
+    const elementId = getCurrentContextMenuTarget();
+
+    if (status) {
+      setElementStatus(elementId, status);
+    } else if (item.classList.contains('status-clear')) {
+      clearElementStatus(elementId);
+    }
+
+    hideStatusContextMenu();
+  });
+});
+```
+
+---
+
+### リスク管理
+
+| リスク | 影響度 | 対策 |
+|-------|-------|------|
+| 別セッションのスキーマ修正と競合 | 高 | `elementStatuses`をトップレベルフィールドとして独立配置 |
+| バージョン番号の不整合 | 中 | 別セッション完了後にバージョン調整 |
+| 既存要素への影響 | 低 | ステータス未設定時は既存色を維持 |
+| パフォーマンス（大量要素） | 低 | 100要素以下では問題なし |
+
+---
+
+### 工数見積もり
+
+| フェーズ | 内容 | 工数 |
+|---------|------|------|
+| Phase 4-1 | 基本実装（正規ノード） | 3-4h |
+| Phase 4-2 | 拡張（サブグラフ・メモノード・マイグレーション） | 2-3h |
+| Phase 4-3 | UX改善（バッジ・フィルタリング） | 1-2h |
+| **合計** | | **6-9h** |
+
 ---
 
 ## 次のアクション
@@ -439,6 +752,9 @@ manualEdges = {
 
 ---
 
-**最終更新**: 2026-03-21
-**ステータス**: 仕様確定、Phase 1実装待ち
-**総工数**: 24-29h（MVP）/ 30-37h（完全版）
+**最終更新**: 2026-03-22
+**ステータス**: Phase 4仕様追加完了
+**総工数**:
+- Phase 1-3（MVP）: 24-29h
+- Phase 4（ステータス色分け）: 6-9h
+- **合計**: 30-38h

@@ -14,6 +14,20 @@
       box-sizing: border-box;
     }
 
+    :root {
+      /* ==========================================
+       * Status Colors (Phase 4)
+       * task-manager.htmlと同一の7種類
+       * ========================================== */
+      --status-completed: #28a745;      /* 完了 - 緑 */
+      --status-in-progress: #ffc107;    /* 進行中 - 黄 */
+      --status-not-started: #6c757d;    /* 未着手 - 灰 */
+      --status-on-hold: #fd7e14;        /* 保留 - 橙 */
+      --status-postponed: #e83e8c;      /* 延期 - ピンク */
+      --status-cancelled: #dc3545;      /* 中止 - 赤 */
+      --status-unknown: #17a2b8;        /* 不明 - シアン */
+    }
+
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
       font-size: 14px;
@@ -2086,6 +2100,235 @@
       text-align: center;
     }
 
+    /* ==========================================
+     * Task Links Panel (Phase 3)
+     * ========================================== */
+    .task-links-panel {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 350px;
+      max-height: 400px;
+      background: rgba(255, 255, 255, 0.98);
+      backdrop-filter: blur(10px);
+      border: 2px solid #4CAF50;
+      border-radius: 12px;
+      box-shadow: 0 6px 16px rgba(76, 175, 80, 0.3);
+      overflow: hidden;
+      z-index: 999;
+      transition: all 0.3s ease;
+    }
+
+    .task-links-panel.collapsed .task-links-content {
+      display: none;
+    }
+
+    .task-links-header {
+      background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+      color: white;
+      padding: 10px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      user-select: none;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .task-links-header:hover {
+      background: linear-gradient(135deg, #45a049 0%, #3d8b40 100%);
+    }
+
+    .task-links-title {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .task-links-controls {
+      display: flex;
+      align-items: center;
+    }
+
+    .expand-icon {
+      font-size: 10px;
+      transition: transform 0.3s ease;
+      display: inline-block;
+    }
+
+    .task-links-panel:not(.collapsed) .expand-icon {
+      transform: rotate(90deg);
+    }
+
+    .task-links-content {
+      padding: 12px;
+      max-height: 350px;
+      overflow-y: auto;
+    }
+
+    .task-links-status {
+      margin-bottom: 10px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .status-line {
+      font-size: 11px;
+      color: #666;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .snapshot-time {
+      font-weight: 600;
+      color: #4CAF50;
+    }
+
+    .task-links-list {
+      min-height: 50px;
+      max-height: 250px;
+      overflow-y: auto;
+    }
+
+    .task-link-item {
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 6px;
+      padding: 8px 10px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .task-link-item:hover {
+      background: #e3f2fd;
+      border-color: #4CAF50;
+      box-shadow: 0 2px 4px rgba(76, 175, 80, 0.2);
+    }
+
+    .task-wbs {
+      font-size: 10px;
+      font-weight: 700;
+      color: #4CAF50;
+      margin-bottom: 3px;
+    }
+
+    .task-name {
+      font-size: 12px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 4px;
+    }
+
+    .mermaid-ids {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    .mermaid-id {
+      font-size: 10px;
+      background: #fff;
+      border: 1px solid #4CAF50;
+      color: #4CAF50;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+    }
+
+    .task-links-actions {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid #e0e0e0;
+    }
+
+    .task-links-btn {
+      width: 100%;
+      padding: 8px 12px;
+      background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .task-links-btn:hover {
+      background: linear-gradient(135deg, #45a049 0%, #3d8b40 100%);
+      box-shadow: 0 2px 6px rgba(76, 175, 80, 0.4);
+    }
+
+    /* ==========================================
+     * Status Context Menu (Phase 4)
+     * ========================================== */
+    .status-context-menu {
+      position: fixed;
+      z-index: 10000;
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      min-width: 200px;
+      padding: 8px 0;
+      display: none;
+    }
+
+    .status-menu-header {
+      padding: 8px 16px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid #eee;
+      margin-bottom: 4px;
+    }
+
+    .status-menu-item {
+      padding: 8px 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      transition: background 0.15s;
+    }
+
+    .status-menu-item:hover {
+      background: #f5f5f5;
+    }
+
+    .status-menu-item.status-clear {
+      border-top: 1px solid #eee;
+      margin-top: 4px;
+      padding-top: 8px;
+      color: #dc3545;
+    }
+
+    .status-menu-item.status-clear:hover {
+      background: #fff5f5;
+    }
+
+    .status-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      border: 2px solid white;
+      box-shadow: 0 0 0 1px rgba(0,0,0,0.1);
+    }
+
+    .status-menu-divider {
+      height: 1px;
+      background: #eee;
+      margin: 4px 0;
+    }
+
     /* Warning Modal Styles */
     .warning-modal-overlay {
       display: none;
@@ -2518,6 +2761,75 @@
               </button>
             </div>
           </div>
+
+          <!-- Task Links Panel (Phase 3) -->
+          <div id="task-links-panel" class="task-links-panel collapsed" style="display: none;">
+            <div class="task-links-header" onclick="toggleTaskLinksPanel()">
+              <div class="task-links-title">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="8.5" cy="7" r="4"></circle>
+                  <polyline points="17 11 19 13 23 9"></polyline>
+                </svg>
+                <span>タスク連携</span>
+              </div>
+              <div class="task-links-controls">
+                <span class="expand-icon">▶</span>
+              </div>
+            </div>
+            <div class="task-links-content">
+              <div class="task-links-status">
+                <div class="status-line">
+                  <span>スナップショット:</span>
+                  <span id="snapshot-time" class="snapshot-time">未取得</span>
+                </div>
+              </div>
+              <div id="task-links-list" class="task-links-list">
+                <!-- 動的生成 -->
+              </div>
+              <div class="task-links-actions">
+                <button class="task-links-btn" onclick="refreshTaskLinks()">🔄 再スナップショット</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Status Context Menu (Phase 4) -->
+          <div id="status-context-menu" class="status-context-menu">
+            <div class="status-menu-header">ステータス設定</div>
+            <div class="status-menu-item" data-status="completed">
+              <span class="status-dot" style="background: var(--status-completed);"></span>
+              <span>完了</span>
+            </div>
+            <div class="status-menu-item" data-status="in-progress">
+              <span class="status-dot" style="background: var(--status-in-progress);"></span>
+              <span>進行中</span>
+            </div>
+            <div class="status-menu-item" data-status="not-started">
+              <span class="status-dot" style="background: var(--status-not-started);"></span>
+              <span>未着手</span>
+            </div>
+            <div class="status-menu-item" data-status="on-hold">
+              <span class="status-dot" style="background: var(--status-on-hold);"></span>
+              <span>保留</span>
+            </div>
+            <div class="status-menu-item" data-status="postponed">
+              <span class="status-dot" style="background: var(--status-postponed);"></span>
+              <span>延期</span>
+            </div>
+            <div class="status-menu-item" data-status="cancelled">
+              <span class="status-dot" style="background: var(--status-cancelled);"></span>
+              <span>中止</span>
+            </div>
+            <div class="status-menu-item" data-status="unknown">
+              <span class="status-dot" style="background: var(--status-unknown);"></span>
+              <span>不明</span>
+            </div>
+            <div class="status-menu-divider"></div>
+            <div class="status-menu-item status-clear">
+              <span>✗ ステータスをクリア</span>
+            </div>
+          </div>
+
         </div>
       </div>
     </div>
@@ -3043,6 +3355,7 @@
       setupPanelDrag();
       setupDragDetection();
       updateStatusBar();
+      setupStatusMenu();
 
       // フローティングパネルをデフォルトで表示
       showPanel();
@@ -3560,6 +3873,22 @@
     let contextMenuElement = null; // コンテキストメニュー要素への参照
     let contextMenuTarget = null; // 右クリックされた要素の情報 { type, element, x, y }
 
+    // ========== v2.0 メタデータ機能用の変数 (Phase 1) ==========
+    /**
+     * フローチャート要素のステータス管理 (Phase 4)
+     * ⚠️ 注意: task-manager.htmlのタスクステータスとは独立
+     * @type {Object<string, string>}
+     * @example { "flowchart-A": "completed", "memo_node_1": "in-progress" }
+     */
+    let elementStatuses = {}; // { elementId: statusKey }
+
+    /**
+     * 要素間の参照関係管理 (Phase 2)
+     * @type {Object<string, Array<string>>}
+     * @example { "flowchart-A": ["flowchart-B", "memo_node_1"] }
+     */
+    let elementReferences = {}; // { elementId: [refId1, refId2, ...] }
+
     // ========================================
     // Data Integration Functions (Task Manager ⇔ Flowchart Editor)
     // ========================================
@@ -4057,6 +4386,52 @@
 
         clearHighlight();
       });
+    }
+
+    /**
+     * Phase 4: ステータスメニューのイベントリスナーを設定
+     */
+    function setupStatusMenu() {
+      const menu = document.getElementById('status-context-menu');
+      if (!menu) {
+        console.warn('[Status Menu] メニュー要素が見つかりません');
+        return;
+      }
+
+      // メニュー項目にクリックイベントを追加
+      const menuItems = menu.querySelectorAll('.status-menu-item');
+      menuItems.forEach(item => {
+        item.addEventListener('click', (e) => {
+          e.stopPropagation();
+
+          if (item.classList.contains('status-clear')) {
+            // ステータスクリア
+            if (currentStatusMenuTarget) {
+              clearElementStatus(currentStatusMenuTarget);
+              hideStatusContextMenu();
+            }
+          } else {
+            // ステータス設定
+            const status = item.getAttribute('data-status');
+            if (status && currentStatusMenuTarget) {
+              setElementStatus(currentStatusMenuTarget, status);
+              hideStatusContextMenu();
+            }
+          }
+        });
+      });
+
+      // メニュー外クリックで閉じる
+      document.addEventListener('click', (e) => {
+        const menu = document.getElementById('status-context-menu');
+        if (menu && menu.style.display === 'block') {
+          if (!menu.contains(e.target)) {
+            hideStatusContextMenu();
+          }
+        }
+      });
+
+      console.log('[Status Menu] イベントリスナー設定完了');
     }
 
     /**
@@ -4966,25 +5341,28 @@
 
           // ★ メタデータを復元（イベントハンドラも再アタッチ）
           if (extractedMetadata) {
+            // ★v1.0 → v2.0マイグレーション実行
+            const migratedData = migrateMetadata(extractedMetadata);
+
             // 元のラベル情報を復元
-            if (extractedMetadata.originalLabels && typeof extractedMetadata.originalLabels === 'object') {
-              originalLabels = extractedMetadata.originalLabels;
+            if (migratedData.originalLabels && typeof migratedData.originalLabels === 'object') {
+              originalLabels = migratedData.originalLabels;
               console.log('📝 元のラベル情報を復元:', Object.keys(originalLabels).length, '件');
             }
 
             // メモとカスタムラベルを復元
-            if (extractedMetadata.elements && typeof extractedMetadata.elements === 'object') {
+            if (migratedData.elements && typeof migratedData.elements === 'object') {
               elementMemos = {};
               elementCustomLabels = {};
 
-              for (const [elementId, elementData] of Object.entries(extractedMetadata.elements)) {
+              for (const [elementId, elementData] of Object.entries(migratedData.elements)) {
                 if (elementData.memo) {
                   elementMemos[elementId] = elementData.memo;
                 }
                 if (elementData.customLabel) {
                   elementCustomLabels[elementId] = elementData.customLabel;
                   // SVG DOMに即座に反映
-                  const element = document.querySelector(`[data-id="${elementId}"]`) || document.getElementById(elementId);
+                  const element = document.querySelector(`[data-id="${CSS.escape(elementId)}"]`) || document.getElementById(elementId);
                   if (element) {
                     updateSvgLabel(element, elementData.customLabel);
                   }
@@ -4998,12 +5376,12 @@
             }
 
             // 手動ノードを復元（データ構造 + イベントハンドラ）
-            if (extractedMetadata.manualNodes && typeof extractedMetadata.manualNodes === 'object') {
-              manualNodes = extractedMetadata.manualNodes;
+            if (migratedData.manualNodes && typeof migratedData.manualNodes === 'object') {
+              manualNodes = migratedData.manualNodes;
 
               // 既存のSVG要素にイベントハンドラを再アタッチ
               for (const nodeId of Object.keys(manualNodes)) {
-                const nodeGroup = document.querySelector(`[data-node-id="${nodeId}"]`);
+                const nodeGroup = document.querySelector(`[data-node-id="${CSS.escape(nodeId)}"]`);
                 if (nodeGroup) {
                   // ドラッグ動作を再アタッチ
                   attachDragBehavior(nodeId);
@@ -5023,12 +5401,12 @@
             }
 
             // 手動エッジを復元（データ構造 + イベントハンドラ）
-            if (extractedMetadata.manualEdges && typeof extractedMetadata.manualEdges === 'object') {
-              manualEdges = extractedMetadata.manualEdges;
+            if (migratedData.manualEdges && typeof migratedData.manualEdges === 'object') {
+              manualEdges = migratedData.manualEdges;
 
               // 既存のSVG要素にイベントハンドラを再アタッチ
               for (const edgeId of Object.keys(manualEdges)) {
-                const edgeGroup = document.querySelector(`[data-id="${edgeId}"]`);
+                const edgeGroup = document.querySelector(`[data-id="${CSS.escape(edgeId)}"]`);
                 if (edgeGroup) {
                   // クリックで編集モード
                   edgeGroup.addEventListener('click', (e) => {
@@ -5057,6 +5435,40 @@
               }
 
               console.log('🔗 手動エッジを復元:', Object.keys(manualEdges).length, '件');
+            }
+
+            // ★v2.0新機能: ステータスデータの復元 (Phase 4)
+            if (migratedData.elementStatuses && typeof migratedData.elementStatuses === 'object') {
+              elementStatuses = migratedData.elementStatuses;
+              console.log(`📊 ステータスを復元: ${Object.keys(elementStatuses).length}件`);
+
+              // DOM要素準備後にステータスを適用
+              setTimeout(() => {
+                restoreStatusesFromMetadata(migratedData);
+              }, 100);
+            }
+
+            // ★v2.0新機能: 参照関係データの復元 (Phase 2)
+            if (migratedData.references && typeof migratedData.references === 'object') {
+              // 参照データを検証（Prototype Pollution対策）
+              elementReferences = validateReferences(migratedData.references);
+              console.log(`🔗 参照関係を復元: ${Object.keys(elementReferences).length}件`);
+
+              // 孤立参照をクリーンアップ（SVGが完全に読み込まれた後に実行）
+              setTimeout(() => {
+                cleanupInvalidReferences();
+                renderReferenceArrows();
+              }, 100);
+            }
+
+            // ★v2.0新機能: タスク連携データの復元（表示のみ、Phase 3）
+            if (migratedData.taskFlowchartLinks) {
+              console.log('📋 タスク連携スナップショットを検出');
+
+              // タスク連携UIを更新（SVGが完全に読み込まれた後に実行）
+              setTimeout(() => {
+                updateTaskLinksUI(migratedData.taskFlowchartLinks);
+              }, 100);
             }
           }
 
@@ -5691,7 +6103,150 @@
     }
 
     /**
-     * メモデータを構築
+     * v1.0 → v2.0 自動マイグレーション (Phase 1)
+     * @param {Object} data - メタデータ
+     * @returns {Object} v2.0形式のメタデータ
+     */
+    function migrateMetadata(data) {
+      // v2.0の場合はそのまま返す
+      if (data.version === "2.0" || data.schemaVersion === "2.0") {
+        console.log('[Migration] 既にv2.0形式です');
+        return data;
+      }
+
+      // Deep clone to avoid mutation
+      let migrated = structuredClone(data);
+
+      console.log('[Migration] v1.0 → v2.0 マイグレーション開始');
+
+      // バージョン更新
+      migrated.version = "2.0";
+      migrated.schemaVersion = "2.0";
+
+      // exportedAtが無い場合は現在時刻を設定
+      if (!migrated.exportedAt) {
+        migrated.exportedAt = new Date().toISOString();
+      }
+
+      // svgFileが無い場合はデフォルト値を設定
+      if (!migrated.svgFile) {
+        migrated.svgFile = currentSvgFileName || 'unknown.svg';
+      }
+
+      // ★Phase 4: ステータス管理の初期化
+      if (!migrated.elementStatuses) {
+        migrated.elementStatuses = {};
+        console.log('[Migration] elementStatuses を空オブジェクトで初期化');
+      }
+
+      // ★Phase 2: 参照関係管理の初期化
+      if (!migrated.references) {
+        migrated.references = {};
+        console.log('[Migration] references を空オブジェクトで初期化');
+      }
+
+      // ★Phase 3: タスク連携の初期化
+      if (!migrated.taskFlowchartLinks) {
+        migrated.taskFlowchartLinks = {
+          nodes: {},
+          _snapshotAt: null
+        };
+        console.log('[Migration] taskFlowchartLinks を空で初期化');
+      }
+
+      // 既存フィールドの確認・初期化
+      if (!migrated.elements) {
+        migrated.elements = {};
+      }
+      if (!migrated.originalLabels) {
+        migrated.originalLabels = {};
+      }
+      if (!migrated.manualNodes) {
+        migrated.manualNodes = {};
+      }
+      if (!migrated.manualEdges) {
+        migrated.manualEdges = {};
+      }
+
+      console.log('[Migration] ✅ v2.0へのマイグレーション完了');
+
+      return migrated;
+    }
+
+    /**
+     * タスク連携データをスナップショット形式で構築 (Phase 3)
+     * task-manager.htmlのLocalStorageからタスクデータを取得してスナップショット生成
+     * @returns {Object} タスク連携スナップショット { nodes: {...}, _snapshotAt: "..." }
+     */
+    function buildTaskLinks() {
+      try {
+        // task-manager.html の LocalStorage から taskData を取得
+        const taskDataStr = localStorage.getItem('task_manager_v2_project_data');
+        if (!taskDataStr) {
+          console.log('[TaskLinks] task-manager.htmlのデータが見つかりません');
+          return {
+            nodes: {},
+            _snapshotAt: null
+          };
+        }
+
+        const taskData = JSON.parse(taskDataStr);
+        const tasks = taskData.tasks || [];
+
+        // flowchartMetadata から Mermaid ID連携情報を取得
+        const flowchartMeta = taskData.flowchartMetadata?.nodes || {};
+
+        const nodes = {};
+
+        for (const [wbsNo, linkData] of Object.entries(flowchartMeta)) {
+          // Prototype Pollution対策
+          if (wbsNo === '__proto__' || wbsNo === 'constructor' || wbsNo === 'prototype') {
+            console.warn(`[Security] プロトタイプ汚染の試みを検出: ${wbsNo}`);
+            continue;
+          }
+
+          // タスク本体を検索
+          const task = tasks.find(t => t.wbsNo === wbsNo);
+          if (!task) {
+            console.warn(`[TaskLinks] WBS ${wbsNo} のタスクが見つかりません`);
+            continue;
+          }
+
+          // XSS対策: taskNameをサニタイズ
+          const sanitizedName = (task.name || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+          // 配列検証: mermaidIdsが配列であることを確認
+          const mermaidIds = Array.isArray(linkData.mermaidIds) ?
+            linkData.mermaidIds.filter(id => typeof id === 'string') : [];
+
+          nodes[wbsNo] = {
+            taskId: task.id,
+            wbsNo: wbsNo,
+            taskName: sanitizedName,
+            mermaidIds: mermaidIds,
+            _snapshotAt: new Date().toISOString()
+          };
+        }
+
+        console.log(`[TaskLinks] ${Object.keys(nodes).length}個のタスク連携をスナップショット`);
+
+        return {
+          nodes: nodes,
+          _snapshotAt: new Date().toISOString()
+        };
+
+      } catch (error) {
+        console.error('[TaskLinks] エラー:', error);
+        return {
+          nodes: {},
+          _snapshotAt: null
+        };
+      }
+    }
+
+    /**
+     * メモデータを構築 (v2.0)
+     * @returns {Object} v2.0形式のメタデータ
      */
     function buildMemoData() {
       const svgFile = currentSvgFileName || 'unknown.svg';
@@ -5702,16 +6257,16 @@
       // メモまたはカスタムラベルが設定されているすべての要素を収集
       const allElementIds = new Set([
         ...Object.keys(elementMemos),
-        ...Object.keys(elementCustomLabels)
+        ...Object.keys(elementCustomLabels),
+        ...Object.keys(originalLabels)
       ]);
 
       for (const elementId of allElementIds) {
         // 要素を取得
-        const element = document.querySelector(`[data-id="${elementId}"]`) || document.getElementById(elementId);
-        if (!element) continue;
+        const element = document.querySelector(`[data-id="${CSS.escape(elementId)}"]`) || document.getElementById(elementId);
 
-        const type = element.getAttribute('data-et') || 'unknown';
-        const displayText = getElementDisplayText(element);
+        const type = element?.getAttribute('data-et') || 'unknown';
+        const displayText = element ? getElementDisplayText(element) : '';
         const memo = elementMemos[elementId] || '';
         const customLabel = elementCustomLabels[elementId] || '';
         const originalLabel = originalLabels[elementId] || '';
@@ -5725,14 +6280,27 @@
         };
       }
 
+      // v2.0形式で返す
       return {
-        flowchartId: flowchartId,
+        version: "2.0",
+        schemaVersion: "2.0",
+        exportedAt: new Date().toISOString(),
         svgFile: svgFile,
-        savedAt: new Date().toISOString(),
+
+        // 既存フィールド（v1.0互換）
         elements: elements,
-        originalLabels: originalLabels, // すべての元のラベルも保存
-        manualEdges: manualEdges, // 手動エッジも保存
-        manualNodes: manualNodes // ★Phase 1: メモノードも保存
+        originalLabels: originalLabels,
+        manualNodes: manualNodes,
+        manualEdges: manualEdges,
+
+        // v2.0新機能
+        elementStatuses: elementStatuses,        // Phase 4: ステータス色分け
+        references: elementReferences,           // Phase 2: 参照関係管理
+        taskFlowchartLinks: buildTaskLinks(),    // Phase 3: タスク連携スナップショット
+
+        // 後方互換性のため旧フィールドも保持
+        flowchartId: flowchartId,
+        savedAt: new Date().toISOString()
       };
     }
 
@@ -5833,7 +6401,10 @@
         // ファイルを読み込み
         const file = await handle.getFile();
         const text = await file.text();
-        const data = JSON.parse(text);
+        const rawData = JSON.parse(text);
+
+        // ★v1.0 → v2.0マイグレーション実行
+        const data = migrateMetadata(rawData);
 
         // データ構造を検証
         if (!data.elements || typeof data.elements !== 'object') {
@@ -5870,7 +6441,7 @@
             loadedLabelCount++;
 
             // SVG DOMに即座に反映
-            const element = document.querySelector(`[data-id="${elementId}"]`) || document.getElementById(elementId);
+            const element = document.querySelector(`[data-id="${CSS.escape(elementId)}"]`) || document.getElementById(elementId);
             if (element) {
               updateSvgLabel(element, elementData.customLabel);
             }
@@ -5915,6 +6486,40 @@
           }
 
           console.log('手動エッジを復元しました:', loadedEdgeCount, '件');
+        }
+
+        // ★v2.0新機能: ステータスデータの復元 (Phase 4)
+        if (data.elementStatuses && typeof data.elementStatuses === 'object') {
+          elementStatuses = data.elementStatuses;
+          console.log(`📊 ステータスを復元: ${Object.keys(elementStatuses).length}件`);
+
+          // DOM要素準備後にステータスを適用
+          setTimeout(() => {
+            restoreStatusesFromMetadata(data);
+          }, 100);
+        }
+
+        // ★v2.0新機能: 参照関係データの復元 (Phase 2)
+        if (data.references && typeof data.references === 'object') {
+          // 参照データを検証（Prototype Pollution対策）
+          elementReferences = validateReferences(data.references);
+          console.log(`🔗 参照関係を復元: ${Object.keys(elementReferences).length}件`);
+
+          // 孤立参照をクリーンアップして参照矢印を描画
+          setTimeout(() => {
+            cleanupInvalidReferences();
+            renderReferenceArrows();
+          }, 100);
+        }
+
+        // ★v2.0新機能: タスク連携データの復元（表示のみ、Phase 3）
+        if (data.taskFlowchartLinks) {
+          console.log('📋 タスク連携スナップショットを検出');
+
+          // タスク連携UIを更新
+          setTimeout(() => {
+            updateTaskLinksUI(data.taskFlowchartLinks);
+          }, 100);
         }
 
         // ★全エッジのクリック感度を向上（ルールベース自動適用）
@@ -8364,8 +8969,11 @@ ${metadataJson}
         showMemoEdgeContextMenu(e.clientX, e.clientY, target, svgX, svgY);
       } else if (elementType === 'node') {
         showNodeContextMenu(e.clientX, e.clientY, target, svgX, svgY);
+      } else if (elementType === 'cluster' || target?.classList.contains('cluster')) {
+        // サブグラフ（クラスタ）
+        showClusterContextMenu(e.clientX, e.clientY, target, svgX, svgY);
       } else {
-        // 空白エリアまたはサブグラフ（cluster）
+        // 空白エリア
         showSvgContextMenu(e.clientX, e.clientY, svgX, svgY);
       }
     }
@@ -8404,6 +9012,8 @@ ${metadataJson}
     function showNodeContextMenu(clientX, clientY, element, svgX, svgY) {
       contextMenuTarget = { type: 'node', element, x: svgX, y: svgY };
 
+      const elementId = element.dataset.id || element.id;
+
       const menuItems = [
         {
           icon: '🔗',
@@ -8411,6 +9021,32 @@ ${metadataJson}
           action: () => {
             hideContextMenu();
             startOneShotEdgeModeFromNode(element);
+          }
+        },
+        { separator: true },
+        {
+          icon: '🔗',
+          label: '参照を追加',
+          action: () => {
+            hideContextMenu();
+            openReferenceDialog(elementId);
+          }
+        },
+        {
+          icon: '📋',
+          label: '参照一覧を表示',
+          action: () => {
+            hideContextMenu();
+            showReferencesInfo(elementId);
+          }
+        },
+        { separator: true },
+        {
+          icon: '🎨',
+          label: 'ステータスを設定',
+          action: () => {
+            hideContextMenu();
+            showStatusContextMenu(clientX, clientY, elementId);
           }
         }
       ];
@@ -8441,6 +9077,32 @@ ${metadataJson}
           action: () => {
             hideContextMenu();
             startOneShotEdgeModeFromNode(element);
+          }
+        },
+        { separator: true },
+        {
+          icon: '🔗',
+          label: '参照を追加',
+          action: () => {
+            hideContextMenu();
+            openReferenceDialog(nodeId);
+          }
+        },
+        {
+          icon: '📋',
+          label: '参照一覧を表示',
+          action: () => {
+            hideContextMenu();
+            showReferencesInfo(nodeId);
+          }
+        },
+        { separator: true },
+        {
+          icon: '🎨',
+          label: 'ステータスを設定',
+          action: () => {
+            hideContextMenu();
+            showStatusContextMenu(clientX, clientY, nodeId);
           }
         },
         { separator: true },
@@ -8481,6 +9143,29 @@ ${metadataJson}
           action: () => {
             hideContextMenu();
             deleteMemoEdge(edgeId);
+          }
+        }
+      ];
+
+      renderContextMenu(menuItems, clientX, clientY);
+    }
+
+    /**
+     * サブグラフ（クラスタ）上での右クリックメニューを表示
+     * Phase 4
+     */
+    function showClusterContextMenu(clientX, clientY, element, svgX, svgY) {
+      contextMenuTarget = { type: 'cluster', element, x: svgX, y: svgY };
+
+      const elementId = element.dataset.id || element.id;
+
+      const menuItems = [
+        {
+          icon: '🎨',
+          label: 'ステータスを設定',
+          action: () => {
+            hideContextMenu();
+            showStatusContextMenu(clientX, clientY, elementId);
           }
         }
       ];
@@ -8806,6 +9491,792 @@ ${metadataJson}
       }
 
       console.log('✅ メモエッジ削除:', { edgeId });
+    }
+
+    // ==========================================
+    // Reference Management (参照関係管理 - Phase 2)
+    // ==========================================
+
+    /**
+     * 参照可能な全要素IDを取得
+     * @returns {Array<{id: string, displayText: string, type: string}>}
+     */
+    function getAllReferenceableIds() {
+      const referenceableElements = [];
+
+      // Mermaid正規ノードを取得
+      const svg = document.querySelector('.svg-content-wrapper svg') || document.querySelector('svg');
+      if (svg) {
+        const nodes = svg.querySelectorAll('[data-id][data-et="node"]');
+        nodes.forEach(node => {
+          const id = node.getAttribute('data-id');
+          if (id) {
+            const displayText = getElementDisplayText(node);
+            referenceableElements.push({
+              id: id,
+              displayText: displayText || id,
+              type: 'node'
+            });
+          }
+        });
+      }
+
+      // メモノードを取得
+      for (const [nodeId, nodeData] of Object.entries(manualNodes)) {
+        referenceableElements.push({
+          id: nodeId,
+          displayText: nodeData.label || nodeId,
+          type: 'manual-node'
+        });
+      }
+
+      return referenceableElements;
+    }
+
+    /**
+     * 参照追加ダイアログを開く (Phase 2)
+     * @param {string} elementId - 参照元の要素ID
+     */
+    function openReferenceDialog(elementId) {
+      const allElements = getAllReferenceableIds();
+      const currentReferences = elementReferences[elementId] || [];
+
+      // 自分自身を除外
+      const availableElements = allElements.filter(el => el.id !== elementId);
+
+      if (availableElements.length === 0) {
+        alert('参照可能な要素がありません');
+        return;
+      }
+
+      // 簡易ダイアログでチェックボックス形式で参照を選択
+      let dialogHtml = `
+        <div style="max-height: 400px; overflow-y: auto;">
+          <h3>参照先を選択</h3>
+          <p>要素「${elementId}」が参照する要素を選択してください：</p>
+          <div style="margin: 10px 0;">
+      `;
+
+      availableElements.forEach(el => {
+        const checked = currentReferences.includes(el.id) ? 'checked' : '';
+        dialogHtml += `
+          <div style="margin: 5px 0;">
+            <label style="display: flex; align-items: center; cursor: pointer;">
+              <input type="checkbox" value="${el.id}" ${checked} style="margin-right: 8px;">
+              <span>[${el.type === 'manual-node' ? 'メモ' : 'ノード'}] ${el.displayText}</span>
+            </label>
+          </div>
+        `;
+      });
+
+      dialogHtml += `
+          </div>
+          <div style="margin-top: 15px;">
+            <button id="ref-dialog-save" style="padding: 8px 16px; margin-right: 8px;">保存</button>
+            <button id="ref-dialog-cancel" style="padding: 8px 16px;">キャンセル</button>
+          </div>
+        </div>
+      `;
+
+      // モーダルダイアログを作成
+      const dialog = document.createElement('div');
+      dialog.id = 'reference-dialog';
+      dialog.style.cssText = `
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        z-index: 10000;
+        min-width: 400px;
+        max-width: 600px;
+      `;
+      dialog.innerHTML = dialogHtml;
+
+      // オーバーレイを作成
+      const overlay = document.createElement('div');
+      overlay.id = 'reference-dialog-overlay';
+      overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 9999;
+      `;
+
+      document.body.appendChild(overlay);
+      document.body.appendChild(dialog);
+
+      // イベントハンドラー
+      document.getElementById('ref-dialog-save').addEventListener('click', () => {
+        const checkboxes = dialog.querySelectorAll('input[type="checkbox"]');
+        const selectedIds = Array.from(checkboxes)
+          .filter(cb => cb.checked)
+          .map(cb => cb.value);
+
+        // 参照を保存
+        if (selectedIds.length > 0) {
+          elementReferences[elementId] = selectedIds;
+        } else {
+          delete elementReferences[elementId];
+        }
+
+        console.log(`[参照管理] ${elementId} → [${selectedIds.join(', ')}]`);
+
+        // 参照矢印を再描画
+        renderReferenceArrows();
+
+        // ダイアログを閉じる
+        overlay.remove();
+        dialog.remove();
+
+        // 自動保存
+        if (currentFileHandle) {
+          saveToFileAuto().catch(err => {
+            console.warn('自動保存に失敗:', err);
+          });
+        }
+
+        alert('参照を保存しました');
+      });
+
+      document.getElementById('ref-dialog-cancel').addEventListener('click', () => {
+        overlay.remove();
+        dialog.remove();
+      });
+
+      overlay.addEventListener('click', () => {
+        overlay.remove();
+        dialog.remove();
+      });
+    }
+
+    /**
+     * 参照一覧を表示 (Phase 2)
+     * @param {string} elementId - 要素ID
+     */
+    function showReferencesInfo(elementId) {
+      const references = elementReferences[elementId] || [];
+
+      if (references.length === 0) {
+        alert(`要素「${elementId}」は他の要素を参照していません`);
+        return;
+      }
+
+      const allElements = getAllReferenceableIds();
+      const referenceInfo = references.map(refId => {
+        const element = allElements.find(el => el.id === refId);
+        return element ? `・${element.displayText} (${refId})` : `・${refId} (要素が見つかりません)`;
+      }).join('\n');
+
+      alert(`要素「${elementId}」の参照先:\n\n${referenceInfo}`);
+    }
+
+    /**
+     * SVG初期化時に参照矢印マーカーを定義 (Phase 2)
+     */
+    function initializeReferenceMarkers() {
+      const svg = document.querySelector('.svg-content-wrapper svg') || document.querySelector('svg');
+      if (!svg) return;
+
+      let defs = svg.querySelector('defs');
+      if (!defs) {
+        defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+        svg.insertBefore(defs, svg.firstChild);
+      }
+
+      // 既存の参照矢印マーカーを削除
+      const existingMarker = defs.querySelector('#referenceArrowhead');
+      if (existingMarker) {
+        existingMarker.remove();
+      }
+
+      const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+      marker.id = 'referenceArrowhead';
+      marker.setAttribute('markerWidth', '10');
+      marker.setAttribute('markerHeight', '10');
+      marker.setAttribute('refX', '9');
+      marker.setAttribute('refY', '3');
+      marker.setAttribute('orient', 'auto');
+
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', 'M0,0 L0,6 L9,3 z');
+      path.setAttribute('fill', '#888');
+
+      marker.appendChild(path);
+      defs.appendChild(marker);
+
+      console.log('✅ 参照矢印マーカーを初期化しました');
+    }
+
+    /**
+     * 参照矢印をSVG上に描画 (Phase 2)
+     */
+    function renderReferenceArrows() {
+      const svg = document.querySelector('.svg-content-wrapper svg') || document.querySelector('svg');
+      if (!svg) return;
+
+      // 既存の参照矢印を削除
+      svg.querySelectorAll('[data-reference-arrow]').forEach(el => el.remove());
+
+      // 参照矢印用のグループを作成
+      let refGroup = svg.querySelector('#referenceArrows');
+      if (!refGroup) {
+        refGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        refGroup.id = 'referenceArrows';
+        refGroup.setAttribute('data-reference-arrow', 'group');
+        svg.insertBefore(refGroup, svg.firstChild); // 最背面に配置
+      } else {
+        // 既存のグループをクリア
+        refGroup.innerHTML = '';
+      }
+
+      // 矢印マーカーを初期化
+      initializeReferenceMarkers();
+
+      // すべての参照を描画
+      for (const [sourceId, targetIds] of Object.entries(elementReferences)) {
+        const sourceEl = svg.querySelector(`[data-id="${CSS.escape(sourceId)}"]`);
+        if (!sourceEl) {
+          console.warn(`[参照矢印] 参照元が見つかりません: ${sourceId}`);
+          continue;
+        }
+
+        const sourceBBox = sourceEl.getBBox();
+        const sourceX = sourceBBox.x + sourceBBox.width / 2;
+        const sourceY = sourceBBox.y + sourceBBox.height / 2;
+
+        for (const targetId of targetIds) {
+          const targetEl = svg.querySelector(`[data-id="${CSS.escape(targetId)}"]`);
+          if (!targetEl) {
+            console.warn(`[参照矢印] 参照先が見つかりません: ${targetId}`);
+            continue;
+          }
+
+          const targetBBox = targetEl.getBBox();
+          const targetX = targetBBox.x + targetBBox.width / 2;
+          const targetY = targetBBox.y + targetBBox.height / 2;
+
+          // 破線矢印を描画
+          const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+          line.setAttribute('x1', sourceX);
+          line.setAttribute('y1', sourceY);
+          line.setAttribute('x2', targetX);
+          line.setAttribute('y2', targetY);
+          line.setAttribute('stroke', '#888');
+          line.setAttribute('stroke-width', '1.5');
+          line.setAttribute('stroke-dasharray', '5,3');
+          line.setAttribute('marker-end', 'url(#referenceArrowhead)');
+          line.setAttribute('data-reference-arrow', 'true');
+          line.setAttribute('data-ref-source', sourceId);
+          line.setAttribute('data-ref-target', targetId);
+
+          refGroup.appendChild(line);
+        }
+      }
+
+      const arrowCount = refGroup.querySelectorAll('line').length;
+      console.log(`✅ 参照矢印を描画しました: ${arrowCount}本`);
+    }
+
+    /**
+     * 参照データの検証（Prototype Pollution対策） (Phase 2)
+     * @param {Object} refs - 参照データ
+     * @returns {Object} 検証済み参照データ
+     */
+    function validateReferences(refs) {
+      if (typeof refs !== 'object' || refs === null) {
+        return {};
+      }
+
+      const validated = {};
+
+      for (const [key, value] of Object.entries(refs)) {
+        // プロトタイプ汚染対策
+        if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
+          console.warn(`[Security] プロトタイプ汚染の試みを検出: ${key}`);
+          continue;
+        }
+
+        // 値が配列であることを確認
+        if (!Array.isArray(value)) {
+          console.warn(`[Validation] references[${key}]が配列ではありません`);
+          continue;
+        }
+
+        // 配列の各要素が文字列であることを確認
+        const validatedArray = value.filter(item => typeof item === 'string');
+        if (validatedArray.length !== value.length) {
+          console.warn(`[Validation] references[${key}]に非文字列要素が含まれています`);
+        }
+
+        validated[key] = validatedArray;
+      }
+
+      return validated;
+    }
+
+    /**
+     * 孤立参照のクリーンアップ（存在しない要素への参照を削除） (Phase 2)
+     */
+    function cleanupInvalidReferences() {
+      const svg = document.querySelector('.svg-content-wrapper svg') || document.querySelector('svg');
+      if (!svg) return;
+
+      const validElementIds = new Set();
+
+      // 正規ノードのID収集
+      svg.querySelectorAll('[data-id]').forEach(el => {
+        validElementIds.add(el.getAttribute('data-id'));
+      });
+
+      // メモノードのID収集
+      for (const memoId of Object.keys(manualNodes)) {
+        validElementIds.add(memoId);
+      }
+
+      // 孤立参照の削除
+      let orphanedCount = 0;
+      for (const [sourceId, targetIds] of Object.entries(elementReferences)) {
+        // 参照元が存在しない場合、参照全体を削除
+        if (!validElementIds.has(sourceId)) {
+          delete elementReferences[sourceId];
+          orphanedCount += targetIds.length;
+          console.log(`[Cleanup] 孤立参照を削除（参照元なし）: ${sourceId} → [${targetIds.join(', ')}]`);
+          continue;
+        }
+
+        // 参照先が存在しない要素をフィルタ
+        const validTargets = targetIds.filter(targetId => {
+          if (!validElementIds.has(targetId)) {
+            orphanedCount++;
+            console.log(`[Cleanup] 孤立参照を削除（参照先なし）: ${sourceId} → ${targetId}`);
+            return false;
+          }
+          return true;
+        });
+
+        // 有効な参照先が残っている場合のみ保持
+        if (validTargets.length > 0) {
+          elementReferences[sourceId] = validTargets;
+        } else {
+          delete elementReferences[sourceId];
+        }
+      }
+
+      if (orphanedCount > 0) {
+        console.log(`[Cleanup] ${orphanedCount}個の孤立参照を削除しました`);
+      }
+    }
+
+    // ==========================================
+    // Task Links UI (タスク連携UI - Phase 3)
+    // ==========================================
+
+    /**
+     * タスク連携UIを更新 (Phase 3)
+     * @param {Object} taskLinks - タスク連携スナップショット { nodes: {...}, _snapshotAt: "..." }
+     */
+    function updateTaskLinksUI(taskLinks) {
+      if (!taskLinks || !taskLinks.nodes) {
+        document.getElementById('snapshot-time').textContent = '未取得';
+        document.getElementById('task-links-list').innerHTML = '<p style="text-align: center; color: #999; font-size: 11px; padding: 20px 0;">データがありません</p>';
+        return;
+      }
+
+      // スナップショット時刻を表示
+      const snapshotTime = taskLinks._snapshotAt ?
+        new Date(taskLinks._snapshotAt).toLocaleString('ja-JP', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit'
+        }) : '不明';
+      document.getElementById('snapshot-time').textContent = snapshotTime;
+
+      // タスクリンク一覧を生成
+      const listDiv = document.getElementById('task-links-list');
+      listDiv.innerHTML = '';
+
+      const entries = Object.values(taskLinks.nodes);
+
+      if (entries.length === 0) {
+        listDiv.innerHTML = '<p style="text-align: center; color: #999; font-size: 11px; padding: 20px 0;">連携タスクがありません</p>';
+        return;
+      }
+
+      entries.forEach(link => {
+        const item = document.createElement('div');
+        item.className = 'task-link-item';
+
+        // タスク名のサニタイズ（既にbuildTaskLinks()でサニタイズ済みだが念のため）
+        const sanitizedName = (link.taskName || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+        item.innerHTML = `
+          <div class="task-wbs">${link.wbsNo || ''}</div>
+          <div class="task-name">${sanitizedName}</div>
+          <div class="mermaid-ids">
+            ${(link.mermaidIds || []).map(id =>
+              `<span class="mermaid-id">${id}</span>`
+            ).join('')}
+          </div>
+        `;
+
+        // クリックでフローチャート要素をハイライト
+        item.addEventListener('click', () => {
+          highlightLinkedNodes(link.mermaidIds || []);
+        });
+
+        listDiv.appendChild(item);
+      });
+
+      // パネルを表示
+      const panel = document.getElementById('task-links-panel');
+      if (panel) {
+        panel.style.display = 'block';
+      }
+
+      console.log(`✅ タスク連携UIを更新: ${entries.length}件`);
+    }
+
+    /**
+     * タスク連携パネルの折りたたみ切り替え (Phase 3)
+     */
+    function toggleTaskLinksPanel() {
+      const panel = document.getElementById('task-links-panel');
+      if (panel) {
+        panel.classList.toggle('collapsed');
+      }
+    }
+
+    /**
+     * 連携ノードをハイライト (Phase 3)
+     * @param {Array<string>} mermaidIds - ハイライトするノードIDの配列
+     */
+    function highlightLinkedNodes(mermaidIds) {
+      const svg = document.querySelector('.svg-content-wrapper svg') || document.querySelector('svg');
+      if (!svg) return;
+
+      // 既存のハイライトを削除
+      svg.querySelectorAll('.highlighted-task-link').forEach(el => {
+        el.classList.remove('highlighted-task-link');
+      });
+
+      if (!mermaidIds || mermaidIds.length === 0) {
+        return;
+      }
+
+      // 対象ノードをハイライト
+      let highlightCount = 0;
+      mermaidIds.forEach(id => {
+        const node = svg.querySelector(`[data-id="${CSS.escape(id)}"]`);
+        if (node) {
+          node.classList.add('highlighted-task-link');
+          highlightCount++;
+
+          // ハイライト用のスタイルを一時的に追加（CSSで定義されていない場合）
+          const shape = node.querySelector('rect, circle, polygon, path');
+          if (shape) {
+            const originalStroke = shape.getAttribute('stroke');
+            const originalStrokeWidth = shape.getAttribute('stroke-width');
+
+            shape.setAttribute('stroke', '#4CAF50');
+            shape.setAttribute('stroke-width', '3');
+
+            // 3秒後にハイライト解除
+            setTimeout(() => {
+              node.classList.remove('highlighted-task-link');
+              if (originalStroke) {
+                shape.setAttribute('stroke', originalStroke);
+              }
+              if (originalStrokeWidth) {
+                shape.setAttribute('stroke-width', originalStrokeWidth);
+              } else {
+                shape.removeAttribute('stroke-width');
+              }
+            }, 3000);
+          }
+        }
+      });
+
+      console.log(`✅ ${highlightCount}個のノードをハイライト`);
+    }
+
+    /**
+     * タスク連携を再スナップショット (Phase 3)
+     */
+    function refreshTaskLinks() {
+      // buildTaskLinks()を呼び出して最新のスナップショットを取得
+      const taskLinks = buildTaskLinks();
+
+      // UIを更新
+      updateTaskLinksUI(taskLinks);
+
+      // 自動保存（スナップショット自体はbuildMemoData()で保存される）
+      if (currentFileHandle) {
+        saveToFileAuto().catch(err => {
+          console.warn('自動保存に失敗:', err);
+        });
+      }
+
+      alert('タスク連携を再スナップショットしました');
+    }
+
+    // ========== Phase 4: ステータス色分け機能 ==========
+
+    /**
+     * ステータスコンテキストメニューを表示
+     * @param {number} clientX - クライアントX座標
+     * @param {number} clientY - クライアントY座標
+     * @param {string} elementId - 要素ID
+     */
+    let currentStatusMenuTarget = null;
+
+    function showStatusContextMenu(clientX, clientY, elementId) {
+      const menu = document.getElementById('status-context-menu');
+      if (!menu) return;
+
+      currentStatusMenuTarget = elementId;
+
+      // メニュー表示
+      menu.style.display = 'block';
+      menu.style.left = `${clientX}px`;
+      menu.style.top = `${clientY}px`;
+
+      console.log(`[Status Menu] 表示: elementId=${elementId}, x=${clientX}, y=${clientY}`);
+    }
+
+    /**
+     * ステータスコンテキストメニューを非表示
+     */
+    function hideStatusContextMenu() {
+      const menu = document.getElementById('status-context-menu');
+      if (menu) {
+        menu.style.display = 'none';
+      }
+      currentStatusMenuTarget = null;
+    }
+
+    /**
+     * 要素にステータスを設定
+     * @param {string} elementId - 要素ID
+     * @param {string} status - ステータスキー (completed, in-progress, etc.)
+     */
+    function setElementStatus(elementId, status) {
+      if (!elementId || !status) {
+        console.warn('[Status] 無効なパラメータ:', { elementId, status });
+        return;
+      }
+
+      // elementStatusesに保存
+      elementStatuses[elementId] = status;
+
+      // 視覚的に適用
+      applyStatusToElement(elementId, status);
+
+      // 自動保存
+      if (currentFileHandle) {
+        saveToFileAuto().catch(err => {
+          console.warn('自動保存に失敗:', err);
+        });
+      }
+
+      console.log(`[Status] 設定完了: ${elementId} → ${status}`);
+    }
+
+    /**
+     * 要素のステータスをクリア
+     * @param {string} elementId - 要素ID
+     */
+    function clearElementStatus(elementId) {
+      if (!elementId) return;
+
+      // elementStatusesから削除
+      delete elementStatuses[elementId];
+
+      // デフォルトスタイルに戻す
+      removeStatusFromElement(elementId);
+
+      // 自動保存
+      if (currentFileHandle) {
+        saveToFileAuto().catch(err => {
+          console.warn('自動保存に失敗:', err);
+        });
+      }
+
+      console.log(`[Status] クリア完了: ${elementId}`);
+    }
+
+    /**
+     * 要素にステータス視覚効果を適用
+     * @param {string} elementId - 要素ID
+     * @param {string} status - ステータスキー
+     */
+    function applyStatusToElement(elementId, status) {
+      const svg = document.querySelector('.svg-content-wrapper svg') || document.querySelector('svg');
+      if (!svg) return;
+
+      // CSS.escape()で安全にセレクタを作成
+      const element = svg.querySelector(`[data-id="${CSS.escape(elementId)}"]`);
+      if (!element) {
+        console.warn(`[Status] 要素が見つかりません: ${elementId}`);
+        return;
+      }
+
+      // ステータス色のマッピング
+      const statusColors = {
+        'completed': 'var(--status-completed)',
+        'in-progress': 'var(--status-in-progress)',
+        'not-started': 'var(--status-not-started)',
+        'on-hold': 'var(--status-on-hold)',
+        'postponed': 'var(--status-postponed)',
+        'cancelled': 'var(--status-cancelled)',
+        'unknown': 'var(--status-unknown)'
+      };
+
+      const color = statusColors[status];
+      if (!color) {
+        console.warn(`[Status] 不明なステータス: ${status}`);
+        return;
+      }
+
+      // 要素タイプを判定
+      const elementType = element.getAttribute('data-et') || 'unknown';
+
+      if (elementType === 'cluster' || element.classList.contains('cluster')) {
+        // サブグラフ（クラスタ）の場合
+        applyStatusToSubgraph(element, color, status);
+      } else if (element.classList.contains('manual-memo-node')) {
+        // メモノードの場合
+        applyStatusToMemoNode(element, color, status);
+      } else {
+        // 正規ノードの場合
+        applyStatusToNode(element, color, status);
+      }
+    }
+
+    /**
+     * 正規ノードにステータス色を適用
+     * @param {SVGElement} element - SVG要素
+     * @param {string} color - CSS変数または色コード
+     * @param {string} status - ステータスキー
+     */
+    function applyStatusToNode(element, color, status) {
+      // シェイプ要素を探す
+      const shape = element.querySelector('rect, circle, polygon, path, ellipse');
+      if (shape) {
+        // ボーダー色を変更
+        shape.style.stroke = color;
+        shape.style.strokeWidth = '3';
+      }
+
+      // data-status属性を設定
+      element.setAttribute('data-status', status);
+
+      console.log(`[Status] ノードに適用: ${element.getAttribute('data-id')} → ${status}`);
+    }
+
+    /**
+     * サブグラフにステータス色を適用
+     * @param {SVGElement} element - SVG要素
+     * @param {string} color - CSS変数または色コード
+     * @param {string} status - ステータスキー
+     */
+    function applyStatusToSubgraph(element, color, status) {
+      // 背景矩形を探す
+      const rect = element.querySelector('rect');
+      if (rect) {
+        // 背景色を30%透明化
+        const computedColor = getComputedStyle(document.documentElement).getPropertyValue(color.replace('var(', '').replace(')', '')).trim();
+        rect.style.fill = computedColor + '33'; // 33 = 20% opacity in hex
+        rect.style.stroke = color;
+        rect.style.strokeWidth = '2';
+      }
+
+      // data-status属性を設定
+      element.setAttribute('data-status', status);
+
+      console.log(`[Status] サブグラフに適用: ${element.getAttribute('data-id')} → ${status}`);
+    }
+
+    /**
+     * メモノードにステータス色を適用
+     * @param {SVGElement} element - SVG要素
+     * @param {string} color - CSS変数または色コード
+     * @param {string} status - ステータスキー
+     */
+    function applyStatusToMemoNode(element, color, status) {
+      // 矩形を探す
+      const rect = element.querySelector('rect');
+      if (rect) {
+        // ボーダー色を変更
+        rect.style.stroke = color;
+        rect.style.strokeWidth = '3';
+      }
+
+      // data-status属性を設定
+      element.setAttribute('data-status', status);
+
+      console.log(`[Status] メモノードに適用: ${element.getAttribute('data-id')} → ${status}`);
+    }
+
+    /**
+     * 要素からステータス視覚効果を削除
+     * @param {string} elementId - 要素ID
+     */
+    function removeStatusFromElement(elementId) {
+      const svg = document.querySelector('.svg-content-wrapper svg') || document.querySelector('svg');
+      if (!svg) return;
+
+      const element = svg.querySelector(`[data-id="${CSS.escape(elementId)}"]`);
+      if (!element) return;
+
+      // シェイプのスタイルをリセット
+      const shape = element.querySelector('rect, circle, polygon, path, ellipse');
+      if (shape) {
+        shape.style.stroke = '';
+        shape.style.strokeWidth = '';
+        shape.style.fill = '';
+      }
+
+      // data-status属性を削除
+      element.removeAttribute('data-status');
+
+      console.log(`[Status] スタイル削除: ${elementId}`);
+    }
+
+    /**
+     * メタデータからステータスを復元
+     * @param {Object} metadata - メタデータオブジェクト（elementStatusesを含む）
+     */
+    function restoreStatusesFromMetadata(metadata) {
+      if (!metadata || !metadata.elementStatuses) {
+        console.log('[Status] ステータス情報なし');
+        return;
+      }
+
+      const statuses = metadata.elementStatuses;
+      let restoredCount = 0;
+
+      for (const [elementId, status] of Object.entries(statuses)) {
+        // Prototype Pollution対策
+        if (elementId === '__proto__' || elementId === 'constructor' || elementId === 'prototype') {
+          console.warn(`[Security] プロトタイプ汚染の試みを検出: ${elementId}`);
+          continue;
+        }
+
+        // ステータスを適用
+        applyStatusToElement(elementId, status);
+        restoredCount++;
+      }
+
+      console.log(`[Status] ✅ ${restoredCount}個の要素にステータスを復元しました`);
     }
 
     /**

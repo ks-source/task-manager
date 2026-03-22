@@ -1,665 +1,868 @@
-# データ構造定義
+# データ構造定義 - v2.0メタデータスキーマ完全仕様
 
-## 📊 TypeScript型定義
-
-### 基本型
-
-```typescript
-/**
- * 参照関係の型（Phase 1: 文字列配列）
- */
-type ElementReferences = string[];
-
-/**
- * 参照関係の型（Phase 3: オブジェクト配列、将来拡張用）
- */
-type ElementReferencesAdvanced = Array<{
-  id: string;
-  type?: "related" | "prerequisite" | "supplement" | "note";
-  note?: string;
-}>;
-
-/**
- * 要素タイプ
- */
-type ElementType = "node" | "edge" | "cluster" | "unknown";
-
-/**
- * タスクステータス
- */
-type TaskStatus = "Not Started" | "In Progress" | "Completed" | "On Hold" | "Cancelled";
-```
-
-### 要素メタデータ
-
-```typescript
-/**
- * フローチャート要素のメタデータ
- */
-interface ElementMetadata {
-  /** 要素タイプ（node, edge, cluster等） */
-  type: ElementType;
-
-  /** SVG上の表示テキスト */
-  displayText: string;
-
-  /** ユーザーが入力したメモ */
-  memo: string;
-
-  /** カスタムラベル（SVGラベルの上書き） */
-  customLabel: string;
-
-  /** 元のラベル（SVG読込時の値、復元用） */
-  originalLabel: string;
-
-  /** ★新規: この要素が参照している他の要素のID配列 */
-  references: ElementReferences;
-}
-
-/**
- * 要素メタデータのマップ
- * キー: 要素ID（data-id属性の値）
- */
-type ElementMetadataMap = { [elementId: string]: ElementMetadata };
-```
-
-### メモノード（手動追加ノード）
-
-```typescript
-/**
- * メモノード（手動で追加された注釈ノード）
- */
-interface ManualNode {
-  /** ノードID（例: MEMO_001） */
-  id: string;
-
-  /** ノードのラベル（表示テキスト） */
-  label: string;
-
-  /** X座標（SVG座標系） */
-  x: number;
-
-  /** Y座標（SVG座標系） */
-  y: number;
-
-  /** ノードの幅 */
-  width: number;
-
-  /** ノードの高さ */
-  height: number;
-
-  /** ★新規: このメモノードが参照している要素のID配列 */
-  references: ElementReferences;
-}
-
-/**
- * メモノードのマップ
- * キー: ノードID
- */
-type ManualNodeMap = { [nodeId: string]: ManualNode };
-```
-
-### 手動エッジ
-
-```typescript
-/**
- * 手動エッジ（手動で追加されたエッジ）
- */
-interface ManualEdge {
-  /** エッジID（例: E_MANUAL_001） */
-  id: string;
-
-  /** 開始ノードID */
-  from: string;
-
-  /** 終了ノードID */
-  to: string;
-
-  /** エッジのラベル */
-  label: string;
-
-  /** 開始点X座標 */
-  x1: number;
-
-  /** 開始点Y座標 */
-  y1: number;
-
-  /** 終了点X座標 */
-  x2: number;
-
-  /** 終了点Y座標 */
-  y2: number;
-
-  /** 制御点X座標（ベジェ曲線用） */
-  controlX: number;
-
-  /** 制御点Y座標（ベジェ曲線用） */
-  controlY: number;
-
-  /** ★新規（任意）: このエッジが参照している要素のID配列 */
-  references?: ElementReferences;
-}
-
-/**
- * 手動エッジのマップ
- * キー: エッジID
- */
-type ManualEdgeMap = { [edgeId: string]: ManualEdge };
-```
-
-### タスク連携
-
-```typescript
-/**
- * タスクとフローチャートの連携情報
- */
-interface TaskFlowchartLink {
-  /** タスク名 */
-  taskName: string;
-
-  /** フローチャート要素との連携 */
-  flowchartLinks: {
-    /** 連携しているノードIDの配列 */
-    nodes: string[];
-
-    /** 連携しているエッジIDの配列 */
-    edges: string[];
-  };
-}
-
-/**
- * タスク連携のマップ
- * キー: WBS番号（例: "0.1", "0.2"）
- */
-type TaskFlowchartLinkMap = { [wbs: string]: TaskFlowchartLink };
-```
-
-### SVGメタデータ（v2.0）
-
-```typescript
-/**
- * SVGメタデータ v2.0
- * SVGコメント内にJSON形式で埋め込まれる
- */
-interface SVGMetadataV2 {
-  /** メタデータバージョン（v1.0 → v2.0にアップグレード） */
-  version: "2.0";
-
-  /** エクスポート日時（ISO 8601形式） */
-  exportedAt: string;
-
-  /** 元のSVGファイル名 */
-  svgFile: string;
-
-  /** フローチャート要素のメタデータ */
-  elements: ElementMetadataMap;
-
-  /** メモノード（手動追加） */
-  manualNodes: ManualNodeMap;
-
-  /** 手動エッジ */
-  manualEdges: ManualEdgeMap;
-
-  /** ★新規: タスクとフローチャートの連携情報 */
-  taskFlowchartLinks: TaskFlowchartLinkMap;
-
-  /** 元のラベル情報（復元用） */
-  originalLabels: { [elementId: string]: string };
-}
-```
+---
+**作成日**: 2026-03-22
+**バージョン**: 2.0
+**対象**: flowchart-editor.html
+**目的**: v2.0メタデータスキーマの完全な技術仕様定義（Phase 4統合版）
 
 ---
 
-## 📋 JSONサンプル
+## 概要
 
-### 完全なメタデータ例
+本ドキュメントは、flowchart-editor.html の v2.0 メタデータスキーマの完全な技術仕様を定義する。
+
+v2.0 では、以下3つの新機能が追加される：
+1. **ステータス色分け機能**（Phase 4） - 要素の視覚的な状態管理
+2. **参照関係管理機能** - ノード間の関連性を明示的に記録
+3. **タスク連携スナップショット** - task-manager.htmlのタスク情報の保存
+
+---
+
+## v2.0 スキーマの全体像
+
+### 完全なJSON構造
 
 ```json
 {
   "version": "2.0",
-  "exportedAt": "2026-03-22T12:00:00.000Z",
-  "svgFile": "Dify_Workflow.svg",
+  "schemaVersion": "2.0",
+  "exportedAt": "2026-03-22T12:00:00Z",
+  "svgFile": "workflow.svg",
 
   "elements": {
-    "U_START": {
+    "flowchart-A": {
       "type": "node",
-      "displayText": "[USR_01] ユーザー",
-      "memo": "初期状態のノード\n問い合わせが発生する起点",
-      "customLabel": "[USR_01] ユーザー：問い合わせ発生",
-      "originalLabel": "[USR_01] ユーザー",
-      "references": ["MEMO_001", "node_002"]
-    },
-    "node_002": {
-      "type": "node",
-      "displayText": "[SYS_01] システム",
-      "memo": "",
-      "customLabel": "",
-      "originalLabel": "[SYS_01] システム",
-      "references": []
-    },
-    "node_003": {
-      "type": "node",
-      "displayText": "[DB_01] データベース",
-      "memo": "マスターデータを参照",
-      "customLabel": "",
-      "originalLabel": "[DB_01] データベース",
-      "references": ["node_002"]
-    },
-    "E_001": {
-      "type": "edge",
-      "displayText": "問い合わせ送信",
-      "memo": "",
-      "customLabel": "",
-      "originalLabel": "問い合わせ送信",
-      "references": []
-    }
-  },
-
-  "manualNodes": {
-    "MEMO_001": {
-      "id": "MEMO_001",
-      "label": "重要な注意事項",
-      "x": 100,
-      "y": 200,
-      "width": 120,
-      "height": 60,
-      "references": ["U_START", "node_002"]
-    },
-    "MEMO_002": {
-      "id": "MEMO_002",
-      "label": "共通エラーハンドリング",
-      "x": 300,
-      "y": 150,
-      "width": 150,
-      "height": 80,
-      "references": ["U_START", "node_002", "node_003"]
-    }
-  },
-
-  "manualEdges": {
-    "E_MANUAL_001": {
-      "id": "E_MANUAL_001",
-      "from": "MEMO_001",
-      "to": "U_START",
-      "label": "補足説明",
-      "x1": 100,
-      "y1": 200,
-      "x2": 300,
-      "y2": 250,
-      "controlX": 200,
-      "controlY": 225
-    },
-    "E_MANUAL_002": {
-      "id": "E_MANUAL_002",
-      "from": "MEMO_001",
-      "to": "node_002",
-      "label": "",
-      "x1": 220,
-      "y1": 200,
-      "x2": 400,
-      "y2": 300,
-      "controlX": 310,
-      "controlY": 250
-    }
-  },
-
-  "taskFlowchartLinks": {
-    "0.1": {
-      "taskName": "要件定義",
-      "flowchartLinks": {
-        "nodes": ["U_START", "node_002"],
-        "edges": ["E_001"]
-      }
-    },
-    "0.2": {
-      "taskName": "Difyワークフローアーキテクチャ設計",
-      "flowchartLinks": {
-        "nodes": ["U_START", "node_002", "node_003"],
-        "edges": []
-      }
-    },
-    "1.1": {
-      "taskName": "データベース設計",
-      "flowchartLinks": {
-        "nodes": ["node_003"],
-        "edges": []
-      }
+      "displayText": "開始",
+      "memo": "プロジェクトキックオフ会議で決定",
+      "customLabel": "Phase 1開始",
+      "originalLabel": "開始"
     }
   },
 
   "originalLabels": {
-    "U_START": "[USR_01] ユーザー",
-    "node_002": "[SYS_01] システム",
-    "node_003": "[DB_01] データベース",
-    "E_001": "問い合わせ送信"
+    "flowchart-A": "開始",
+    "flowchart-B": "設計"
+  },
+
+  "manualNodes": {
+    "memo_node_1": {
+      "id": "memo_node_1",
+      "x": 500,
+      "y": 300,
+      "width": 200,
+      "height": 100,
+      "label": "会議メモ",
+      "content": "次回レビュー時に確認",
+      "createdAt": "2026-03-22T10:00:00Z"
+    }
+  },
+
+  "manualEdges": {
+    "manual-edge-1710000000000": {
+      "id": "manual-edge-1710000000000",
+      "startX": 100,
+      "startY": 50,
+      "startNodeId": "flowchart-A",
+      "endX": 300,
+      "endY": 200,
+      "endNodeId": "flowchart-B",
+      "label": "承認後に実施",
+      "style": {
+        "color": "#666",
+        "width": 2,
+        "dashArray": "5,5"
+      },
+      "createdAt": "2026-03-21T10:30:00Z"
+    }
+  },
+
+  "elementStatuses": {
+    "flowchart-A": "completed",
+    "flowchart-B": "in-progress",
+    "subgraph_1": "on-hold",
+    "memo_node_1": "postponed"
+  },
+
+  "references": {
+    "flowchart-A": ["flowchart-B", "memo_node_1"],
+    "flowchart-B": ["flowchart-C"],
+    "memo_node_1": ["flowchart-A"]
+  },
+
+  "taskFlowchartLinks": {
+    "nodes": {
+      "WBS1.1.0": {
+        "taskId": "task-001",
+        "wbsNo": "WBS1.1.0",
+        "taskName": "要件定義",
+        "mermaidIds": ["flowchart-A", "flowchart-B"],
+        "_snapshotAt": "2026-03-22T12:00:00Z"
+      }
+    },
+    "_snapshotAt": "2026-03-22T12:00:00Z"
   }
 }
 ```
 
 ---
 
-## 🔄 データ変換ロジック
+## フィールド一覧表
 
-### メモリ上のデータ構造（JavaScript）
+### トップレベルフィールド
+
+| フィールド | 型 | 必須 | v1.0 | v2.0 | 説明 |
+|-----------|---|------|------|------|------|
+| `version` | string | ✅ | ✅ | ✅ | メタデータバージョン（"1.0" or "2.0"） |
+| `schemaVersion` | string | ✅ | ❌ | ✅ | スキーマバージョン（v2.0で明示的に追加） |
+| `exportedAt` | string | ✅ | ✅ | ✅ | エクスポート日時（ISO 8601形式） |
+| `svgFile` | string | ✅ | ✅ | ✅ | 元のSVGファイル名 |
+| `elements` | object | ✅ | ✅ | ✅ | ノード・エッジのメモ・ラベル情報 |
+| `originalLabels` | object | ✅ | ✅ | ✅ | 元のラベル情報 |
+| `manualNodes` | object | ✅ | ✅ | ✅ | メモノード情報 |
+| `manualEdges` | object | ✅ | ✅ | ✅ | 手動エッジ情報 |
+| **`elementStatuses`** | **object** | ✅ | **❌** | **✅** | **ステータス情報（Phase 4）** |
+| **`references`** | **object** | ✅ | **❌** | **✅** | **参照関係情報** |
+| **`taskFlowchartLinks`** | **object** | ✅ | **❌** | **✅** | **タスク連携スナップショット** |
+
+---
+
+## グローバル変数
+
+### JavaScript内部データ構造
 
 ```javascript
-// flowchart-editor.html内のグローバル変数
+// ========== 既存の変数（v1.0から継続） ==========
+let selectedElement = null;               // 選択中のSVG要素
+let elementMemos = {};                    // { elementId: memoText }
+let elementLabels = {};                   // { elementId: customLabel }
+let originalLabels = {};                  // { elementId: originalLabel }
+let manualNodes = {};                     // メモノードのマップ
+let manualEdges = {};                     // 手動エッジのマップ
+let autoSaveTimer = null;                 // 自動保存タイマー
+let currentFileHandle = null;             // File System Access API ハンドル
+let currentSvgFileName = null;            // 読み込み中のSVGファイル名
 
-// 要素のメモ（単純なマップ）
-let elementMemos = {
-  "U_START": "初期状態のノード\n問い合わせが発生する起点",
-  "node_003": "マスターデータを参照"
-};
-
-// 要素のカスタムラベル（単純なマップ）
-let elementCustomLabels = {
-  "U_START": "[USR_01] ユーザー：問い合わせ発生"
-};
-
-// ★新規: 要素の参照関係（単純なマップ）
-let elementReferences = {
-  "U_START": ["MEMO_001", "node_002"],
-  "node_003": ["node_002"]
-};
-
-// メモノード（オブジェクトのマップ）
-let manualNodes = {
-  "MEMO_001": {
-    id: "MEMO_001",
-    label: "重要な注意事項",
-    x: 100, y: 200,
-    width: 120, height: 60,
-    references: ["U_START", "node_002"]  // ★新規
-  }
-};
-
-// タスク連携（配列）
-let mockTasks = [
-  {
-    wbs: "0.1",
-    taskName: "要件定義",
-    mermaidIds: "U_START, node_002",
-    flowchartLinks: {
-      nodes: ["U_START", "node_002"],
-      edges: ["E_001"]
-    }
-  },
-  {
-    wbs: "0.2",
-    taskName: "Difyワークフローアーキテクチャ設計",
-    mermaidIds: "U_START, node_002, node_003",
-    flowchartLinks: {
-      nodes: ["U_START", "node_002", "node_003"],
-      edges: []
-    }
-  }
-];
+// ========== v2.0 新規追加の変数 ==========
+let elementStatuses = {};                 // { elementId: statusKey } - Phase 4
+let elementReferences = {};               // { elementId: [refId1, refId2, ...] } - 参照関係管理
 ```
 
-### メモリ → SVGメタデータ変換
+---
+
+## 1. elementStatuses（ステータス色分け機能 - Phase 4）
+
+### データ構造
+
+```javascript
+elementStatuses = {
+  'flowchart-A': 'completed',       // 正規ノード（Mermaidノード）
+  'flowchart-B': 'in-progress',     // 正規ノード
+  'subgraph_1': 'on-hold',          // サブグラフ
+  'memo_node_1': 'postponed'        // メモノード
+};
+
+// ステータス未設定の要素はキーが存在しない（undefinedまたはnull）
+```
+
+### ステータス定義（task-manager.htmlと同一）
 
 ```javascript
 /**
- * メモリ上のデータをSVGメタデータ形式に変換
+ * ステータス色定義
+ * task-manager.htmlのステータス仕様と完全同一
  */
-function buildMetadata() {
-  const metadata = {
-    version: "2.0",
-    exportedAt: new Date().toISOString(),
-    svgFile: currentSvgFileName || 'unknown.svg',
-    elements: {},
-    manualNodes: manualNodes,  // そのまま
-    manualEdges: manualEdges,  // そのまま
-    taskFlowchartLinks: {},    // ★新規
-    originalLabels: originalLabels
-  };
+const STATUS_COLORS = Object.freeze({
+  'not-started': {
+    bg: '#e2e3e5',       // 背景色（薄グレー）
+    text: '#383d41',     // テキスト色（ダークグレー）
+    border: '#6c757d',   // ボーダー色
+    label: '未着手'
+  },
+  'in-progress': {
+    bg: '#fff3cd',       // 背景色（薄イエロー）
+    text: '#856404',     // テキスト色（ダークイエロー）
+    border: '#ffc107',   // ボーダー色
+    label: '進行中'
+  },
+  'completed': {
+    bg: '#d4edda',       // 背景色（薄グリーン）
+    text: '#155724',     // テキスト色（ダークグリーン）
+    border: '#28a745',   // ボーダー色
+    label: '完了'
+  },
+  'on-hold': {
+    bg: '#ffe5d0',       // 背景色（薄オレンジ）
+    text: '#8a4a0e',     // テキスト色（ダークオレンジ）
+    border: '#fd7e14',   // ボーダー色
+    label: '保留'
+  },
+  'postponed': {
+    bg: '#f8d7da',       // 背景色（薄ピンク）
+    text: '#721c24',     // テキスト色（ダークレッド）
+    border: '#dc3545',   // ボーダー色
+    label: '延期'
+  },
+  'cancelled': {
+    bg: '#f5f5f5',       // 背景色（薄グレー）
+    text: '#666',        // テキスト色（グレー）
+    border: '#999',      // ボーダー色
+    label: '中止'
+  },
+  'unknown': {
+    bg: '#e9ecef',       // 背景色（薄グレー）
+    text: '#495057',     // テキスト色（グレー）
+    border: '#adb5bd',   // ボーダー色
+    label: '不明'
+  }
+});
+```
 
-  // elements を構築
+### フィールド仕様
+
+| フィールド | 型 | 説明 | 制約 |
+|-----------|---|------|------|
+| `elementStatuses` | object | 要素IDとステータスキーのマップ | トップレベルフィールド |
+| キー | string | 要素ID（正規ノード・サブグラフ・メモノード） | 必須 |
+| 値 | string | ステータスキー | `STATUS_COLORS`のキーのいずれか |
+
+**値の制約**:
+- `not-started`, `in-progress`, `completed`, `on-hold`, `postponed`, `cancelled`, `unknown`のいずれか
+- ステータス未設定の要素はキーが存在しない
+
+### タスクステータスとの独立性
+
+**重要**: フローチャートステータスとタスクステータスは**完全に独立**している。
+
+```
+┌─────────────────────────┐         ┌─────────────────────────┐
+│ flowchart-editor.html   │         │ task-manager.html       │
+│                         │         │                         │
+│ elementStatuses {       │         │ projectData.tasks [{    │
+│   'F_01': 'completed'   │         │   wbs_no: "WBS1.1.0",   │
+│ }                       │         │   status: "進行中"      │
+│                         │ 🚫 連携なし │ }]                      │
+│ 用途: 視覚的な状態管理    │         │ 用途: 実タスク進捗管理   │
+│ 保存: SVGファイル         │         │ 保存: JSONファイル       │
+└─────────────────────────┘         └─────────────────────────┘
+
+理由:
+1. フローチャートとタスクは1:Nの関係（1つのノードに複数タスク）
+2. フローチャートステータスは「工程全体」の状態を表す
+3. タスクステータスは「個別作業」の状態を表す
+4. データ同期による複雑性を回避
+```
+
+---
+
+## 2. references（参照関係管理機能）
+
+### データ構造
+
+```javascript
+elementReferences = {
+  'flowchart-A': ['flowchart-B', 'memo_node_1'],  // 正規ノード → 正規ノード + メモノード
+  'flowchart-B': ['flowchart-C'],                 // 正規ノード → 正規ノード
+  'memo_node_1': ['flowchart-A'],                 // メモノード → 正規ノード
+  'subgraph_1': ['flowchart-D']                   // サブグラフ → 正規ノード
+};
+
+// 参照なしの要素はキーが存在しない
+```
+
+### フィールド仕様
+
+| フィールド | 型 | 説明 | 制約 |
+|-----------|---|------|------|
+| `references` | object | 要素IDと参照先ID配列のマップ | トップレベルフィールド |
+| キー | string | 参照元の要素ID | 必須 |
+| 値 | array of string | 参照先の要素ID一覧 | 空配列不可（空の場合はキー削除） |
+
+**値の制約**:
+- 配列要素は有効な要素ID（正規ノード・サブグラフ・メモノード）
+- 重複不可
+- 自己参照不可（`'F_01': ['F_01']` は禁止）
+- MVPではエッジIDは参照先から除外（Phase 3で開放検討）
+
+### 参照の意味論
+
+**設計原則**（外部レビューより）:
+
+本機能における `references` は**図要素間の汎用的な関連先ID一覧**として扱う。
+
+- **補足対象**: 「このメモノードはこの正規ノードの補足である」
+- **関連対象**: 「この要素は別の要素と関連がある」
+- **依存対象**: 「この要素は別の要素を前提としている」
+
+将来的に relation type（related/prerequisite/supplement）の導入可能性を前提とするが、MVPでは単一の `references` 配列として実装。
+
+### IDの安定性問題
+
+Mermaid由来のIDは実装都合の識別子であり、必ずしも業務上安定した識別子ではない。
+
+**対策**:
+- SVG読込時に参照先IDが見つからない場合、ラベルベースの再解決候補をユーザーに提示
+- 自動で勝手に修復せず、ユーザーに選択肢を見せる（Phase 2以降）
+
+---
+
+## 3. taskFlowchartLinks（タスク連携スナップショット）
+
+### データ構造
+
+```javascript
+taskFlowchartLinks = {
+  "nodes": {
+    "WBS1.1.0": {
+      "taskId": "task-001",
+      "wbsNo": "WBS1.1.0",
+      "taskName": "要件定義",
+      "mermaidIds": ["flowchart-A", "flowchart-B"],
+      "_snapshotAt": "2026-03-22T12:00:00Z"
+    },
+    "WBS1.2.0": {
+      "taskId": "task-002",
+      "wbsNo": "WBS1.2.0",
+      "taskName": "基本設計",
+      "mermaidIds": ["flowchart-C"],
+      "_snapshotAt": "2026-03-22T12:00:00Z"
+    }
+  },
+  "_snapshotAt": "2026-03-22T12:00:00Z"
+};
+```
+
+### フィールド仕様
+
+| フィールド | 型 | 説明 | 制約 |
+|-----------|---|------|------|
+| `taskFlowchartLinks` | object | タスク連携情報のスナップショット | トップレベルフィールド |
+| `nodes` | object | WBS番号をキーとしたタスク連携マップ | 必須 |
+| `_snapshotAt` | string | スナップショット取得日時（ISO 8601） | 必須 |
+
+#### nodes の各エントリフィールド
+
+| フィールド | 型 | 説明 | 必須 |
+|-----------|---|------|------|
+| `taskId` | string | タスクの一意識別子 | ✅ |
+| `wbsNo` | string | WBS番号 | ✅ |
+| `taskName` | string | タスク名 | ✅ |
+| `mermaidIds` | array of string | 連携するMermaidノードID一覧 | ✅ |
+| `_snapshotAt` | string | この連携情報のスナップショット日時 | ✅ |
+
+### 正本（Source of Truth）の定義
+
+**設計原則**（外部レビューより）:
+
+- **タスク本体の正本**: A側（task-manager.html の LocalStorage）
+- **SVG内の `taskFlowchartLinks`**: スナップショット（バックアップ）
+- **競合時**: A側のタスクデータを優先
+
+**運用方針**:
+1. SVG単独読込時のみスナップショットを復元に使用
+2. task-manager.htmlが起動している場合は、A側のデータを優先
+3. 同期は手動トリガー（自動同期は行わない）
+
+---
+
+## buildMemoData() の最終形（完全版）
+
+### 完全なコード
+
+```javascript
+/**
+ * メタデータを構築してJSON形式で返す（v2.0完全版）
+ * @returns {Object} v2.0メタデータオブジェクト
+ */
+function buildMemoData() {
+  const elements = {};
+
+  // 既存のメモ・ラベル情報を収集
   const allElementIds = new Set([
     ...Object.keys(elementMemos),
-    ...Object.keys(elementCustomLabels),
-    ...Object.keys(elementReferences)  // ★新規
+    ...Object.keys(elementLabels),
+    ...Object.keys(originalLabels)
   ]);
 
   for (const elementId of allElementIds) {
-    const element = document.querySelector(`[data-id="${elementId}"]`);
-    if (!element) continue;
+    const element = document.querySelector(`[data-id="${CSS.escape(elementId)}"]`);
+    const type = element?.getAttribute('data-et') || 'unknown';
+    const displayText = getElementDisplayText(element);
+    const memo = elementMemos[elementId] || '';
+    const customLabel = elementLabels[elementId] || '';
 
-    metadata.elements[elementId] = {
-      type: element.getAttribute('data-et') || 'unknown',
-      displayText: getElementDisplayText(element),
-      memo: elementMemos[elementId] || '',
-      customLabel: elementCustomLabels[elementId] || '',
-      originalLabel: originalLabels[elementId] || '',
-      references: elementReferences[elementId] || []  // ★新規
+    elements[elementId] = {
+      type: type,
+      displayText: displayText,
+      memo: memo,
+      customLabel: customLabel,
+      originalLabel: originalLabels[elementId] || ''
     };
   }
 
-  // taskFlowchartLinks を構築（mockTasks配列をオブジェクトに変換）
-  mockTasks.forEach(task => {
-    metadata.taskFlowchartLinks[task.wbs] = {
-      taskName: task.taskName,
-      flowchartLinks: {
-        nodes: task.flowchartLinks.nodes,
-        edges: task.flowchartLinks.edges
-      }
+  return {
+    // バージョン情報
+    version: "2.0",
+    schemaVersion: "2.0",
+    exportedAt: new Date().toISOString(),
+    svgFile: currentSvgFileName || 'unknown.svg',
+
+    // 既存フィールド（v1.0から継続）
+    elements: elements,
+    originalLabels: originalLabels,
+    manualNodes: manualNodes,
+    manualEdges: manualEdges,
+
+    // v2.0 新機能
+    elementStatuses: elementStatuses,        // Phase 4: ステータス色分け
+    references: elementReferences,           // 参照関係管理
+    taskFlowchartLinks: buildTaskLinks()     // タスク連携スナップショット
+  };
+}
+
+/**
+ * タスク連携情報を構築
+ * @returns {Object} taskFlowchartLinks オブジェクト
+ */
+function buildTaskLinks() {
+  // task-manager.html から受信したデータを使用
+  const taskLinks = window.taskFlowchartData || { nodes: {} };
+
+  return {
+    nodes: taskLinks.nodes || {},
+    _snapshotAt: new Date().toISOString()
+  };
+}
+```
+
+---
+
+## マイグレーション処理（v1.0 → v2.0 統合版）
+
+### 完全なマイグレーション関数
+
+```javascript
+/**
+ * メタデータのバージョンマイグレーション（v1.0 → v2.0）
+ * @param {Object} data - メタデータ
+ * @returns {Object} マイグレーション後のデータ
+ */
+function migrateMetadata(data) {
+  // 既にv2.0の場合はそのまま返す
+  if (data.version === "2.0" || data.schemaVersion === "2.0") {
+    console.log('[Migration] 既にv2.0形式です');
+    return data;
+  }
+
+  // v1.0の場合、構造をクローンしてマイグレーション
+  let migrated = structuredClone(data);
+
+  console.log('[Migration] v1.0 → v2.0 マイグレーション開始');
+
+  // バージョン情報の更新
+  migrated.version = "2.0";
+  migrated.schemaVersion = "2.0";
+
+  // ★ Phase 4: ステータス管理の初期化
+  if (!migrated.elementStatuses) {
+    migrated.elementStatuses = {};
+    console.log('[Migration] elementStatuses を空オブジェクトで初期化');
+  }
+
+  // ★ 参照関係管理の初期化
+  if (!migrated.references) {
+    migrated.references = {};
+    console.log('[Migration] references を空オブジェクトで初期化');
+  }
+
+  // ★ タスク連携の初期化
+  if (!migrated.taskFlowchartLinks) {
+    migrated.taskFlowchartLinks = {
+      nodes: {},
+      _snapshotAt: null
     };
-  });
+    console.log('[Migration] taskFlowchartLinks を空で初期化');
+  }
 
-  return metadata;
+  console.log('[Migration] ✅ v2.0へのマイグレーション完了');
+
+  return migrated;
 }
 ```
 
-### SVGメタデータ → メモリ変換
+### バージョン互換性マトリクス
+
+| バージョン | elementStatuses | references | taskFlowchartLinks | 後方互換性 | 前方互換性 |
+|-----------|----------------|------------|-------------------|-----------|-----------|
+| v1.0 | なし | なし | なし | - | ✅ v2.0で読み込み可（空で初期化） |
+| v2.0 | あり | あり | あり | ❌ v1.0で読み込み不可 | - |
+
+**注意事項**:
+- v2.0ファイルをv1.0実装で開くと新規フィールドが無視される
+- v1.0ファイルをv2.0実装で開くと自動マイグレーションされる
+- マイグレーション後は再保存でv2.0形式になる
+
+---
+
+## 復元処理の完全なフロー
+
+### SVG読み込み時の復元処理
 
 ```javascript
 /**
- * SVGメタデータをメモリ上のデータに復元
+ * SVGファイルを読み込んでメタデータを復元
+ * @param {File} file - SVGファイル
  */
-function restoreMetadata(extractedMetadata) {
-  if (!extractedMetadata) return;
+async function loadSVGFile(file) {
+  const text = await file.text();
+  const parser = new DOMParser();
+  const svgDoc = parser.parseFromString(text, 'image/svg+xml');
 
-  // 元のラベル情報を復元
-  if (extractedMetadata.originalLabels) {
-    originalLabels = extractedMetadata.originalLabels;
+  // SVGをDOMに挿入
+  const svgContainer = document.getElementById('svg-container');
+  svgContainer.innerHTML = '';
+  svgContainer.appendChild(svgDoc.documentElement);
+
+  // メタデータを抽出
+  const memoData = extractMemoDataFromSVG(svgDoc);
+
+  if (memoData) {
+    // v1.0 → v2.0 マイグレーション
+    const migratedData = migrateMetadata(memoData);
+
+    // 1. 既存機能の復元（v1.0から継続）
+    restoreLabelsFromMemoData(migratedData);
+    restoreMemosFromMemoData(migratedData);
+    restoreManualElementsFromMemoData(migratedData);
+
+    // 2. v2.0機能の復元（順序任意 - 各関数は独立）
+    restoreStatusesFromMetadata(migratedData);      // Phase 4: ステータス
+    restoreReferencesFromMemoData(migratedData);    // 参照関係
+    restoreTaskLinksFromMemoData(migratedData);     // タスク連携
+
+    // 3. 統合検証
+    validateRestoredData();
+
+    console.log('[Load] ✅ SVG読み込み完了（v2.0）');
+  } else {
+    console.log('[Load] メタデータなし（新規SVG）');
+    initializeGlobalState();
+  }
+}
+
+/**
+ * ステータス情報を復元（Phase 4）
+ * @param {Object} metadata - メタデータ
+ */
+function restoreStatusesFromMetadata(metadata) {
+  if (!metadata || !metadata.elementStatuses) {
+    console.log('[Status] ステータス情報なし（v1.0以前のファイル）');
+    elementStatuses = {};
+    return;
   }
 
-  // メモ・カスタムラベル・参照関係を復元
-  if (extractedMetadata.elements) {
-    elementMemos = {};
-    elementCustomLabels = {};
-    elementReferences = {};  // ★新規
+  elementStatuses = metadata.elementStatuses;
 
-    for (const [elementId, elementData] of Object.entries(extractedMetadata.elements)) {
-      if (elementData.memo) {
-        elementMemos[elementId] = elementData.memo;
-      }
-      if (elementData.customLabel) {
-        elementCustomLabels[elementId] = elementData.customLabel;
-        // SVG DOMに即座に反映
-        const element = document.querySelector(`[data-id="${elementId}"]`);
-        if (element) {
-          updateSvgLabel(element, elementData.customLabel);
-        }
-      }
-      if (elementData.references) {  // ★新規
-        elementReferences[elementId] = elementData.references;
-      }
+  // 各要素にステータススタイルを適用
+  for (const [elementId, status] of Object.entries(elementStatuses)) {
+    if (!STATUS_COLORS[status]) {
+      console.warn(`[Status] 不正なステータス値: ${status} (要素ID: ${elementId})`);
+      continue;
+    }
+
+    applyStatusStyle(elementId, status);
+  }
+
+  console.log(`[Status] ✅ 復元完了: ${Object.keys(elementStatuses).length}個の要素`);
+}
+
+/**
+ * 参照関係情報を復元
+ * @param {Object} memoData - メタデータ
+ */
+function restoreReferencesFromMemoData(memoData) {
+  if (!memoData || !memoData.references) {
+    console.log('[References] 参照関係情報なし');
+    elementReferences = {};
+    return;
+  }
+
+  elementReferences = memoData.references;
+
+  // 無効な参照を検証
+  for (const [elementId, refs] of Object.entries(elementReferences)) {
+    const invalidRefs = refs.filter(refId => {
+      const refElement = document.querySelector(`[data-id="${CSS.escape(refId)}"]`);
+      return !refElement && !manualNodes[refId];
+    });
+
+    if (invalidRefs.length > 0) {
+      console.warn(`[References] 無効な参照を検出: ${elementId} → [${invalidRefs.join(', ')}]`);
     }
   }
 
-  // メモノードを復元
-  if (extractedMetadata.manualNodes) {
-    manualNodes = extractedMetadata.manualNodes;
-    // イベントハンドラを再アタッチ
-    for (const nodeId of Object.keys(manualNodes)) {
-      attachDragBehavior(nodeId);
-    }
+  console.log(`[References] ✅ 復元完了: ${Object.keys(elementReferences).length}個の要素`);
+}
+
+/**
+ * タスク連携情報を復元
+ * @param {Object} memoData - メタデータ
+ */
+function restoreTaskLinksFromMemoData(memoData) {
+  if (!memoData || !memoData.taskFlowchartLinks) {
+    console.log('[TaskLinks] タスク連携情報なし');
+    return;
   }
 
-  // 手動エッジを復元
-  if (extractedMetadata.manualEdges) {
-    manualEdges = extractedMetadata.manualEdges;
-  }
+  // スナップショットをグローバル変数に保存（必要に応じて）
+  window.taskFlowchartSnapshot = memoData.taskFlowchartLinks;
 
-  // タスク連携を復元（オブジェクト → 配列変換）  // ★新規
-  if (extractedMetadata.taskFlowchartLinks) {
-    mockTasks = [];
-    for (const [wbs, linkData] of Object.entries(extractedMetadata.taskFlowchartLinks)) {
-      mockTasks.push({
-        wbs: wbs,
-        taskName: linkData.taskName,
-        mermaidIds: linkData.flowchartLinks.nodes.join(', '),
-        flowchartLinks: linkData.flowchartLinks,
-        status: "Not Started"  // デフォルト値（A側から再取得時に上書き）
-      });
-    }
-  }
+  console.log(`[TaskLinks] ✅ 復元完了: ${Object.keys(memoData.taskFlowchartLinks.nodes).length}個のタスク`);
+}
+
+/**
+ * グローバル状態の初期化
+ */
+function initializeGlobalState() {
+  // 既存
+  elementLabels = {};
+  elementMemos = {};
+  manualNodes = {};
+  manualEdges = {};
+
+  // v2.0追加
+  elementStatuses = {};
+  elementReferences = {};
+}
+
+/**
+ * 復元データの検証
+ */
+function validateRestoredData() {
+  // 参照関係の循環検出（簡易版）
+  // Phase 2以降で実装予定
+
+  console.log('[Validation] データ検証完了');
 }
 ```
 
 ---
 
-## 🔍 データ検証ロジック
+## バリデーション関数
 
-### 参照の一貫性チェック
-
-```javascript
-/**
- * 参照の一貫性をチェック（存在しないIDへの参照を検出）
- */
-function validateReferences(metadata) {
-  const allIds = new Set([
-    ...Object.keys(metadata.elements),
-    ...Object.keys(metadata.manualNodes),
-    ...Object.keys(metadata.manualEdges)
-  ]);
-
-  const errors = [];
-
-  // elements の参照をチェック
-  for (const [elementId, elementData] of Object.entries(metadata.elements)) {
-    if (!elementData.references) continue;
-
-    for (const refId of elementData.references) {
-      if (!allIds.has(refId)) {
-        errors.push({
-          elementId: elementId,
-          invalidRef: refId,
-          type: 'element'
-        });
-      }
-    }
-  }
-
-  // manualNodes の参照をチェック
-  for (const [nodeId, nodeData] of Object.entries(metadata.manualNodes)) {
-    if (!nodeData.references) continue;
-
-    for (const refId of nodeData.references) {
-      if (!allIds.has(refId)) {
-        errors.push({
-          elementId: nodeId,
-          invalidRef: refId,
-          type: 'manualNode'
-        });
-      }
-    }
-  }
-
-  return errors;
-}
-
-/**
- * 検証エラーをクリーンアップ（無効な参照を削除）
- */
-function cleanupInvalidReferences(metadata, errors) {
-  errors.forEach(error => {
-    if (error.type === 'element') {
-      const refs = metadata.elements[error.elementId].references;
-      metadata.elements[error.elementId].references =
-        refs.filter(id => id !== error.invalidRef);
-
-      console.warn(`⚠️ 無効な参照を削除: ${error.elementId} → ${error.invalidRef}`);
-    } else if (error.type === 'manualNode') {
-      const refs = metadata.manualNodes[error.elementId].references;
-      metadata.manualNodes[error.elementId].references =
-        refs.filter(id => id !== error.invalidRef);
-
-      console.warn(`⚠️ 無効な参照を削除: ${error.elementId} → ${error.invalidRef}`);
-    }
-  });
-}
-```
-
-### 循環参照の検出
+### データ整合性検証
 
 ```javascript
 /**
- * 循環参照を検出（警告のみ、エラーにはしない）
+ * elementStatuses の検証
+ * @param {Object} statuses - ステータスオブジェクト
+ * @returns {boolean} 検証結果
  */
-function detectCircularReferences(elementId, metadata, visited = new Set(), path = []) {
-  if (visited.has(elementId)) {
-    console.warn('⚠️ 循環参照を検出:', [...path, elementId].join(' → '));
-    return true;
+function validateElementStatuses(statuses) {
+  if (typeof statuses !== 'object' || statuses === null) {
+    console.error('[Validation] elementStatuses はオブジェクトである必要があります');
+    return false;
   }
 
-  visited.add(elementId);
-  path.push(elementId);
+  for (const [elementId, status] of Object.entries(statuses)) {
+    // ステータスキーの検証
+    if (!STATUS_COLORS[status]) {
+      console.error(`[Validation] 不正なステータスキー: ${status} (要素ID: ${elementId})`);
+      return false;
+    }
 
-  const refs = getReferences(elementId, metadata);
-
-  for (const refId of refs) {
-    if (detectCircularReferences(refId, metadata, new Set(visited), [...path])) {
-      return true;
+    // 要素IDの検証（要素が存在するか）
+    const element = document.querySelector(`[data-id="${CSS.escape(elementId)}"]`);
+    if (!element && !manualNodes[elementId]) {
+      console.warn(`[Validation] 要素が見つかりません: ${elementId}`);
     }
   }
 
-  return false;
+  return true;
 }
 
 /**
- * 要素の参照リストを取得
+ * references の検証
+ * @param {Object} references - 参照関係オブジェクト
+ * @returns {boolean} 検証結果
  */
-function getReferences(elementId, metadata) {
-  if (metadata.elements[elementId]) {
-    return metadata.elements[elementId].references || [];
+function validateReferences(references) {
+  if (typeof references !== 'object' || references === null) {
+    console.error('[Validation] references はオブジェクトである必要があります');
+    return false;
   }
-  if (metadata.manualNodes[elementId]) {
-    return metadata.manualNodes[elementId].references || [];
+
+  for (const [elementId, refs] of Object.entries(references)) {
+    // 配列であることを確認
+    if (!Array.isArray(refs)) {
+      console.error(`[Validation] 参照先は配列である必要があります: ${elementId}`);
+      return false;
+    }
+
+    // 空配列は無効
+    if (refs.length === 0) {
+      console.warn(`[Validation] 空の参照配列: ${elementId}（キーを削除すべき）`);
+    }
+
+    // 自己参照の検出
+    if (refs.includes(elementId)) {
+      console.error(`[Validation] 自己参照が検出されました: ${elementId}`);
+      return false;
+    }
+
+    // 重複の検出
+    const uniqueRefs = [...new Set(refs)];
+    if (uniqueRefs.length !== refs.length) {
+      console.warn(`[Validation] 重複した参照先: ${elementId}`);
+    }
   }
-  return [];
+
+  return true;
+}
+
+/**
+ * taskFlowchartLinks の検証
+ * @param {Object} taskLinks - タスク連携オブジェクト
+ * @returns {boolean} 検証結果
+ */
+function validateTaskFlowchartLinks(taskLinks) {
+  if (typeof taskLinks !== 'object' || taskLinks === null) {
+    console.error('[Validation] taskFlowchartLinks はオブジェクトである必要があります');
+    return false;
+  }
+
+  // nodes フィールドの存在確認
+  if (!taskLinks.nodes || typeof taskLinks.nodes !== 'object') {
+    console.error('[Validation] taskFlowchartLinks.nodes が存在しません');
+    return false;
+  }
+
+  // _snapshotAt の存在確認
+  if (!taskLinks._snapshotAt) {
+    console.warn('[Validation] taskFlowchartLinks._snapshotAt が存在しません');
+  }
+
+  return true;
 }
 ```
 
 ---
 
-## 📏 データサイズ見積もり
+## セキュリティ対策
 
-### 典型的なプロジェクトでのメタデータサイズ
+### 1. CSS.escape() の使用
 
-```
-フローチャート規模: 50ノード、70エッジ
-メモノード: 10個
-タスク: 20個
+**脆弱性**: CSSセレクタインジェクション
 
-JSON サイズ見積もり:
-- elements (50ノード + 70エッジ): 約 30KB
-  （1要素あたり約250バイト）
-- manualNodes (10個): 約 2KB
-- manualEdges (15本): 約 3KB
-- taskFlowchartLinks (20タスク): 約 5KB
-- originalLabels: 約 10KB
+```javascript
+// ❌ 危険: セレクタが壊れる可能性
+const id = 'node[data-dangerous="true"]';
+document.querySelector(`[data-id="${id}"]`);
 
-合計: 約 50KB（圧縮前）
-
-SVGファイル全体: 約 200-300KB
+// ✅ 安全な実装
+document.querySelector(`[data-id="${CSS.escape(id)}"]`);
 ```
 
-**結論**: SVGファイルサイズへの影響は軽微（+15-20%程度）
+**実装箇所**:
+- 全ての `document.querySelector()` で使用
+- `applyStatusStyle()`、`restoreReferencesFromMemoData()` 等
+
+### 2. Prototype Pollution 対策
+
+**脆弱性**: 外部SVG内のJSONをそのままオブジェクトにマージすると危険
+
+```javascript
+/**
+ * メタデータのホワイトリスト検証
+ * @param {Object} metadata - メタデータ
+ * @returns {Object} サニタイズ済みメタデータ
+ */
+function sanitizeMetadata(metadata) {
+  const ALLOWED_METADATA_KEYS = [
+    'version', 'schemaVersion', 'exportedAt', 'svgFile',
+    'elements', 'originalLabels', 'manualNodes', 'manualEdges',
+    'elementStatuses', 'references', 'taskFlowchartLinks'
+  ];
+
+  const sanitized = Object.create(null);  // プロトタイプなしオブジェクト
+
+  for (const key of ALLOWED_METADATA_KEYS) {
+    if (key in metadata) {
+      sanitized[key] = metadata[key];
+    }
+  }
+
+  return sanitized;
+}
+
+/**
+ * SVGからメタデータを抽出（サニタイズ付き）
+ */
+function extractMemoDataFromSVG(svgDoc) {
+  const comment = findMemoComment(svgDoc);
+  if (!comment) return null;
+
+  try {
+    const data = JSON.parse(comment.textContent.trim());
+    return sanitizeMetadata(data);  // ★ サニタイズ
+  } catch (error) {
+    console.error('[Extract] メタデータのパースに失敗:', error);
+    return null;
+  }
+}
+```
+
+### 3. SVG Sanitization
+
+**脆弱性**: 読み込むSVGに `<script>` や `on*` 属性が含まれている場合
+
+```javascript
+/**
+ * SVGコンテンツのサニタイズ
+ * @param {string} svgString - SVG文字列
+ * @returns {string} サニタイズ済みSVG
+ */
+function sanitizeSVG(svgString) {
+  // <script> タグを削除
+  svgString = svgString.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
+
+  // on* イベント属性を削除
+  svgString = svgString.replace(/\son\w+="[^"]*"/g, '');
+  svgString = svgString.replace(/\son\w+='[^']*'/g, '');
+
+  // foreignObject を削除（任意のHTMLを含む可能性）
+  svgString = svgString.replace(/<foreignObject[^>]*>[\s\S]*?<\/foreignObject>/gi, '');
+
+  return svgString;
+}
+```
+
+### 4. XSS対策
+
+**脆弱性**: innerHTML の使用
+
+```javascript
+// ❌ 危険: XSSの可能性
+element.innerHTML = userInput;
+
+// ✅ 安全な実装: textContent + addEventListener
+element.textContent = userInput;
+element.addEventListener('click', handleClick);
+```
 
 ---
 
-**作成日**: 2026-03-22
-**バージョン**: 1.0
-**メタデータバージョン**: v2.0
+## 更新履歴
+
+| 日付 | バージョン | 変更内容 |
+|------|-----------|---------|
+| 2026-03-22 | 1.0 | 初版作成 - 参照関係管理機能の基本仕様 |
+| 2026-03-22 | 2.0 | v2.0完全版 - Phase 4（ステータス色分け機能）を統合 |
+
+---
+
+**関連ドキュメント**:
+- [02_proposed-design.md](./02_proposed-design.md) - 提案設計
+- [05_implementation-plan.md](./05_implementation-plan.md) - 実装計画
+- [06_technical-concerns.md](./06_technical-concerns.md) - 技術的懸念事項
+- [07_integrated-roadmap.md](./07_integrated-roadmap.md) - 統合実装ロードマップ
