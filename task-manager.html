@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Task Manager - WBS Visualizer v2.18.4</title>
+  <title>Task Manager - WBS Visualizer v2.18.5</title>
   <meta name="description" content="A lightweight, browser-based Work Breakdown Structure (WBS) visualization and management tool">
   <meta name="keywords" content="task manager, WBS, project management, task tracking">
   <meta name="author" content="ks-source">
@@ -2300,6 +2300,45 @@
 
     function applyFilters() {
       renderTaskTable();
+
+      // 検索クエリがある場合、最初の検索結果にスクロール
+      const searchQuery = document.getElementById('search-input').value.trim();
+      if (searchQuery) {
+        // 少し待ってからスクロール（DOMレンダリング完了後）
+        setTimeout(() => {
+          scrollToFirstSearchResult();
+        }, 100);
+      }
+    }
+
+    function scrollToFirstSearchResult() {
+      const tbody = document.getElementById('task-table-body');
+      const firstRow = tbody.querySelector('tr:not([style*="display: none"])');
+
+      if (firstRow) {
+        // テーブルヘッダーとグローバルヘッダーの高さを考慮
+        const headerHeight = 60;        // グローバルヘッダー
+        const tableHeaderHeight = 50;   // テーブルヘッダー（推定）
+        const margin = 10;              // 余白
+        const offset = headerHeight + tableHeaderHeight + margin;
+
+        // 行の位置を取得
+        const rowRect = firstRow.getBoundingClientRect();
+        const scrollTop = window.scrollY || document.documentElement.scrollTop;
+        const targetY = scrollTop + rowRect.top - offset;
+
+        // スクロール
+        window.scrollTo({
+          top: targetY,
+          behavior: 'smooth'
+        });
+
+        // 最初の検索結果を一時的にハイライト
+        firstRow.style.backgroundColor = '#fffacd'; // 薄い黄色
+        setTimeout(() => {
+          firstRow.style.backgroundColor = '';
+        }, 2000); // 2秒後に元に戻す
+      }
     }
 
     function clearFilters() {
@@ -4733,22 +4772,23 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
       border-radius: 8px;
       max-width: 600px;
       width: 90%;
-      max-height: calc(100vh - 4rem);
+      max-height: 90vh;
       display: flex;
       flex-direction: column;
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
       position: relative;
       z-index: 1001;
       margin: auto;
+      overflow: hidden;
     }
 
     .security-modal-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 0.75rem;
-      padding: 1.5rem;
-      border-bottom: 2px solid #e5e7eb;
+      gap: 0.5rem;
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid #e5e7eb;
       background: white;
       border-radius: 8px 8px 0 0;
       flex-shrink: 0;
@@ -4757,26 +4797,28 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
     .security-modal-header-left {
       display: flex;
       align-items: center;
-      gap: 0.75rem;
+      gap: 0.5rem;
     }
 
     .security-modal-header svg {
-      width: 32px;
-      height: 32px;
+      width: 20px;
+      height: 20px;
       color: #3b82f6;
+      flex-shrink: 0;
     }
 
     .security-modal-header h2 {
-      font-size: 1.25rem;
+      font-size: 1rem;
       color: #1f2937;
       margin: 0;
+      font-weight: 600;
     }
 
     .security-modal-close {
       background: none;
       border: none;
       cursor: pointer;
-      padding: 0.5rem;
+      padding: 0.25rem;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -4792,16 +4834,19 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
     }
 
     .security-modal-close svg {
-      width: 24px;
-      height: 24px;
+      width: 20px;
+      height: 20px;
     }
 
     .security-modal-body {
       flex: 1;
-      overflow-y: auto;
+      overflow-y: scroll !important;
       overflow-x: hidden;
       padding: 1.5rem;
+      padding-bottom: 8rem;
       line-height: 1.8;
+      min-height: 0;
+      -webkit-overflow-scrolling: touch;
     }
 
     .security-modal-body::-webkit-scrollbar {
@@ -5223,12 +5268,16 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
 
       .security-modal-content {
         width: 95%;
-        max-height: 90vh;
+        max-height: calc(100vh - 2rem);
       }
 
-      .security-modal-header,
+      .security-modal-header {
+        padding: 0.5rem 0.75rem;
+      }
+
       .security-modal-body {
         padding: 1rem;
+        padding-bottom: 6rem;
       }
 
       .tech-summary {
@@ -5250,8 +5299,21 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
     }
 
     @media (max-height: 600px) {
+      .security-modal {
+        padding: 0.5rem 0;
+      }
+
       .security-modal-content {
-        max-height: calc(100vh - 2rem);
+        max-height: calc(100vh - 1rem);
+      }
+
+      .security-modal-header {
+        padding: 0.5rem 0.75rem;
+      }
+
+      .security-modal-body {
+        padding: 1rem;
+        padding-bottom: 6rem;
       }
     }
 
@@ -5395,6 +5457,12 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
           </svg>
           <p>画面共有や配布時も安全です</p>
         </div>
+        <div class="security-item">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          <p>外部ライブラリ・アプリのインストール不要（Windows標準ブラウザで動作）</p>
+        </div>
         <div class="security-warning">
           <div class="security-warning-header">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -5489,6 +5557,29 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
                   </td>
                 </tr>
                 <tr>
+                  <td><span class="glossary-term">外部ライブラリ</span></td>
+                  <td>
+                    他の人が作ったプログラムの部品（例: jQuery、React等）です。<br>
+                    通常はインターネットからダウンロードして使いますが、<strong>本ツールは一切使用していません</strong>。<br>
+                    <span class="glossary-not-used">→ ダウンロード・インストール不要</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td><span class="glossary-term">ブラウザ標準API</span></td>
+                  <td>
+                    WindowsのEdgeやChromeに<strong>最初から組み込まれている機能</strong>です（例: <code>setTimeout()</code>、<code>querySelector()</code>等）。<br>
+                    外部ライブラリと違い、<strong>追加インストール不要</strong>で使えます。<br>
+                    <strong style="color: #059669;">💡 本ツールはこれだけで動作します</strong>
+                  </td>
+                </tr>
+                <tr>
+                  <td><span class="glossary-term">スタンドアロン</span></td>
+                  <td>
+                    「単体で動く」という意味です。<br>
+                    本ツールは<strong>1つのHTMLファイルだけ</strong>で動作し、他のファイルやインターネット接続を必要としません。
+                  </td>
+                </tr>
+                <tr>
                   <td><span class="glossary-term">同一オリジン<br>ポリシー</span></td>
                   <td>
                     ブラウザの「防犯システム」です。<strong>別々のWebサイトやファイル同士がお互いのデータを勝手に読み取れないようにする仕組み</strong>です。<br>
@@ -5531,8 +5622,13 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
               したりする機能は一切ありません。
             </p>
             <p>
-              専門用語で言えば「完全なオフライン動作」であり、データがPCの外に出る
-              ことは物理的に不可能です。
+              <strong>Windows標準環境で動作</strong>します。外部ライブラリ（jQuery、React等）や
+              追加アプリのダウンロード・インストールは不要です。<br>
+              使用しているのは、EdgeやChromeに<strong>最初から組み込まれているブラウザ標準API</strong>のみです。
+            </p>
+            <p>
+              専門用語で言えば「<strong>スタンドアロン</strong>（単体動作）」かつ「<strong>完全なオフライン動作</strong>」であり、
+              データがPCの外に出ることは物理的に不可能です。
             </p>
           </div>
 
@@ -5545,6 +5641,15 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
             </p>
 
             <ul>
+              <li>
+                <strong>構成ファイル:</strong> <code>HTML5 + CSS3 + JavaScript</code> (単一ファイル、スタンドアロン)<br>
+                <span style="color: #6b7280; font-size: 0.9rem;">
+                  → 1つのHTMLファイルに全てのコード（HTML、CSS、JavaScript）が含まれています<br>
+                  <strong style="color: #059669;">⚠️ 重要:</strong> <strong>外部ライブラリ（jQuery、React等）は一切使用していません</strong>。
+                  Windows標準ブラウザ（Edge、Chrome）に<strong>最初から組み込まれているブラウザ標準API</strong>のみで動作します。<br>
+                  → <strong>追加インストール不要</strong>、HTMLファイルをダブルクリックするだけで動作します
+                </span>
+              </li>
               <li>
                 <strong>プロトコル:</strong> <code>file://</code> (ローカルファイルシステム)<br>
                 <span style="color: #6b7280; font-size: 0.9rem;">

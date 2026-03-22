@@ -5,6 +5,49 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.18.5] - 2026-03-22
+
+### Added
+- **🔍 検索結果の自動スクロール機能**
+  - **検索時の問題を解決**: 検索結果の最初の行がテーブルヘッダーの裏に隠れる問題を修正
+  - **自動スクロール**: 検索実行時、最初の検索結果がテーブルヘッダーのすぐ下に表示されるように自動スクロール
+  - **視覚的フィードバック**: 最初の検索結果を2秒間ハイライト表示（薄い黄色）
+  - **滑らかなアニメーション**: `window.scrollTo({ behavior: 'smooth' })` で滑らかにスクロール
+
+- **📖 セキュリティポリシー画面に外部ライブラリ不要情報を追加**
+  - **セキュリティアイテム**: 「外部ライブラリ・アプリのインストール不要（Windows標準ブラウザで動作）」を追加
+  - **用語集**: 以下の3つの用語を追加
+    - 「外部ライブラリ」: jQuery、React等は使用していない
+    - 「ブラウザ標準API」: Windows標準ブラウザに最初から組み込まれている機能のみ使用
+    - 「スタンドアロン」: 単体で動作、他のファイルやインターネット接続不要
+  - **技術スタック詳細**:
+    - 総括文章を更新: 「Windows標準環境で動作」「追加インストール不要」を明記
+    - 使用技術リストの先頭に追加: 「HTML5 + CSS3 + JavaScript（単一ファイル、スタンドアロン）」
+
+### Changed
+- **JavaScript変更**:
+  - `applyFilters()`: 検索クエリがある場合、`scrollToFirstSearchResult()` を呼び出す処理を追加
+  - `scrollToFirstSearchResult()`: 新規関数を追加（グローバルヘッダー60px + テーブルヘッダー50px + 余白10px = 120pxのオフセットを考慮）
+
+### Technical Details
+- **検索結果スクロール**:
+  - DOMレンダリング完了後（100ms待機）にスクロール実行
+  - `getBoundingClientRect()` で最初の検索結果行の位置を取得
+  - `window.scrollTo()` で滑らかにスクロール
+  - ハイライト表示後、2秒で元の背景色に戻す
+- **外部ライブラリ不要**:
+  - 使用しているのは全てブラウザ標準API（`setTimeout()`, `querySelector()`, `getBoundingClientRect()`, `window.scrollTo()`等）
+  - 外部ライブラリ（jQuery、React等）は一切使用していない
+  - Windows標準ブラウザ（Edge、Chrome）で追加インストールなしで動作
+
+### User Experience
+- **検索結果がすぐに見える**: 検索実行時、最初の検索結果が自動的に画面に表示される
+- **視覚的フィードバック**: ハイライト表示により、検索結果がすぐに認識できる
+- **スムーズな操作**: 滑らかなスクロールアニメーションで快適な操作感
+- **セキュリティ情報の充実**: 外部ライブラリ不要であることをセキュリティポリシー画面で明確に説明
+
+---
+
 ## [2.18.4] - 2026-03-22
 
 ### Fixed
