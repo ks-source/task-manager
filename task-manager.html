@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Task Manager - WBS Visualizer v2.18.3</title>
+  <title>Task Manager - WBS Visualizer v2.18.4</title>
   <meta name="description" content="A lightweight, browser-based Work Breakdown Structure (WBS) visualization and management tool">
   <meta name="keywords" content="task manager, WBS, project management, task tracking">
   <meta name="author" content="ks-source">
@@ -208,7 +208,7 @@
       max-width: 1400px;
       margin: 0 auto;
       padding: 0 1rem;
-      padding-top: 60px; /* Space for fixed header */
+      padding-top: 0; /* No gap - table header sticky handles positioning */
       padding-bottom: 4rem; /* Space for fixed footer */
     }
 
@@ -902,16 +902,18 @@
       left: 0;
       right: 0;
       background-color: white;
-      border-bottom: 1px solid var(--color-border);
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      border-bottom: none;
+      box-shadow: none;
       z-index: 999;
       max-height: 0;
       overflow: hidden;
-      transition: max-height 0.3s ease;
+      transition: max-height 0.3s ease, border-bottom 0.3s ease, box-shadow 0.3s ease;
     }
 
     .filter-panel.active {
       max-height: 80px;
+      border-bottom: 1px solid var(--color-border);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
 
     .filter-panel-content {
@@ -4731,7 +4733,7 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
       border-radius: 8px;
       max-width: 600px;
       width: 90%;
-      max-height: 85vh;
+      max-height: calc(100vh - 4rem);
       display: flex;
       flex-direction: column;
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -4743,12 +4745,19 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
     .security-modal-header {
       display: flex;
       align-items: center;
+      justify-content: space-between;
       gap: 0.75rem;
       padding: 1.5rem;
       border-bottom: 2px solid #e5e7eb;
       background: white;
       border-radius: 8px 8px 0 0;
       flex-shrink: 0;
+    }
+
+    .security-modal-header-left {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
     }
 
     .security-modal-header svg {
@@ -4761,6 +4770,30 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
       font-size: 1.25rem;
       color: #1f2937;
       margin: 0;
+    }
+
+    .security-modal-close {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      transition: background 0.2s;
+      color: #6b7280;
+      flex-shrink: 0;
+    }
+
+    .security-modal-close:hover {
+      background: #f3f4f6;
+      color: #1f2937;
+    }
+
+    .security-modal-close svg {
+      width: 24px;
+      height: 24px;
     }
 
     .security-modal-body {
@@ -4843,29 +4876,6 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
       line-height: 1.6;
     }
 
-    .security-modal-footer {
-      flex-shrink: 0;
-      padding: 1.5rem;
-      text-align: right;
-      background: white;
-      border-top: 1px solid #e5e7eb;
-      border-radius: 0 0 8px 8px;
-    }
-
-    .security-close-btn {
-      padding: 0.5rem 1.5rem;
-      background: #3b82f6;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 0.9rem;
-      font-weight: 500;
-    }
-
-    .security-close-btn:hover {
-      background: #2563eb;
-    }
 
     .tech-details-toggle {
       display: flex;
@@ -5217,8 +5227,7 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
       }
 
       .security-modal-header,
-      .security-modal-body,
-      .security-modal-footer {
+      .security-modal-body {
         padding: 1rem;
       }
 
@@ -5242,7 +5251,7 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
 
     @media (max-height: 600px) {
       .security-modal-content {
-        max-height: 95vh;
+        max-height: calc(100vh - 2rem);
       }
     }
 
@@ -5347,11 +5356,19 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
   <div class="security-modal" id="securityModal" onclick="closeSecurityModal(event)">
     <div class="security-modal-content" onclick="event.stopPropagation()">
       <div class="security-modal-header">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-          <path d="M9 12l2 2 4-4"></path>
-        </svg>
-        <h2>セキュリティポリシー</h2>
+        <div class="security-modal-header-left">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            <path d="M9 12l2 2 4-4"></path>
+          </svg>
+          <h2>セキュリティポリシー</h2>
+        </div>
+        <button class="security-modal-close" onclick="closeSecurityModal()" title="閉じる">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
       </div>
       <div class="security-modal-body">
         <div class="security-item">
@@ -5428,7 +5445,7 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
                     ブラウザが一時的に作る「メモリ上のデータの住所」です。<br>
                     インターネット接続は不要で、ブラウザを閉じると消えます。<br>
                     <strong style="color: #059669;">💡 セキュリティ:</strong> このメモリは<strong>あなたのブラウザ内だけ</strong>で有効で、
-                    他のアプリや外部サイトからはアクセスできません（ブラウザの同一オリジンポリシーで保護）。
+                    他のアプリや外部サイトからはアクセスできません（ブラウザの<strong>同一オリジンポリシー</strong>＝別サイト間でデータを読み取れない防犯システムで保護）。
                   </td>
                 </tr>
                 <tr>
@@ -5471,6 +5488,36 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
                     <span class="glossary-not-used">→ 本ツールは使用していません</span>
                   </td>
                 </tr>
+                <tr>
+                  <td><span class="glossary-term">同一オリジン<br>ポリシー</span></td>
+                  <td>
+                    ブラウザの「防犯システム」です。<strong>別々のWebサイトやファイル同士がお互いのデータを勝手に読み取れないようにする仕組み</strong>です。<br>
+                    例: Yahoo!のページからGoogleのデータは読めません。<br>
+                    本ツールでは、<code>file://</code>で開いたファイルのデータは、インターネット上のサイトから読み取れません。
+                  </td>
+                </tr>
+                <tr>
+                  <td><span class="glossary-term">ドメイン単位<br>隔離</span></td>
+                  <td>
+                    データを「Webサイトごと」に完全に分離して保存する仕組みです。<br>
+                    例: Yahoo!に保存したデータは、Googleからは見えません。<br>
+                    本ツールは<code>file://</code>というドメインに保存されるため、インターネット上のどのサイトからもアクセスできません。
+                  </td>
+                </tr>
+                <tr>
+                  <td><span class="glossary-term">ブラウザ<br>プロセス</span></td>
+                  <td>
+                    ブラウザ（Edge等）がPC上で動くときの「専用メモリ領域」です。<br>
+                    他のアプリ（Excel、Word等）とは完全に分離されており、ブラウザ内のデータは他のアプリから読み取れません。
+                  </td>
+                </tr>
+                <tr>
+                  <td><span class="glossary-term">サーバーサイド<br>処理</span></td>
+                  <td>
+                    インターネット上のサーバー（遠隔地のコンピュータ）でプログラムを実行する仕組みです。<br>
+                    <span class="glossary-not-used">→ 本ツールは使用していません（あなたのPC内だけで完結）</span>
+                  </td>
+                </tr>
               </tbody>
             </table>
           </div>
@@ -5508,8 +5555,8 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
                 <strong>データ生成:</strong> <code>Blob URL</code> (blob:null/... 形式、一時メモリ)<br>
                 <span style="color: #6b7280; font-size: 0.9rem;">
                   → ブラウザのメモリ内に一時的にデータを保存する仕組みです<br>
-                  <strong style="color: #059669;">⚠️ 重要:</strong> このメモリは<strong>あなたのPCのブラウザプロセス内でのみ有効</strong>で、
-                  外部からのアクセスは不可能です（同一オリジンポリシーによる保護）
+                  <strong style="color: #059669;">⚠️ 重要:</strong> このメモリは<strong>あなたのPCのブラウザプロセス内</strong>（Edge等の専用メモリ領域）<strong>でのみ有効</strong>で、
+                  外部からのアクセスは不可能です（<strong>同一オリジンポリシー</strong>＝別サイト間でデータを読み取れない防犯システムによる保護）
                 </span>
               </li>
               <li>
@@ -5619,17 +5666,17 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
                 <span style="color: #6b7280; font-size: 0.9rem;">
                   → データがPCの外に出ない仕組みを使っています
                 </span><br>
-                - <code>postMessage</code> origin検証実装済み (同一PC内のみ許可)<br>
-                - <code>LocalStorage</code>はドメイン単位隔離<br>
-                - <code>Blob URL</code>は同一セッション内有効
+                - <code>postMessage</code> <strong>origin検証</strong>（送信元チェック）実装済み (同一PC内のみ許可)<br>
+                - <code>LocalStorage</code>は<strong>ドメイン単位隔離</strong>（Webサイトごとに完全分離）<br>
+                - <code>Blob URL</code>は<strong>同一セッション内有効</strong>（ブラウザを閉じると消える）
               </li>
               <li>
                 <strong>3. 静的コンテンツ保証</strong><br>
                 <span style="color: #6b7280; font-size: 0.9rem;">
                   → 動的にプログラムを書き換える危険な機能は使っていません
                 </span><br>
-                - サーバーサイド処理なし<br>
-                - <code>eval()</code>, <code>new Function()</code>不使用<br>
+                - <strong>サーバーサイド処理</strong>（インターネット上のサーバーでプログラム実行）なし<br>
+                - <code>eval()</code>, <code>new Function()</code>（外部から送られたコードを実行する危険な命令）不使用<br>
                 - すべてのロジックが検証可能
               </li>
             </ul>
@@ -5679,7 +5726,7 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
             <p class="expert-note">
               <strong>セキュリティ専門家の方へ:</strong>
               この検証方法により、第三者による技術的監査が可能です。
-              Network Waterfallが空であることで、外部通信不在を証明できます。
+              <strong>Network Waterfall</strong>（ネットワークタブの通信記録タイムライン）が空であることで、外部通信不在を証明できます。
             </p>
 
             <!-- 詳細な手順セクション -->
@@ -5763,9 +5810,6 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
           </div>
 
         </div>
-      </div>
-      <div class="security-modal-footer">
-        <button class="security-close-btn" onclick="closeSecurityModal()">閉じる</button>
       </div>
     </div>
   </div>

@@ -5,6 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.18.4] - 2026-03-22
+
+### Fixed
+- **🔧 グローバルヘッダー下の不自然な隙間を完全削除**
+  - **根本原因を特定**: `.filter-panel` の `border-bottom` と `box-shadow` が閉じている時も表示されていた（約5pxの隙間）
+  - **修正内容**: フィルターパネルのデフォルト状態から `border-bottom` と `box-shadow` を削除
+  - **開いている時のみ表示**: `.filter-panel.active` 時のみ `border-bottom` と `box-shadow` を表示
+  - **追加の隙間を削除**: `.container` の `padding-top: 60px` を `0` に変更
+
+### Changed
+- **CSS変更**:
+  - `.filter-panel`: `border-bottom: none`, `box-shadow: none` に変更（デフォルト状態）
+  - `.filter-panel`: `transition` に `border-bottom` と `box-shadow` を追加
+  - `.filter-panel.active`: `border-bottom` と `box-shadow` を追加（開いている時のみ表示）
+  - `.container`: `padding-top: 0` に変更（コメント更新: "No gap - table header sticky handles positioning"）
+
+### Technical Details
+- **隙間の原因**:
+  - フィルターパネル: `max-height: 0` で閉じているが、`border-bottom: 1px` + `box-shadow: 0 2px 4px` が表示されていた（約5px）
+  - コンテナ: グローバルヘッダー用の `padding-top: 60px` が余分な隙間を作成
+- **解決策**:
+  - フィルターパネルの `border` と `shadow` を条件付き表示（`.active` 時のみ）
+  - コンテナの上部余白を削除（テーブルヘッダーの `position: sticky, top: 60px` が位置を制御）
+
+### User Experience
+- **グローバルヘッダー直下にテーブルヘッダーを配置**: 不自然な隙間が完全に削除され、見た目がすっきり
+- **フィルターパネル開閉時の視覚的フィードバック**: 開いている時のみボーダーとシャドウが表示
+- **滑らかなアニメーション**: `transition` により、ボーダーとシャドウも滑らかに表示/非表示
+
+---
+
 ## [2.18.3] - 2026-03-22
 
 ### Fixed
