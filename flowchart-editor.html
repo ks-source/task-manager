@@ -3718,9 +3718,23 @@
         return;
       }
 
+      // 既存のmockTasksをバックアップ（flowchartLinks情報を保持するため）
+      const existingTasks = new Map(mockTasks.map(t => [t.wbs, t]));
+
       // A側のタスクをmockTasks形式に変換
       mockTasks = taskManagerData.tasks.map(task => {
         const mermaidIds = task.mermaid_ids || "";
+        const existingTask = existingTasks.get(task.wbs_no);
+
+        // 既存のタスクが存在する場合、flowchartLinksを保持
+        let flowchartLinks;
+        if (existingTask && existingTask.flowchartLinks) {
+          // B側で編集された詳細情報を保持
+          flowchartLinks = existingTask.flowchartLinks;
+        } else {
+          // 新規タスクの場合はmermaidIdsから解析
+          flowchartLinks = parseMermaidIds(mermaidIds);
+        }
 
         return {
           wbs: task.wbs_no,
@@ -3728,11 +3742,11 @@
           status: task.status || "Not Started",
           deleted: task.deleted || false,
           mermaidIds: mermaidIds,
-          flowchartLinks: parseMermaidIds(mermaidIds)
+          flowchartLinks: flowchartLinks
         };
       });
 
-      console.log(`[FlowchartEditor] Initialized ${mockTasks.length} tasks from Task Manager`);
+      console.log(`[FlowchartEditor] Initialized ${mockTasks.length} tasks from Task Manager (preserved flowchartLinks)`);
     }
 
     const mockFlowchart = {
@@ -3910,10 +3924,10 @@
         } else {
           const parts = [];
           if (task.flowchartLinks.nodes.length > 0) {
-            parts.push(`ノード: ${task.flowchartLinks.nodes.join(', ')}`);
+            parts.push(`ノード: ${task.flowchartLinks.nodes.map(n => n.id).join(', ')}`);
           }
           if (task.flowchartLinks.edges.length > 0) {
-            parts.push(`エッジ: ${task.flowchartLinks.edges.join(', ')}`);
+            parts.push(`エッジ: ${task.flowchartLinks.edges.map(e => e.id).join(', ')}`);
           }
           linkInfo = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg><span>${parts.join(' | ')}</span>`;
         }
@@ -4980,8 +4994,8 @@
 
       // このelementIdにリンクされているタスクを検索
       const linkedTasks = mockTasks.filter(task =>
-        task.flowchartLinks.nodes.includes(elementId) ||
-        task.flowchartLinks.edges.includes(elementId)
+        task.flowchartLinks.nodes.some(n => n.id === elementId) ||
+        task.flowchartLinks.edges.some(e => e.id === elementId)
       );
 
       if (linkedTasks.length === 0) {
@@ -7961,11 +7975,11 @@ ${metadataJson}
 
       const parts = [];
       if (nodes.length > 0) {
-        const nodeList = nodes.join(', ');
+        const nodeList = nodes.map(n => n.id).join(', ');
         parts.push(`ノード: ${nodeList}`);
       }
       if (edges.length > 0) {
-        const edgeList = edges.join(', ');
+        const edgeList = edges.map(e => e.id).join(', ');
         parts.push(`エッジ: ${edgeList}`);
       }
 

@@ -5,6 +5,50 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.20.1] - 2026-03-22
+
+### Fixed
+- **🐛 flowchart-editor.html: タスク・ノード連携機能のデータ構造不整合を修正**
+  - **問題**: ドラッグ&ドロップでタスクにノードを連携した際、以下の3つのバグが発生していた
+    1. タスク編集画面とタスクリストで「[object Object]」と表示される
+    2. ノード連携の削除が機能しない
+    3. タスク編集画面でノードを削除して保存しても、画面を閉じると削除前の状態に戻る
+
+  - **根本原因**: `flowchartLinks.nodes` と `flowchartLinks.edges` のデータ構造が不整合
+    - 期待される構造: オブジェクト配列 `[{id, label, highlightType}, ...]`
+    - 実際の動作: `handleTaskDrop()` が文字列IDを直接pushしていた
+    - A側からの同期時に、B側で編集された詳細情報が失われていた
+
+  - **修正内容（計11箇所）**:
+    - **データ追加の修正**:
+      - `handleTaskDrop()`: ノード・エッジをオブジェクト形式で追加（`{id, label, highlightType}` 構造）
+      - `handleTaskDrop()`: 重複チェックを `.includes()` から `.some(n => n.id === elementId)` に変更
+    - **データ削除の修正**:
+      - `onRemoveNode()`: フィルタリングを `.filter(id => id !== nodeId)` から `.filter(n => n.id !== nodeId)` に変更
+      - `onRemoveEdge()`: 同様にオブジェクト構造対応
+    - **表示処理の修正（[object Object]対策）**:
+      - `renderLinkedNodesInModal()`: オブジェクトから `node.id`, `node.label` を取得
+      - `renderLinkedEdgesInModal()`: オブジェクトから `edge.id`, `edge.label` を取得
+      - `renderTaskList()`: `.join()` を `.map(n => n.id).join()` に変更
+      - `updateModalPreview()`: 同様に修正
+      - `updatePanelInfo()`: linkedTasks検索を `.some()` に変更
+    - **データ保持の修正**:
+      - `initializeTasksFromTaskManager()`: A側からの同期時に既存の `flowchartLinks` を保持するように修正
+      - `saveTaskEditModal()`: `mermaidIds` 生成を `.map(n => n.id).join()` に修正
+
+### Technical Details
+- **データ構造の統一**: 全ての `flowchartLinks.nodes` と `flowchartLinks.edges` をオブジェクト配列として一貫して扱うように修正
+- **データ保持戦略**: A→B同期時に、タスクの基本情報（名前、ステータス等）はA側を優先し、フローチャート連携情報はB側を保持
+- **後方互換性**: `mermaidIds` フィールドは文字列として維持（後方互換性のため）
+
+### User Experience
+- ✅ タスク編集画面で正しくノードID・ラベルが表示される
+- ✅ 左サイドパネルのタスクリストで「🔗ノード: DAT_04」のように正しく表示される
+- ✅ ノード連携の削除が正常に機能する
+- ✅ 削除後に保存してもデータが維持される
+
+---
+
 ## [2.20.0] - 2026-03-22
 
 ### Added
