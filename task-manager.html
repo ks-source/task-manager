@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Task Manager - WBS Visualizer v2.18.5</title>
+  <title>Task Manager - WBS Visualizer v2.18.6</title>
   <meta name="description" content="A lightweight, browser-based Work Breakdown Structure (WBS) visualization and management tool">
   <meta name="keywords" content="task manager, WBS, project management, task tracking">
   <meta name="author" content="ks-source">
@@ -208,7 +208,7 @@
       max-width: 1400px;
       margin: 0 auto;
       padding: 0 1rem;
-      padding-top: 0; /* No gap - table header sticky handles positioning */
+      padding-top: 60px; /* Push content below global header */
       padding-bottom: 4rem; /* Space for fixed footer */
     }
 
@@ -218,6 +218,8 @@
     .dashboard {
       display: grid;
       gap: 0;
+      margin: 0;
+      padding: 0;
     }
 
     .card {
@@ -971,7 +973,7 @@
     .task-table-wrapper {
       background-color: white;
       border: 1px solid var(--color-border);
-      border-radius: 8px;
+      border-radius: 0 0 8px 8px; /* Remove top border-radius for edge-to-edge connection */
       margin: 0;
       padding: 0;
       box-shadow: 0 1px 3px rgba(0,0,0,0.1);
@@ -2313,7 +2315,18 @@
 
     function scrollToFirstSearchResult() {
       const tbody = document.getElementById('task-table-body');
-      const firstRow = tbody.querySelector('tr:not([style*="display: none"])');
+
+      // 全てのtrを取得し、display:noneでないものを探す
+      const allRows = tbody.querySelectorAll('tr');
+      let firstRow = null;
+
+      for (const row of allRows) {
+        const style = window.getComputedStyle(row);
+        if (style.display !== 'none') {
+          firstRow = row;
+          break;
+        }
+      }
 
       if (firstRow) {
         // テーブルヘッダーとグローバルヘッダーの高さを考慮
@@ -2327,9 +2340,17 @@
         const scrollTop = window.scrollY || document.documentElement.scrollTop;
         const targetY = scrollTop + rowRect.top - offset;
 
+        console.log('[SEARCH] Scrolling to first result:', {
+          firstRow: firstRow.cells[0]?.textContent,
+          targetY,
+          currentScrollY: scrollTop,
+          rowTop: rowRect.top,
+          offset
+        });
+
         // スクロール
         window.scrollTo({
-          top: targetY,
+          top: Math.max(0, targetY),  // 負の値にならないようにする
           behavior: 'smooth'
         });
 
@@ -2338,6 +2359,8 @@
         setTimeout(() => {
           firstRow.style.backgroundColor = '';
         }, 2000); // 2秒後に元に戻す
+      } else {
+        console.log('[SEARCH] No visible rows found');
       }
     }
 
@@ -4772,7 +4795,7 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
       border-radius: 8px;
       max-width: 600px;
       width: 90%;
-      max-height: 90vh;
+      max-height: 95vh;
       display: flex;
       flex-direction: column;
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -4843,7 +4866,7 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
       overflow-y: scroll !important;
       overflow-x: hidden;
       padding: 1.5rem;
-      padding-bottom: 8rem;
+      padding-bottom: 2rem;
       line-height: 1.8;
       min-height: 0;
       -webkit-overflow-scrolling: touch;
@@ -4961,10 +4984,13 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
       max-height: 0;
       overflow: hidden;
       transition: max-height 0.3s ease;
+      padding-bottom: 0;
     }
 
     .tech-details-content.expanded {
-      max-height: 3000px;
+      max-height: 5000px;
+      overflow: visible;
+      padding-bottom: 2rem;
     }
 
     .tech-summary {
@@ -5277,7 +5303,7 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
 
       .security-modal-body {
         padding: 1rem;
-        padding-bottom: 6rem;
+        padding-bottom: 2rem;
       }
 
       .tech-summary {
@@ -5313,7 +5339,7 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
 
       .security-modal-body {
         padding: 1rem;
-        padding-bottom: 6rem;
+        padding-bottom: 2rem;
       }
     }
 

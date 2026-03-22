@@ -312,10 +312,10 @@ manualNodes = {
       strokeWidth: 2
     },
     metadata: {
-      connectedEdges: [],      // 手動管理（自動更新しない）
       memo: "補足説明",
       createdBy: "user"
     },
+    references: [],  // ★ Phase 2: 参照関係管理（/docs/specs/flowchart-reference-relationships/ を参照）
     createdAt: "2026-03-21T10:30:45.678Z",
     updatedAt: "2026-03-21T10:35:12.123Z"
   }

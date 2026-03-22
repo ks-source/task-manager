@@ -5,6 +5,42 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.18.6] - 2026-03-22
+
+### Fixed
+- **🔧 グローバルヘッダーとテーブルヘッダー間の隙間を削除 & 検索スクロール改善**
+  - **隙間を完全削除**: グローバルヘッダーとテーブルヘッダーをEdge to Edge接続
+  - **検索スクロールの修正**: `scrollToFirstSearchResult()`のセレクタを改善し、確実に動作するように修正
+  - **デバッグログ追加**: コンソールログで検索スクロールの動作を確認可能
+
+### Changed
+- **CSS変更**:
+  - `.container`: `padding-top: 0` → `padding-top: 60px` に戻す（グローバルヘッダーの下にコンテンツを配置）
+  - `.dashboard`: `margin: 0`, `padding: 0` を明示的に追加（ブラウザデフォルトmarginを削除）
+  - `.task-table-wrapper`: `border-radius: 8px` → `border-radius: 0 0 8px 8px` に変更（上部の角丸を削除、Edge to Edge接続実現）
+
+- **JavaScript変更**:
+  - `scrollToFirstSearchResult()`: セレクタを `tr:not([style*="display: none"])` から `window.getComputedStyle()` を使った確実な方法に変更
+  - `scrollToFirstSearchResult()`: デバッグログを追加（検索結果の情報、スクロール位置等）
+  - `scrollToFirstSearchResult()`: `Math.max(0, targetY)` で負の値にならないようにガード処理を追加
+
+### Technical Details
+- **隙間削除**:
+  - `.container`の`padding-top: 60px`でグローバルヘッダー分のスペースを確保
+  - `.dashboard`の不要なmargin/paddingを削除
+  - `.task-table-wrapper`の上部角丸を削除してEdge to Edge接続
+- **検索スクロール改善**:
+  - `window.getComputedStyle()`で正確に`display: none`判定
+  - 全ての`<tr>`要素をループして最初の可視行を確実に取得
+  - コンソールログで動作確認可能（WBS番号、スクロール位置等）
+
+### User Experience
+- **グローバルヘッダーとテーブルヘッダーが隙間なく接続**: すっきりとした見た目
+- **検索結果が確実に表示**: 検索時、最初の検索結果が必ずテーブルヘッダーのすぐ下に表示される
+- **デバッグしやすい**: コンソールログで検索スクロールの動作を確認可能
+
+---
+
 ## [2.18.5] - 2026-03-22
 
 ### Added

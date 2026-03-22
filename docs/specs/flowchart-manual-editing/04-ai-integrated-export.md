@@ -150,10 +150,10 @@ AI出力:
       "center": { "x": 590, "y": 330 },
       "label": "メモ内容",
       "metadata": {
-        "connectedEdges": ["manual-edge-XXX"],
         "memo": "補足説明",
         "createdBy": "user"
       },
+      "references": ["flowchart-A", "flowchart-B"],
       "createdAt": "2026-03-21T10:30:45.678Z",
       "updatedAt": "2026-03-21T10:35:12.123Z"
     }
@@ -265,7 +265,8 @@ AI出力:
 | `bbox` | object | 境界ボックス |
 | `center` | object | 中心座標 |
 | `label` | string | ラベル/メモ内容 |
-| `metadata` | object | メタデータ（connectedEdges等） |
+| `metadata` | object | メタデータ（memo, createdBy等） |
+| `references` | array | 参照関係（Phase 2: [flowchart-reference-relationships](../flowchart-reference-relationships/README.md)） |
 | `createdAt` | string | 作成日時 |
 | `updatedAt` | string | 更新日時 |
 
