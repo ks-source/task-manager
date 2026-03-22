@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.19.2] - 2026-03-22
+
+### Changed
+- **💾 flowchart-editor.html: フッター表示をSVG保存情報のみに簡潔化**
+  - **背景**: SVGファイルが全体の本体システムファイル（メモ、カスタムラベル、手動エッジ、参照関係等すべてを含む）であるため、SVG保存状況のみ表示することでUI簡潔化
+  - **変更内容**:
+    - JSON保存情報をフッターから削除（JSON保存は自動実行されるため、ユーザーの意識的な操作対象はSVGのみ）
+    - フッターレイアウトをtask-manager.htmlと同じミニマルレイアウトに変更
+    - フッター高さを統一（`padding: 0.5rem 1.5rem`、`font-size: 0.75rem`）
+  - **フッター構造**:
+    - 左側: SVGファイル名 + 最終保存時刻
+    - 右側: 保存ステータス（✓ 保存済み / ● 未保存の変更あり）
+
+### Removed
+- **flowchart-editor.html**:
+  - JSON保存情報のフッター表示を削除
+  - `saveToFileAuto()`、`saveToFileAs()`からの`updateJsonFileStatus()`呼び出しを削除
+  - `restoreFileHandleFromDB()`のJSON部分でのフッター更新コードを削除
+
+### User Experience
+- **UI簡潔化**: フッター高さが低くなり、視覚的にすっきりした
+- **情報の焦点**: ユーザーが本当に知りたい情報（SVG保存状況）のみに集中
+- **task-manager.htmlとの一貫性**: 両ファイルでフッター高さが統一され、統一感のあるUI
+
+---
+
 ## [2.19.1] - 2026-03-22
 
 ### Added

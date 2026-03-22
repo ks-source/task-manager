@@ -96,15 +96,10 @@
       color: #6c757d;
     }
 
-    .footer .file-info {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .footer .file-info svg {
+    .footer svg {
       width: 14px;
       height: 14px;
+      flex-shrink: 0;
     }
 
     .footer .status-indicator {
@@ -6657,9 +6652,6 @@
         // IndexedDBに保存（権限チェック後に再保存）
         await saveFileHandleToDB('flowchart-editor-file', currentFileHandle);
 
-        // フッターに保存状況を表示
-        updateJsonFileStatus(currentFileHandle.name);
-
         // フローチャート属性をtask-manager.htmlへ送信
         publishFlowchartAttributes();
       } catch (err) {
@@ -6707,9 +6699,6 @@
 
         console.log('✅ メモを保存しました:', handle.name);
 
-        // フッターに保存状況を表示
-        updateJsonFileStatus(handle.name);
-
         // フローチャート属性をtask-manager.htmlへ送信
         publishFlowchartAttributes();
 
@@ -6734,19 +6723,9 @@
           const permission = await currentFileHandle.queryPermission({ mode: 'readwrite' });
           if (permission === 'granted') {
             console.log('✅ JSONファイルハンドル復元成功:', currentFileHandle.name);
-            // フッターにファイル名を表示（保存時刻は"未保存"のまま）
-            const fileNameEl = document.getElementById('current-json-file-name');
-            if (fileNameEl) {
-              fileNameEl.textContent = currentFileHandle.name;
-            }
           } else if (permission === 'prompt') {
             // 権限が失われている場合、次回保存時に再要求
             console.log('⚠️ JSONファイルハンドル復元（権限確認が必要）:', currentFileHandle.name);
-            // フッターにファイル名を表示（保存時刻は"未保存"のまま）
-            const fileNameEl = document.getElementById('current-json-file-name');
-            if (fileNameEl) {
-              fileNameEl.textContent = currentFileHandle.name;
-            }
           } else {
             // 権限が拒否されている場合、削除
             console.log('❌ JSONファイルハンドル権限が拒否されているため削除');
@@ -11256,33 +11235,20 @@ ${metadataJson}
 
   <!-- Footer -->
   <div class="footer">
-    <!-- 左側: JSON保存情報 -->
-    <div class="file-info">
+    <!-- 左側: ファイル情報 -->
+    <div style="display: flex; align-items: center; gap: 0.5rem;">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
         <path d="M14 2v6h6"></path>
       </svg>
-      <span>JSON: <span id="current-json-file-name">(新規)</span></span>
+      <span id="current-svg-file-name">(新規ファイル)</span>
       <span>|</span>
-      <span>保存: <span id="last-json-save-time">未保存</span></span>
-      <span class="status-indicator unsaved" id="json-save-status">
-        <span>● 未保存</span>
-      </span>
+      <span>最終保存: <span id="last-svg-save-time">未保存</span></span>
     </div>
 
-    <!-- 右側: SVG保存情報 -->
-    <div class="file-info">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-        <circle cx="8.5" cy="8.5" r="1.5"></circle>
-        <polyline points="21 15 16 10 5 21"></polyline>
-      </svg>
-      <span>SVG: <span id="current-svg-file-name">(新規)</span></span>
-      <span>|</span>
-      <span>保存: <span id="last-svg-save-time">未保存</span></span>
-      <span class="status-indicator unsaved" id="svg-save-status">
-        <span>● 未保存</span>
-      </span>
+    <!-- 右側: 保存ステータス -->
+    <div class="status-indicator unsaved" id="svg-save-status">
+      <span>● 未保存の変更あり</span>
     </div>
   </div>
 
