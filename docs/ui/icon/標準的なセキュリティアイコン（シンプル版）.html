@@ -1,0 +1,136 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Standard Security Icons</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .icon-card:hover .icon-preview {
+            color: #2563eb; /* blue-600 */
+        }
+        .icon-card:hover .btn-preview-solid {
+            background-color: #2563eb;
+        }
+        .transition-all {
+            transition: all 0.2s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen p-8 font-sans text-slate-800">
+    <div class="max-w-5xl mx-auto">
+        <header class="mb-10 text-center">
+            <h1 class="text-2xl font-bold mb-2 text-slate-900">セキュリティ・ポリシー アイコン</h1>
+            <p class="text-slate-500 text-sm">システムUIで最も一般的に使用される、標準的な3つのデザインです。</p>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="icon-grid">
+            <!-- Icons will be injected here by JavaScript -->
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-slate-800 text-white px-6 py-3 rounded shadow opacity-0 transition-opacity duration-300 pointer-events-none z-50 text-sm">
+        コピーしました
+    </div>
+
+    <script>
+        // SVG Icon Data
+        const icons = [
+            {
+                name: 'シールド・チェック',
+                description: '盾とチェックマーク。安全基準を満たしていることや、セキュリティが有効であることを示す最も標準的なアイコンです。',
+                btnText: 'セキュリティ状態',
+                svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+  <polyline points="9 12 11 14 15 10"></polyline>
+</svg>`
+            },
+            {
+                name: '南京錠 (ロック)',
+                description: 'シンプルな南京錠。アクセス制御や権限設定、機密情報の保護を示す際によく使われる王道の表現です。',
+                btnText: '権限・アクセス設定',
+                svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <rect x="5" y="11" width="14" height="10" rx="2" ry="2"></rect>
+  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+</svg>`
+            },
+            {
+                name: 'ドキュメント・ロック',
+                description: '書類と南京錠の組み合わせ。利用規約、プライバシーポリシーなど「機密性のある文書やルール」を示す場合に適しています。',
+                btnText: 'セキュリティポリシー',
+                svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+  <polyline points="14 2 14 8 20 8"></polyline>
+  <rect x="9" y="14" width="6" height="4" rx="1"></rect>
+  <path d="M10.5 14v-1.5a1.5 1.5 0 0 1 3 0V14"></path>
+</svg>`
+            }
+        ];
+
+        const grid = document.getElementById('icon-grid');
+        const toast = document.getElementById('toast');
+        let toastTimeout;
+
+        function showToast() {
+            toast.classList.remove('opacity-0');
+            toast.classList.add('opacity-100');
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('opacity-100');
+                toast.classList.add('opacity-0');
+            }, 2000);
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(showToast).catch(console.error);
+        }
+
+        icons.forEach(icon => {
+            const card = document.createElement('div');
+            card.className = 'icon-card bg-white rounded-lg border border-slate-200 p-6 flex flex-col items-center cursor-pointer hover:border-blue-400 hover:shadow-sm transition-all group';
+            card.onclick = () => copyToClipboard(icon.svg);
+
+            card.innerHTML = `
+                <div class="icon-preview text-slate-600 w-12 h-12 mb-4 transition-all">
+                    ${icon.svg}
+                </div>
+                <h2 class="text-base font-medium text-slate-800 mb-2">${icon.name}</h2>
+                <p class="text-xs text-slate-500 mb-6 text-center leading-relaxed h-12">${icon.description}</p>
+                
+                <div class="w-full pt-4 border-t border-slate-100">
+                    <button class="w-full py-2 bg-slate-50 group-hover:bg-blue-50 group-hover:text-blue-700 text-slate-600 text-xs font-medium rounded transition-colors">
+                        SVGをコピー
+                    </button>
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+    </script>
+<script>window.parent.postMessage({ action: "ready" }, "*"); 
+ 
+window.console = new Proxy(console, {
+  get(target, prop) {
+    if (['log', 'warn', 'error'].includes(prop)) {
+      return new Proxy(target[prop], {
+        apply(fn, thisArg, args) {
+          fn.apply(thisArg, args);
+          window.parent.postMessage({ action: 'console', 
+            type: prop, 
+            args: args.map((arg) => {
+              try {
+                return JSON.stringify(arg).replace(/^["']|["']$/g, '');
+              } catch (e) {
+                return arg;
+              }
+            }) 
+          }, '*');
+        }
+      });
+    }
+    return target[prop];
+  }
+});
+</script></body>
+</html>

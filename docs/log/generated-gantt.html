@@ -1,0 +1,846 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ガントチャート - Dify問い合わせ自動応答システム</title>
+  <style>
+    :root {
+      --task-column-width: 250px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: #f5f5f5;
+      overflow-x: auto;
+    }
+
+    .header {
+      background-color: white;
+      border-bottom: 2px solid #e0e0e0;
+      padding: 0.5rem 1rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      min-height: 60px;
+    }
+
+    .header h1 {
+      font-size: 1.2rem;
+      color: #2c3e50;
+      margin: 0;
+      white-space: nowrap;
+    }
+
+    .controls {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      flex-shrink: 0;
+      flex-wrap: nowrap;
+    }
+
+    .controls > div {
+      flex-shrink: 0;
+    }
+
+    .view-mode-btn {
+      padding: 0.35rem 0.75rem;
+      border: 1px solid #ddd;
+      background: white;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      transition: all 0.2s;
+    }
+
+    .view-mode-btn.active {
+      background: #2c3e50;
+      color: white;
+      border-color: #2c3e50;
+    }
+
+    .view-mode-btn:hover:not(.active) {
+      background: #f0f0f0;
+    }
+
+    .refresh-btn {
+      padding: 0.35rem 0.75rem;
+      background: #3498db;
+      color: white;
+      border: 1px solid #3498db;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      flex-shrink: 0;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .refresh-btn:hover {
+      background: #2980b9;
+    }
+
+    .refresh-btn svg {
+      width: 16px;
+      height: 16px;
+      display: block;
+    }
+
+    .gantt-container {
+      background-color: white;
+      margin: 0;
+      border-radius: 0;
+      box-shadow: none;
+      height: calc(100vh - 60px);
+      overflow: auto;
+      position: relative;
+    }
+
+    .gantt-table {
+      display: grid;
+      grid-template-columns: var(--task-column-width) max-content;
+      min-width: max-content;
+    }
+
+    .task-list {
+      position: sticky;
+      left: 0;
+      z-index: 20;
+      border-right: 2px solid #e0e0e0;
+      background: #fafafa;
+    }
+
+    .column-resizer {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 8px;
+      height: 100%;
+      cursor: col-resize;
+      background: transparent;
+      z-index: 25;
+      user-select: none;
+    }
+
+    .column-resizer:hover {
+      background: rgba(52, 152, 219, 0.3);
+    }
+
+    .column-resizer.resizing {
+      background: rgba(52, 152, 219, 0.5);
+    }
+
+    .task-list-header {
+      padding: 0 1rem;
+      background: #2c3e50;
+      color: white;
+      font-weight: 600;
+      height: 50px;
+      min-height: 50px;
+      display: flex;
+      align-items: center;
+      position: sticky;
+      left: 0;
+      top: 0;
+      z-index: 30;
+    }
+
+    .task-row {
+      padding: 0.5rem 1rem;
+      border-bottom: 1px solid #e0e0e0;
+      background: white;
+      height: 70px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .task-wbs {
+      font-size: 0.75rem;
+      color: #7f8c8d;
+      margin-bottom: 0.25rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .task-name {
+      font-size: 0.9rem;
+      color: #2c3e50;
+      font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .timeline {
+      position: relative;
+    }
+
+    .timeline-header {
+      background: #2c3e50;
+      color: white;
+      height: 50px;
+      min-height: 50px;
+      position: sticky;
+      top: 0;
+      z-index: 15;
+    }
+
+    .timeline-grid {
+      display: flex;
+    }
+
+    .timeline-cell {
+      padding: 0 0.5rem;
+      text-align: center;
+      font-size: 0.75rem;
+      border-right: 1px solid rgba(255,255,255,0.1);
+      min-width: 40px;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .timeline-row {
+      position: relative;
+      height: 70px;
+      border-bottom: 1px solid #e0e0e0;
+      background: white;
+    }
+
+    .timeline-bg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      display: flex;
+    }
+
+    .timeline-bg-cell {
+      border-right: 1px solid #f0f0f0;
+      min-width: 40px;
+    }
+
+    .timeline-bg-cell.today {
+      background: rgba(52, 152, 219, 0.05);
+      border-right: 2px solid #3498db;
+    }
+
+    .task-bar {
+      position: absolute;
+      height: 30px;
+      top: 50%;
+      transform: translateY(-50%);
+      border-radius: 4px;
+      color: white;
+      font-size: 0.75rem;
+      display: flex;
+      align-items: center;
+      padding: 0 0.5rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .task-bar:hover {
+      transform: translateY(-50%) scale(1.02);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      z-index: 10;
+    }
+
+    .task-bar.completed { background: #27ae60; }
+    .task-bar.in-progress { background: #3498db; }
+    .task-bar.not-started { background: #95a5a6; }
+    .task-bar.on-hold { background: #f39c12; }
+    .task-bar.cancelled { background: #e74c3c; }
+
+    .task-bar.dragging {
+      opacity: 0.5;
+      cursor: move !important;
+    }
+
+    .legend {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+      margin-left: auto;
+      flex-shrink: 0;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      font-size: 0.8rem;
+      white-space: nowrap;
+    }
+
+    .legend-color {
+      width: 12px;
+      height: 12px;
+      border-radius: 2px;
+    }
+
+    @media (max-width: 1200px) {
+      .gantt-table {
+        grid-template-columns: 200px auto;
+      }
+      .task-list-header, .task-row {
+        padding: 0.5rem;
+      }
+      .task-name {
+        font-size: 0.85rem;
+      }
+    }
+
+    @media (max-width: 800px) {
+      .gantt-table {
+        grid-template-columns: 150px auto;
+      }
+      .header h1 {
+        font-size: 1.2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 32px; height: 32px; color: #2c3e50;">
+      <rect x="3" y="3" width="18" height="18" rx="3"></rect>
+      <path d="M7 8h4"></path>
+      <path d="M10 12h4"></path>
+      <path d="M13 16h4"></path>
+    </svg>
+    <div class="controls">
+      <div>
+        <button class="view-mode-btn active" onclick="changeViewMode('day')" id="btn-day">日</button>
+        <button class="view-mode-btn" onclick="changeViewMode('week')" id="btn-week">週</button>
+        <button class="view-mode-btn" onclick="changeViewMode('month')" id="btn-month">月</button>
+      </div>
+      <button class="refresh-btn" onclick="refreshData()" title="更新">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="23 4 23 10 17 10"></polyline>
+          <polyline points="1 20 1 14 7 14"></polyline>
+          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"></path>
+          <path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14"></path>
+        </svg>
+      </button>
+    </div>
+    <div class="legend">
+      <div class="legend-item">
+        <div class="legend-color" style="background: #27ae60;"></div>
+        <span>完了</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background: #3498db;"></div>
+        <span>進行中</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background: #95a5a6;"></div>
+        <span>未着手</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background: #f39c12;"></div>
+        <span>保留</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background: #e74c3c;"></div>
+        <span>中止</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="gantt-container">
+    <div class="gantt-table" id="gantt-table">
+      <!-- Will be populated by JavaScript -->
+    </div>
+  </div>
+
+  <script>
+    let currentViewMode = "day";
+    let projectData = {"meta":{"version":"1.0.0","project_name":"Dify問い合わせ自動応答システム","project_start":"2026-03-23","project_end":"2026-04-30","total_tasks":72,"last_updated":"2026-03-20T00:00:00+09:00"},"tasks":[{"wbs_no":"0.1","phase":"WBS0","task_type":"Planning","task_name":"業務要件ヒアリング・整理","mermaid_ids":"全体","primary_owner":"PM","support_owner":"QA1;QA2","duration_bd":1,"start_date":"2026/4/23","finish_date":"2026/5/23","predecessors":"","verification_method":"業務範囲と対象サービスと現行運用をヒアリングして要件定義書を作成する","pass_criteria":"対象業務範囲と対象サービス一覧と現行フローと期待効果が文書化され承認されている","status":"未着手","comments":[{"timestamp":"2026-03-20T02:07:39.068Z","type":"status_change","content":"ステータス変更: 未着手 → 進行中"},{"timestamp":"2026-03-20T02:09:14.029Z","type":"status_change","content":"ステータス変更: 進行中 → 未着手"},{"timestamp":"2026-03-20T02:36:36.705Z","type":"user_comment","content":"testtest"}]},{"wbs_no":"0.2","phase":"WBS0","task_type":"Design","task_name":"Difyワークフローアーキテクチャ設計","mermaid_ids":"全ノード;全エッジ","primary_owner":"ENG","support_owner":"PM","duration_bd":9,"start_date":"2026/3/29","finish_date":"2026/4/7","predecessors":"0.1","verification_method":"Mermaid識別子とDifyノード種別と入出力仕様の対応表を作成する","pass_criteria":"[SYS_01]〜[HUM_04]と[F_01]〜[F_49]の入出力仕様が定義されている","status":"完了","comments":[{"timestamp":"2026-03-20T02:09:10.138Z","type":"status_change","content":"ステータス変更: 未着手 → 完了"},{"timestamp":"2026-03-21T12:40:26.899Z","type":"date_change","content":"ガントチャートで日程変更: 2026/3/28 ～ 2026/3/28 (変更前: 2026/3/24 ～ 2026/3/24)"},{"timestamp":"2026-03-21T12:40:28.475Z","type":"date_change","content":"ガントチャートで日程変更: 2026/3/30 ～ 2026/3/30 (変更前: 2026/3/28 ～ 2026/3/28)"},{"timestamp":"2026-03-21T12:40:47.680Z","type":"date_change","content":"ガントチャートで日程変更: 2026/4/1 ～ 2026/4/1 (変更前: 2026/3/30 ～ 2026/3/30)"},{"timestamp":"2026-03-21T12:40:55.939Z","type":"date_change","content":"ガントチャートで日程変更: 2026/3/28 ～ 2026/3/28 (変更前: 2026/4/1 ～ 2026/4/1)"},{"timestamp":"2026-03-21T12:45:16.372Z","type":"date_change","content":"ガントチャートで日程変更: 2026/4/1 ～ 2026/4/1 (変更前: 2026/3/28 ～ 2026/3/28)"},{"timestamp":"2026-03-21T12:51:45.406Z","type":"date_change","content":"終了日変更: 2026/4/1 → 2026/4/10"},{"timestamp":"2026-03-21T12:52:06.572Z","type":"system","content":"タスク情報を更新しました:\n工数: \"0\" → \"\""},{"timestamp":"2026-03-21T13:03:49.500Z","type":"date_change","content":"ガントチャートで日程変更: 2026/3/29 ～ 2026/4/7 (変更前: 2026/4/1 ～ 2026/4/10)"},{"timestamp":"2026-03-21T13:04:43.267Z","type":"date_change","content":"ガントチャートで日程変更: 2026/4/10 ～ 2026/4/19 (変更前: 2026/3/29 ～ 2026/4/7)"},{"timestamp":"2026-03-21T13:04:54.597Z","type":"date_change","content":"ガントチャートで日程変更: 2026/4/3 ～ 2026/4/12 (変更前: 2026/4/10 ～ 2026/4/19)"},{"timestamp":"2026-03-21T13:06:01.025Z","type":"date_change","content":"ガントチャートで日程変更: 2026/4/13 ～ 2026/4/22 (変更前: 2026/4/3 ～ 2026/4/12)"},{"timestamp":"2026-03-21T13:06:17.943Z","type":"date_change","content":"ガントチャートで日程変更: 2026/3/30 ～ 2026/4/8 (変更前: 2026/4/13 ～ 2026/4/22)"},{"timestamp":"2026-03-21T13:06:21.454Z","type":"date_change","content":"ガントチャートで日程変更: 2026/4/2 ～ 2026/4/11 (変更前: 2026/3/30 ～ 2026/4/8)"},{"timestamp":"2026-03-21T13:06:23.328Z","type":"date_change","content":"ガントチャートで日程変更: 2026/4/1 ～ 2026/4/10 (変更前: 2026/4/2 ～ 2026/4/11)"},{"timestamp":"2026-03-21T13:06:41.145Z","type":"date_change","content":"ガントチャートで日程変更: 2026/4/15 ～ 2026/4/24 (変更前: 2026/4/1 ～ 2026/4/10)"},{"timestamp":"2026-03-21T13:08:21.364Z","type":"date_change","content":"ガントチャートで日程変更: 2026/3/29 ～ 2026/4/7 (変更前: 2026/4/15 ～ 2026/4/24)"}],"priority":"中"},{"wbs_no":"0.3","phase":"WBS0","task_type":"Planning","task_name":"テスト計画書・評価方針作成","mermaid_ids":"[USR_01]〜[USR_04]","primary_owner":"PM","support_owner":"ENG;QA1;QA2","duration_bd":1,"start_date":"2026/3/25","finish_date":"2026/3/25","predecessors":"0.2","verification_method":"単体テストと結合テストとE2Eテストの計画書を作成する","pass_criteria":"E2E 8シナリオとLLM/RAG/CND/SYS/DAT/HUMの合格基準が明記されている","status":"不明","comments":[{"timestamp":"2026-03-20T02:27:54.852Z","type":"status_change","content":"ステータス変更: 未着手 → 不明"},{"timestamp":"2026-03-20T02:28:22.474Z","type":"user_comment","content":"テスト"}]},{"wbs_no":"0.4","phase":"WBS0","task_type":"Review","task_name":"週次社内レビュー1","mermaid_ids":"-","primary_owner":"PM","support_owner":"ENG;QA1;QA2","duration_bd":0.25,"start_date":"2026/3/27","finish_date":"2026/3/27","predecessors":"","verification_method":"設計書とテスト計画書のレビュー会を実施する","pass_criteria":"指摘事項が記録され対応方針が合意されている","status":"未着手","comments":[]},{"wbs_no":"0.5","phase":"WBS0","task_type":"Review","task_name":"週次社内レビュー2","mermaid_ids":"-","primary_owner":"PM","support_owner":"ENG;QA1;QA2","duration_bd":0.25,"start_date":"2026/4/3","finish_date":"2026/4/3","predecessors":"","verification_method":"WBS1とWBS2の進捗レビューを実施する","pass_criteria":"進捗差異と残課題と次週対応が合意されている","status":"未着手","comments":[]},{"wbs_no":"0.6","phase":"WBS0","task_type":"Review","task_name":"週次社内レビュー3","mermaid_ids":"-","primary_owner":"PM","support_owner":"ENG;QA1;QA2","duration_bd":0.25,"start_date":"2026/4/10","finish_date":"2026/4/10","predecessors":"","verification_method":"WBS3前半の進捗レビューを実施する","pass_criteria":"RAG精度と分類精度の中間値が確認されている","status":"未着手","comments":[]},{"wbs_no":"0.7","phase":"WBS0","task_type":"Review","task_name":"週次社内レビュー4","mermaid_ids":"-","primary_owner":"PM","support_owner":"ENG;QA1;QA2","duration_bd":0.25,"start_date":"2026/4/17","finish_date":"2026/4/17","predecessors":"","verification_method":"WBS3完了レビューとWBS4着手確認を実施する","pass_criteria":"PH_2結合結果とPH_3着手可否が承認されている","status":"未着手","comments":[]},{"wbs_no":"0.8","phase":"WBS0","task_type":"Review","task_name":"週次社内レビュー5","mermaid_ids":"-","primary_owner":"PM","support_owner":"ENG;QA1;QA2","duration_bd":0.25,"start_date":"2026/4/24","finish_date":"2026/4/24","predecessors":"","verification_method":"E2Eテスト中間レビューを実施する","pass_criteria":"主要シナリオの合否と不具合是正方針が合意されている","status":"未着手","comments":[]},{"wbs_no":"1.1","phase":"WBS1","task_type":"Knowledge","task_name":"FAQ300件の収集・重複除去・QAペア整形","mermaid_ids":"[RAG_03]前提","primary_owner":"QA1","support_owner":"QA2","duration_bd":1.5,"start_date":"2026/3/26","finish_date":"2026/3/27","predecessors":"0.2","verification_method":"FAQを1行1QAペアの形式に整形し重複と欠損を除去する","pass_criteria":"QAペア約300件が整形済みで空欄0件かつ重複除去済み","status":"未着手","comments":[]},{"wbs_no":"1.2","phase":"WBS1","task_type":"Knowledge","task_name":"PDF/PPT約50ファイルの収集・テキスト抽出","mermaid_ids":"[RAG_01]前提","primary_owner":"QA2","support_owner":"QA1","duration_bd":2,"start_date":"2026/3/26","finish_date":"2026/3/30","predecessors":"0.2","verification_method":"PDF/PPTからテキストを抽出し文字化けと欠落を確認する","pass_criteria":"想定50ファイルの抽出が完了しサンプル確認で文字化け0件","status":"未着手","comments":[]},{"wbs_no":"1.3","phase":"WBS1","task_type":"Knowledge","task_name":"ナレッジクリーニング・チャンク設計","mermaid_ids":"[RAG_01];[RAG_03]","primary_owner":"ENG","support_owner":"QA1;QA2","duration_bd":1,"start_date":"2026/3/30","finish_date":"2026/3/30","predecessors":"1.1;1.2","verification_method":"チャンクサイズと分割規則を決めてサンプル確認する","pass_criteria":"チャンクサイズ方針が定義され文脈切断率が許容範囲内","status":"未着手","comments":[]},{"wbs_no":"1.4","phase":"WBS1","task_type":"Knowledge","task_name":"Difyナレッジベース登録・Embedding生成","mermaid_ids":"[RAG_01];[RAG_03]","primary_owner":"ENG","support_owner":"-","duration_bd":0.5,"start_date":"2026/3/31","finish_date":"2026/3/31","predecessors":"1.3","verification_method":"Difyへアップロードし検索可能状態を確認する","pass_criteria":"FAQと抽出文書が登録されEmbedding生成が正常完了している","status":"未着手","comments":[]},{"wbs_no":"1.5","phase":"WBS1","task_type":"QA","task_name":"RAGベースライン検索精度測定","mermaid_ids":"[RAG_01];[RAG_03]","primary_owner":"ENG","support_owner":"QA1;QA2","duration_bd":0.5,"start_date":"2026/4/1","finish_date":"2026/4/1","predecessors":"1.4","verification_method":"評価クエリ30件でHit RateとMRRを測定する","pass_criteria":"ベースライン結果が記録され後続チューニング条件が確定している","status":"未着手","comments":[]},{"wbs_no":"2.1","phase":"PH1","task_type":"Development","task_name":"[SYS_01] メール受信処理の構築","mermaid_ids":"[SYS_01];[F_03]","primary_owner":"ENG","support_owner":"PM","duration_bd":0.5,"start_date":"2026/4/1","finish_date":"2026/4/1","predecessors":"0.2","verification_method":"正常系と異常系メールを投入してWebhook受信を確認する","pass_criteria":"正常系100%受信かつ異常系で安全に停止または通知される","status":"未着手","comments":[]},{"wbs_no":"2.2","phase":"PH1","task_type":"Development","task_name":"[LLM_01] メール本文解析・正規化","mermaid_ids":"[LLM_01];[F_04];[F_05]","primary_owner":"ENG","support_owner":"QA1","duration_bd":0.75,"start_date":"2026/4/2","finish_date":"2026/4/2","predecessors":"2.1","verification_method":"テストメール10件でJSON出力と内容精度を確認する","pass_criteria":"JSON準拠率95%以上かつ本文正規化の誤りがない","status":"未着手","comments":[]},{"wbs_no":"2.3","phase":"PH1","task_type":"Development","task_name":"[CND_01] 複数問い合わせ判定","mermaid_ids":"[CND_01];[F_05];[F_06];[F_07]","primary_owner":"ENG","support_owner":"PM","duration_bd":0.5,"start_date":"2026/4/3","finish_date":"2026/4/3","predecessors":"2.2","verification_method":"単一と複数と曖昧ケースを投入して分岐を確認する","pass_criteria":"明確ケース95%以上かつ曖昧ケースで安全にフォールバックする","status":"未着手","comments":[]},{"wbs_no":"2.4","phase":"PH1","task_type":"Development","task_name":"[LLM_02] 問い合わせ分解","mermaid_ids":"[LLM_02];[F_06];[F_08]","primary_owner":"ENG","support_owner":"QA1","duration_bd":0.5,"start_date":"2026/4/3","finish_date":"2026/4/3","predecessors":"2.3","verification_method":"複数トピックメール5件で分解結果を確認する","pass_criteria":"トピック欠落0件かつ分解正確性90%以上","status":"未着手","comments":[]},{"wbs_no":"2.5","phase":"PH1","task_type":"Development","task_name":"[SYS_02] 単一問い合わせスルーパス","mermaid_ids":"[SYS_02];[F_07];[F_09]","primary_owner":"ENG","support_owner":"-","duration_bd":0.25,"start_date":"2026/4/6","finish_date":"2026/4/6","predecessors":"2.3","verification_method":"単一問い合わせの入力がそのまま後段へ渡ることを確認する","pass_criteria":"入力と出力が一致し受け渡し成功率100%","status":"未着手","comments":[]},{"wbs_no":"2.6","phase":"PH1","task_type":"Development","task_name":"[DAT_01] 問い合わせリスト生成","mermaid_ids":"[DAT_01];[F_08];[F_09];[F_10]","primary_owner":"ENG","support_owner":"PM","duration_bd":0.5,"start_date":"2026/4/6","finish_date":"2026/4/6","predecessors":"2.4;2.5","verification_method":"単一と複数の両パターンでJSONスキーマを検証する","pass_criteria":"必須項目欠損0件かつJSONスキーマ通過率100%","status":"未着手","comments":[]},{"wbs_no":"2.7","phase":"PH1","task_type":"QA","task_name":"PH_1 結合検証","mermaid_ids":"[F_03]〜[F_10]","primary_owner":"ENG","support_owner":"QA1","duration_bd":0.5,"start_date":"2026/4/6","finish_date":"2026/4/6","predecessors":"2.6","verification_method":"メール受信から問い合わせリスト生成まで通し確認する","pass_criteria":"PH_1全体のデータ伝搬が正常で問い合わせリストが正しく生成される","status":"未着手","comments":[]},{"wbs_no":"3.1","phase":"PH2","task_type":"Development","task_name":"[CND_02] スコープ判定","mermaid_ids":"[CND_02];[F_11]〜[F_14]","primary_owner":"ENG","support_owner":"PM","duration_bd":0.5,"start_date":"2026/4/7","finish_date":"2026/4/7","predecessors":"2.7","verification_method":"対象内と対象外自社と対象外他社の分岐結果を確認する","pass_criteria":"明確ケース95%以上かつ境界ケース80%以上","status":"未着手","comments":[]},{"wbs_no":"3.2","phase":"PH2","task_type":"Development","task_name":"[DAT_02] 対象内データ出力","mermaid_ids":"[DAT_02]","primary_owner":"ENG","support_owner":"-","duration_bd":0.25,"start_date":"2026/4/7","finish_date":"2026/4/7","predecessors":"3.1","verification_method":"対象内ルートの出力スキーマを確認する","pass_criteria":"JSONスキーマ通過率100%","status":"未着手","comments":[]},{"wbs_no":"3.3","phase":"PH2","task_type":"Development","task_name":"[DAT_03] 対象外自社データ出力","mermaid_ids":"[DAT_03]","primary_owner":"ENG","support_owner":"-","duration_bd":0.25,"start_date":"2026/4/7","finish_date":"2026/4/7","predecessors":"3.1","verification_method":"対象外自社ルートの出力スキーマを確認する","pass_criteria":"JSONスキーマ通過率100%","status":"未着手","comments":[]},{"wbs_no":"3.4","phase":"PH2","task_type":"Development","task_name":"[DAT_04] 対象外他社データ出力","mermaid_ids":"[DAT_04]","primary_owner":"ENG","support_owner":"-","duration_bd":0.25,"start_date":"2026/4/7","finish_date":"2026/4/7","predecessors":"3.1","verification_method":"対象外他社ルートの出力スキーマを確認する","pass_criteria":"JSONスキーマ通過率100%","status":"未着手","comments":[]},{"wbs_no":"3.5","phase":"PH2","task_type":"Development","task_name":"[LLM_03] 対象外自社向け定型文生成","mermaid_ids":"[LLM_03];[F_15];[F_33]","primary_owner":"ENG","support_owner":"QA1","duration_bd":0.5,"start_date":"2026/4/8","finish_date":"2026/4/8","predecessors":"3.3","verification_method":"定型文5件のトーンと内容をレビューする","pass_criteria":"不適切表現0件かつ文面品質100%","status":"未着手","comments":[]},{"wbs_no":"3.6","phase":"PH2","task_type":"Development","task_name":"[LLM_04] 対象外他社向け定型文生成","mermaid_ids":"[LLM_04];[F_16];[F_34]","primary_owner":"ENG","support_owner":"QA1","duration_bd":0.5,"start_date":"2026/4/8","finish_date":"2026/4/8","predecessors":"3.4","verification_method":"定型文5件のトーンと内容をレビューする","pass_criteria":"不適切表現0件かつ文面品質100%","status":"未着手","comments":[]},{"wbs_no":"3.7","phase":"PH2","task_type":"Development","task_name":"[LLM_05] 問い合わせカテゴリ自動分類","mermaid_ids":"[LLM_05];[F_17]〜[F_21]","primary_owner":"ENG","support_owner":"QA2","duration_bd":0.75,"start_date":"2026/4/9","finish_date":"2026/4/9","predecessors":"3.2","verification_method":"各カテゴリ5件以上で分類精度を確認する","pass_criteria":"明確ケース95%以上かつその他への安全フォールバック100%","status":"未着手","comments":[]},{"wbs_no":"3.8","phase":"PH2","task_type":"Development","task_name":"[DAT_05] 操作方法カテゴリ出力","mermaid_ids":"[DAT_05]","primary_owner":"ENG","support_owner":"-","duration_bd":0.25,"start_date":"2026/4/9","finish_date":"2026/4/9","predecessors":"3.7","verification_method":"カテゴリ別出力スキーマを確認する","pass_criteria":"JSONスキーマ通過率100%","status":"未着手","comments":[]},{"wbs_no":"3.9","phase":"PH2","task_type":"Development","task_name":"[DAT_06] ユーザー権限カテゴリ出力","mermaid_ids":"[DAT_06]","primary_owner":"ENG","support_owner":"-","duration_bd":0.25,"start_date":"2026/4/9","finish_date":"2026/4/9","predecessors":"3.7","verification_method":"カテゴリ別出力スキーマを確認する","pass_criteria":"JSONスキーマ通過率100%","status":"未着手","comments":[]},{"wbs_no":"3.1","phase":"PH2","task_type":"Development","task_name":"[DAT_07] サービス全般カテゴリ出力","mermaid_ids":"[DAT_07]","primary_owner":"ENG","support_owner":"-","duration_bd":0.25,"start_date":"2026/4/9","finish_date":"2026/4/9","predecessors":"3.7","verification_method":"カテゴリ別出力スキーマを確認する","pass_criteria":"JSONスキーマ通過率100%","status":"未着手","comments":[]},{"wbs_no":"3.11","phase":"PH2","task_type":"Development","task_name":"[DAT_08] その他カテゴリ出力","mermaid_ids":"[DAT_08]","primary_owner":"ENG","support_owner":"-","duration_bd":0.25,"start_date":"2026/4/9","finish_date":"2026/4/9","predecessors":"3.7","verification_method":"カテゴリ別出力スキーマを確認する","pass_criteria":"JSONスキーマ通過率100%","status":"未着手","comments":[]},{"wbs_no":"3.12","phase":"PH2","task_type":"Development","task_name":"[LLM_06] 検索クエリ最適化","mermaid_ids":"[LLM_06];[F_22]〜[F_27]","primary_owner":"ENG","support_owner":"QA2","duration_bd":0.75,"start_date":"2026/4/10","finish_date":"2026/4/10","predecessors":"3.8;3.9;3.10;3.11","verification_method":"カテゴリ別に12件以上の検索クエリ品質を確認する","pass_criteria":"意図保持率90%以上かつ検索有効性がベースライン同等以上","status":"未着手","comments":[]},{"wbs_no":"3.13","phase":"PH2","task_type":"Development","task_name":"[RAG_01] マニュアル系ナレッジ検索","mermaid_ids":"[RAG_01];[F_26];[F_28]","primary_owner":"ENG","support_owner":"QA2","duration_bd":0.75,"start_date":"2026/4/13","finish_date":"2026/4/13","predecessors":"3.12;1.5","verification_method":"評価クエリ30件でHit RateとMRRを測定する","pass_criteria":"Top5 Hit Rate85%以上かつMRR0.7以上","status":"未着手","comments":[]},{"wbs_no":"3.14","phase":"PH2","task_type":"Development","task_name":"[RAG_02] 主要回答文生成","mermaid_ids":"[RAG_02];[F_28];[F_30]","primary_owner":"ENG","support_owner":"QA1","duration_bd":0.5,"start_date":"2026/4/13","finish_date":"2026/4/13","predecessors":"3.13","verification_method":"主要回答15件の正確性とハルシネーションを確認する","pass_criteria":"正確性85%以上かつハルシネーション率5%以下","status":"未着手","comments":[]},{"wbs_no":"3.15","phase":"PH2","task_type":"Development","task_name":"[RAG_03] FAQ系ナレッジ検索","mermaid_ids":"[RAG_03];[F_27];[F_29]","primary_owner":"ENG","support_owner":"QA2","duration_bd":0.75,"start_date":"2026/4/14","finish_date":"2026/4/14","predecessors":"3.12;1.5","verification_method":"FAQ300件に基づく評価クエリ30件で検索精度を測定する","pass_criteria":"Top5 Hit Rate85%以上かつMRR0.7以上","status":"未着手","comments":[]},{"wbs_no":"3.16","phase":"PH2","task_type":"Development","task_name":"[RAG_04] 参考情報生成","mermaid_ids":"[RAG_04];[F_29];[F_31]","primary_owner":"ENG","support_owner":"QA1","duration_bd":0.5,"start_date":"2026/4/14","finish_date":"2026/4/14","predecessors":"3.15","verification_method":"参考情報15件の関連性と矛盾有無を確認する","pass_criteria":"関連性80%以上かつ主要回答との矛盾0件","status":"未着手","comments":[]},{"wbs_no":"3.17","phase":"PH2","task_type":"Development","task_name":"[LLM_07] 回答統合","mermaid_ids":"[LLM_07];[F_30];[F_31];[F_32]","primary_owner":"ENG","support_owner":"QA2","duration_bd":0.75,"start_date":"2026/4/15","finish_date":"2026/4/15","predecessors":"3.14;3.16","verification_method":"主要回答と参考情報の統合結果10件を確認する","pass_criteria":"情報欠落0件かつ統合品質85%以上","status":"未着手","comments":[]},{"wbs_no":"3.18","phase":"PH2","task_type":"Development","task_name":"[SYS_03] イテレーション制御","mermaid_ids":"[SYS_03];[F_10];[F_36]","primary_owner":"ENG","support_owner":"PM","duration_bd":0.5,"start_date":"2026/4/15","finish_date":"2026/4/15","predecessors":"3.17","verification_method":"1件と3件と5件の問い合わせリストでループ回数を確認する","pass_criteria":"件数とループ回数が一致し0件でも安全に終了する","status":"未着手","comments":[]},{"wbs_no":"3.19","phase":"PH2","task_type":"Development","task_name":"[DAT_09] 個別回答結果リスト格納","mermaid_ids":"[DAT_09];[F_32]〜[F_35]","primary_owner":"ENG","support_owner":"-","duration_bd":0.5,"start_date":"2026/4/16","finish_date":"2026/4/16","predecessors":"3.17;3.5;3.6","verification_method":"対象内と対象外の回答を同一リストへ格納してスキーマ確認する","pass_criteria":"必須項目欠損0件かつ格納誤り0件","status":"未着手","comments":[]},{"wbs_no":"3.2","phase":"PH2","task_type":"Development","task_name":"[CND_03] ループ継続・終了判定","mermaid_ids":"[CND_03];[F_35];[F_36];[F_37]","primary_owner":"ENG","support_owner":"-","duration_bd":0.5,"start_date":"2026/4/16","finish_date":"2026/4/16","predecessors":"3.19;3.18","verification_method":"最終件到達時の終了判定と途中件の継続判定を確認する","pass_criteria":"継続判定100%かつ終了判定100%","status":"未着手","comments":[]},{"wbs_no":"3.21","phase":"PH2","task_type":"QA","task_name":"PH_2 結合検証","mermaid_ids":"[F_11]〜[F_37]","primary_owner":"ENG","support_owner":"QA1;QA2","duration_bd":0.5,"start_date":"2026/4/16","finish_date":"2026/4/16","predecessors":"3.20","verification_method":"対象内2件と対象外1件の問い合わせリストでPH_2全体を通し確認する","pass_criteria":"全ルートが正常動作し個別回答結果リストが正しく生成される","status":"未着手","comments":[]},{"wbs_no":"4.1","phase":"PH3","task_type":"Development","task_name":"[LLM_08] 全回答ドラフト統合","mermaid_ids":"[LLM_08];[F_37];[F_38]","primary_owner":"ENG","support_owner":"QA1;QA2","duration_bd":0.75,"start_date":"2026/4/20","finish_date":"2026/4/20","predecessors":"3.21","verification_method":"単一対象内と複数混在と全対象外の3パターンでメール文面を確認する","pass_criteria":"カテゴリ別構成が正しく自然な日本語メールになっている","status":"未着手","comments":[]},{"wbs_no":"4.2","phase":"PH3","task_type":"Development","task_name":"[CND_04] 回答信頼度判定","mermaid_ids":"[CND_04];[F_38]〜[F_42]","primary_owner":"ENG","support_owner":"PM","duration_bd":0.5,"start_date":"2026/4/21","finish_date":"2026/4/21","predecessors":"4.1","verification_method":"高信頼と低信頼と境界ケースで判定精度を確認する","pass_criteria":"明確ケース95%以上かつ低信頼フラグ付与率100%","status":"未着手","comments":[]},{"wbs_no":"4.3","phase":"PH3","task_type":"Development","task_name":"[DAT_10] 高信頼度データ出力","mermaid_ids":"[DAT_10];[F_41]","primary_owner":"ENG","support_owner":"-","duration_bd":0.25,"start_date":"2026/4/21","finish_date":"2026/4/21","predecessors":"4.2","verification_method":"高信頼度ルートの出力スキーマを確認する","pass_criteria":"JSONスキーマ通過率100%","status":"未着手","comments":[]},{"wbs_no":"4.4","phase":"PH3","task_type":"Development","task_name":"[DAT_11] 低信頼度データ出力","mermaid_ids":"[DAT_11];[F_42]","primary_owner":"ENG","support_owner":"-","duration_bd":0.25,"start_date":"2026/4/21","finish_date":"2026/4/21","predecessors":"4.2","verification_method":"低信頼度ルートの出力スキーマを確認する","pass_criteria":"JSONスキーマ通過率100%","status":"未着手","comments":[]},{"wbs_no":"4.5","phase":"PH3","task_type":"Development","task_name":"[DAT_12] 回答メールドラフト完成","mermaid_ids":"[DAT_12];[F_41];[F_42];[F_43]","primary_owner":"ENG","support_owner":"-","duration_bd":0.5,"start_date":"2026/4/22","finish_date":"2026/4/22","predecessors":"4.3;4.4","verification_method":"高信頼と低信頼の両パターンでドラフト構造を確認する","pass_criteria":"要重点確認フラグと本文と元問い合わせ情報が全て含まれる","status":"未着手","comments":[]},{"wbs_no":"4.6","phase":"PH3","task_type":"Operations","task_name":"[HUM_01] 担当者目視確認手順・画面整備","mermaid_ids":"[HUM_01];[F_43];[F_44]","primary_owner":"PM","support_owner":"ENG;QA1;QA2","duration_bd":0.5,"start_date":"2026/4/22","finish_date":"2026/4/22","predecessors":"4.5","verification_method":"手順書レビューと画面ウォークスルーを実施する","pass_criteria":"手順書のみで担当者が迷わず確認操作できる","status":"未着手","comments":[]},{"wbs_no":"4.7","phase":"PH3","task_type":"Development","task_name":"[CND_05] 修正要否判定","mermaid_ids":"[CND_05];[F_44];[F_45];[F_46]","primary_owner":"ENG","support_owner":"PM","duration_bd":0.25,"start_date":"2026/4/23","finish_date":"2026/4/23","predecessors":"4.6","verification_method":"修正ありと修正なしの両パターンで分岐を確認する","pass_criteria":"修正あり時は編集導線へ修正なし時は承認導線へ100%遷移する","status":"未着手","comments":[]},{"wbs_no":"4.8","phase":"PH3","task_type":"Operations","task_name":"[HUM_02] 担当者修正UI整備・確認","mermaid_ids":"[HUM_02];[F_45];[F_47]","primary_owner":"QA1","support_owner":"ENG;PM","duration_bd":0.25,"start_date":"2026/4/23","finish_date":"2026/4/23","predecessors":"4.7","verification_method":"担当者役でドラフト修正を行い保存結果を確認する","pass_criteria":"修正内容が保持され再確認画面に反映される","status":"未着手","comments":[]},{"wbs_no":"4.9","phase":"PH3","task_type":"Operations","task_name":"[HUM_03] 承認操作整備・確認","mermaid_ids":"[HUM_03];[F_46];[F_47]","primary_owner":"QA2","support_owner":"ENG;PM","duration_bd":0.25,"start_date":"2026/4/23","finish_date":"2026/4/23","predecessors":"4.7","verification_method":"承認操作後のステータス変化と履歴を確認する","pass_criteria":"承認者名と時刻が記録され状態が承認済みに変わる","status":"未着手","comments":[]},{"wbs_no":"4.1","phase":"PH3","task_type":"Operations","task_name":"[HUM_04] 手動メール送信","mermaid_ids":"[HUM_04];[F_48];[F_49]","primary_owner":"ENG","support_owner":"QA1","duration_bd":0.5,"start_date":"2026/4/23","finish_date":"2026/4/23","predecessors":"4.9","verification_method":"テスト用メールアドレスへ送信し本文と件名と宛先を確認する","pass_criteria":"送信成功率100%かつドラフト内容と送信内容が一致する","status":"未着手","comments":[]},{"wbs_no":"4.11","phase":"PH3","task_type":"QA","task_name":"PH_3 結合検証","mermaid_ids":"[F_37]〜[F_49]","primary_owner":"ENG","support_owner":"QA1;QA2","duration_bd":0.5,"start_date":"2026/4/23","finish_date":"2026/4/23","predecessors":"4.10","verification_method":"PH_2出力を入力にしてドラフト生成から送信まで通し確認する","pass_criteria":"低信頼表示と修正承認送信の一連フローが正常完了する","status":"未着手","comments":[]},{"wbs_no":"5.1","phase":"TEST","task_type":"QA","task_name":"結合/E2E用テストデータ準備","mermaid_ids":"[USR_01]〜[USR_04]","primary_owner":"PM","support_owner":"QA1;QA2","duration_bd":0.5,"start_date":"2026/4/23","finish_date":"2026/4/24","predecessors":"4.11","verification_method":"正常系と異常系を含むテストメール群を準備する","pass_criteria":"8シナリオ類型を網羅しFAQ300件の代表ケースを含んでいる","status":"未着手","comments":[]},{"wbs_no":"5.2","phase":"TEST","task_type":"QA","task_name":"[F_10] PH_1→PH_2 結合テスト","mermaid_ids":"[F_10]","primary_owner":"ENG","support_owner":"QA1","duration_bd":0.5,"start_date":"2026/4/24","finish_date":"2026/4/24","predecessors":"5.1","verification_method":"PH_1出力がPH_2入力として正しく受け渡されるか確認する","pass_criteria":"データ受け渡し成功率100%","status":"未着手","comments":[]},{"wbs_no":"5.3","phase":"TEST","task_type":"QA","task_name":"[F_37] PH_2→PH_3 結合テスト","mermaid_ids":"[F_37]","primary_owner":"ENG","support_owner":"QA2","duration_bd":0.5,"start_date":"2026/4/27","finish_date":"2026/4/27","predecessors":"5.2","verification_method":"PH_2結果リストがPH_3入力として正しく受け渡されるか確認する","pass_criteria":"データ受け渡し成功率100%","status":"未着手","comments":[]},{"wbs_no":"5.4","phase":"TEST","task_type":"QA","task_name":"全フェーズ通し結合テスト","mermaid_ids":"[F_01]〜[F_49]","primary_owner":"ENG","support_owner":"QA1;QA2","duration_bd":0.5,"start_date":"2026/4/27","finish_date":"2026/4/27","predecessors":"5.3","verification_method":"メール受信から送信まで2件以上を通し実行する","pass_criteria":"全フローがエラーなく完走し最終メールが期待通りである","status":"未着手","comments":[]},{"wbs_no":"5.5","phase":"TEST","task_type":"E2E","task_name":"シナリオA 単一トピック・対象内・高信頼度","mermaid_ids":"[F_01]〜[F_49]","primary_owner":"ENG","support_owner":"QA1","duration_bd":0.25,"start_date":"2026/4/27","finish_date":"2026/4/27","predecessors":"5.4","verification_method":"ハッピーパスを実行して処理時間と回答品質を確認する","pass_criteria":"エラー0件かつドラフト生成まで5分以内","status":"未着手","comments":[]},{"wbs_no":"5.6","phase":"TEST","task_type":"E2E","task_name":"シナリオB 複数トピック混在","mermaid_ids":"[F_06];[F_36]","primary_owner":"ENG","support_owner":"QA2","duration_bd":0.25,"start_date":"2026/4/27","finish_date":"2026/4/27","predecessors":"5.4","verification_method":"3トピック含有メールでループ処理と結果統合を確認する","pass_criteria":"全トピック回答が漏れなく統合される","status":"未着手","comments":[]},{"wbs_no":"5.7","phase":"TEST","task_type":"E2E","task_name":"シナリオC 対象外自社を含む","mermaid_ids":"[F_12];[F_15];[F_33]","primary_owner":"ENG","support_owner":"QA1","duration_bd":0.25,"start_date":"2026/4/27","finish_date":"2026/4/27","predecessors":"5.4","verification_method":"対象外自社定型文が別セクションに配置されるか確認する","pass_criteria":"対象内回答と対象外通知が明確に分離されている","status":"未着手","comments":[]},{"wbs_no":"5.8","phase":"TEST","task_type":"E2E","task_name":"シナリオD 対象外他社を含む","mermaid_ids":"[F_13];[F_16];[F_34]","primary_owner":"ENG","support_owner":"QA1","duration_bd":0.25,"start_date":"2026/4/28","finish_date":"2026/4/28","predecessors":"5.4","verification_method":"他社向け定型文の配置と文面適切性を確認する","pass_criteria":"文面が適切で対象内回答と混在しない","status":"未着手","comments":[]},{"wbs_no":"5.9","phase":"TEST","task_type":"E2E","task_name":"シナリオE 低信頼度ドラフト","mermaid_ids":"[F_40];[F_42]","primary_owner":"ENG","support_owner":"QA2","duration_bd":0.25,"start_date":"2026/4/28","finish_date":"2026/4/28","predecessors":"5.4","verification_method":"低信頼度フラグと要重点確認表示を確認する","pass_criteria":"低信頼度ケースで100%フラグ表示される","status":"未着手","comments":[]},{"wbs_no":"5.1","phase":"TEST","task_type":"E2E","task_name":"シナリオF 担当者修正あり","mermaid_ids":"[F_45];[F_47]","primary_owner":"QA1","support_owner":"QA2;ENG","duration_bd":0.25,"start_date":"2026/4/28","finish_date":"2026/4/28","predecessors":"5.4","verification_method":"担当者修正から承認送信までの手動フローを確認する","pass_criteria":"修正内容が最終送信メールへ100%反映される","status":"未着手","comments":[]},{"wbs_no":"5.11","phase":"TEST","task_type":"E2E","task_name":"シナリオG 空メール受信","mermaid_ids":"[SYS_01]","primary_owner":"ENG","support_owner":"-","duration_bd":0.25,"start_date":"2026/4/28","finish_date":"2026/4/28","predecessors":"5.4","verification_method":"空メールと異常メールを投入してエラーハンドリングを確認する","pass_criteria":"クラッシュ0件かつ適切な停止または通知が行われる","status":"未着手","comments":[]},{"wbs_no":"5.12","phase":"TEST","task_type":"E2E","task_name":"シナリオH LLM応答タイムアウト","mermaid_ids":"[LLM_01]〜[LLM_08]","primary_owner":"ENG","support_owner":"-","duration_bd":0.25,"start_date":"2026/4/28","finish_date":"2026/4/28","predecessors":"5.4","verification_method":"タイムアウト条件でリトライと停止処理を確認する","pass_criteria":"リトライまたは安全停止が100%機能する","status":"未着手","comments":[]},{"wbs_no":"5.13","phase":"TEST","task_type":"QA","task_name":"不具合修正・再テスト","mermaid_ids":"全体","primary_owner":"ENG","support_owner":"QA1;QA2","duration_bd":0.25,"start_date":"2026/4/30","finish_date":"2026/4/30","predecessors":"5.12","verification_method":"検出不具合を修正し該当ケースを再実行する","pass_criteria":"重大不具合0件かつ再テスト合格","status":"未着手","comments":[]},{"wbs_no":"5.14","phase":"TEST","task_type":"QA","task_name":"総合受入判定","mermaid_ids":"全体","primary_owner":"PM","support_owner":"ENG;QA1;QA2","duration_bd":0.25,"start_date":"2026/4/30","finish_date":"2026/4/30","predecessors":"5.13","verification_method":"テスト結果一覧と未解決課題を確認して受入判定する","pass_criteria":"リリース阻害要因がなく受入承認されている","status":"未着手","comments":[]},{"wbs_no":"6.1","phase":"RELEASE","task_type":"Operations","task_name":"運用手順書最終化","mermaid_ids":"[HUM_01]〜[HUM_04]","primary_owner":"PM","support_owner":"QA1;QA2","duration_bd":0.5,"start_date":"2026/4/27","finish_date":"2026/4/28","predecessors":"4.11","verification_method":"手順書を実運用版へ更新しレビューする","pass_criteria":"確認修正承認送信までの手順が最新化されている","status":"未着手","comments":[]},{"wbs_no":"6.2","phase":"RELEASE","task_type":"Operations","task_name":"運用リハーサル・担当者教育","mermaid_ids":"[HUM_01]〜[HUM_04]","primary_owner":"PM","support_owner":"QA1;QA2;ENG","duration_bd":0.5,"start_date":"2026/4/28","finish_date":"2026/4/28","predecessors":"6.1","verification_method":"担当者役で模擬運用を実施し所要時間と理解度を確認する","pass_criteria":"手順書のみで完遂率100%かつ満足度4.0以上","status":"未着手","comments":[]},{"wbs_no":"6.3","phase":"RELEASE","task_type":"Milestone","task_name":"リリース判定会","mermaid_ids":"全体","primary_owner":"PM","support_owner":"ENG;QA1;QA2","duration_bd":0.25,"start_date":"2026/4/30","finish_date":"2026/4/30","predecessors":"5.14;6.2","verification_method":"受入結果と運用準備状況を確認してGo/No-Go判定する","pass_criteria":"全関係者がGo判定を承認している","status":"未着手","comments":[]},{"wbs_no":"6.4","phase":"RELEASE","task_type":"Release","task_name":"本番反映","mermaid_ids":"全体","primary_owner":"ENG","support_owner":"PM","duration_bd":0.25,"start_date":"2026/4/30","finish_date":"2026/4/30","predecessors":"6.3","verification_method":"本番環境へワークフローと設定を反映する","pass_criteria":"反映作業が手順通り完了し設定差分がない","status":"未着手","comments":[]},{"wbs_no":"6.5","phase":"RELEASE","task_type":"Release","task_name":"リリース後スモークテスト","mermaid_ids":"[F_01]〜[F_49]","primary_owner":"ENG","support_owner":"PM;QA1;QA2","duration_bd":0.25,"start_date":"2026/4/30","finish_date":"2026/4/30","predecessors":"6.4","verification_method":"本番で代表ケース1件を実行し主要導線を確認する","pass_criteria":"受信からドラフト生成まで主要機能が正常動作する","status":"未着手","comments":[]},{"wbs_no":"6.6","phase":"RELEASE","task_type":"Milestone","task_name":"リリース完了","mermaid_ids":"全体","primary_owner":"PM","support_owner":"ENG;QA1;QA2","duration_bd":0,"start_date":"2026/4/30","finish_date":"2026/4/30","predecessors":"6.5","verification_method":"完了報告を発行する","pass_criteria":"2026-04-30にリリース完了が宣言されている","status":"未着手","comments":[]}],"statistics":{"total":72,"completed":1,"in_progress":0,"not_started":70,"on_hold":0,"postponed":0,"cancelled":0,"unknown":1,"by_phase":{"WBS0":{"total":8,"completed":1},"WBS1":{"total":5,"completed":0},"PH1":{"total":7,"completed":0},"PH2":{"total":21,"completed":0},"PH3":{"total":11,"completed":0},"TEST":{"total":14,"completed":0},"RELEASE":{"total":6,"completed":0}}},"assignees":["PM","ENG","QA1","QA2"]};
+    const minDate = new Date("2026-03-21");
+    const maxDate = new Date("2026-05-25");
+
+    console.log('[Gantt Window] Loaded projectData:', projectData);
+    console.log('[Gantt Window] Tasks with dates:', projectData.tasks.filter(t => t.start_date && t.finish_date));
+
+    function renderGantt() {
+      const tasksWithDates = projectData.tasks.filter(task =>
+        task.start_date && task.finish_date
+      );
+
+      console.log('[renderGantt] Rendering ' + tasksWithDates.length + ' tasks');
+      tasksWithDates.forEach(t => {
+        console.log('[renderGantt] Task ' + t.wbs_no + ': ' + t.start_date + ' ~ ' + t.finish_date + ' (' + t.task_name + ')');
+      });
+
+      const ganttTable = document.getElementById('gantt-table');
+
+      // Generate timeline
+      const { cells, cellWidth } = generateTimeline(currentViewMode);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      // Task list column
+      let taskListHTML = '<div class="task-list">';
+      taskListHTML += '<div class="task-list-header">タスク</div>';
+
+      tasksWithDates.forEach(task => {
+        const tooltipText = 'WBS: ' + task.wbs_no + '\n' +
+          'Phase: ' + task.phase + '\n' +
+          'Type: ' + (task.task_type || 'N/A') + '\n' +
+          'Task: ' + task.task_name + '\n' +
+          'Duration: ' + (task.duration_bd || 'N/A') + ' BD\n' +
+          'Period: ' + task.start_date + ' ~ ' + task.finish_date + '\n' +
+          'Owner: ' + (task.primary_owner || 'N/A') + '\n' +
+          'Support: ' + (task.support_owner || 'N/A') + '\n' +
+          'Status: ' + task.status + '\n' +
+          'Predecessors: ' + (task.predecessors || 'N/A');
+
+        taskListHTML += '<div class="task-row" title="' + tooltipText + '" onclick="openTaskInMainWindow(\'' + task.wbs_no + '\')" style="cursor: pointer;">' +
+          '<div class="task-wbs">' + task.wbs_no + ' | ' + task.phase + '</div>' +
+          '<div class="task-name">' + task.task_name + '</div>' +
+          '</div>';
+      });
+      taskListHTML += '<div class="column-resizer" id="column-resizer"></div>';
+      taskListHTML += '</div>';
+
+      // Calculate total timeline width
+      const totalTimelineWidth = cells.length * cellWidth;
+
+      // Timeline column
+      let timelineHTML = `<div class="timeline" style="min-width: ${totalTimelineWidth}px; width: ${totalTimelineWidth}px;">`;
+
+      // Timeline header
+      timelineHTML += `<div class="timeline-header"><div class="timeline-grid" style="min-width: ${totalTimelineWidth}px; width: ${totalTimelineWidth}px;">`;
+      cells.forEach(cell => {
+        timelineHTML += `<div class="timeline-cell" style="min-width: ${cellWidth}px; width: ${cellWidth}px; flex: none;">${cell.label}</div>`;
+      });
+      timelineHTML += '</div></div>';
+
+      // Timeline rows
+      tasksWithDates.forEach(task => {
+        const taskStart = new Date(task.start_date);
+        const taskFinish = new Date(task.finish_date);
+
+        const startOffset = Math.max(0, (taskStart - minDate) / (maxDate - minDate) * 100);
+        const duration = Math.max(3, (taskFinish - taskStart) / (maxDate - minDate) * 100);
+
+        const statusClass = getStatusClass(task.status);
+
+        timelineHTML += '<div class="timeline-row">';
+
+        // Background grid
+        timelineHTML += `<div class="timeline-bg" style="min-width: ${totalTimelineWidth}px; width: ${totalTimelineWidth}px;">`;
+        cells.forEach(cell => {
+          const isToday = cell.date &&
+            cell.date.getFullYear() === today.getFullYear() &&
+            cell.date.getMonth() === today.getMonth() &&
+            cell.date.getDate() === today.getDate();
+          timelineHTML += `<div class="timeline-bg-cell ${isToday ? 'today' : ''}" style="min-width: ${cellWidth}px; width: ${cellWidth}px; flex: none;"></div>`;
+        });
+        timelineHTML += '</div>';
+
+        // Task bar
+        const barTooltipText = 'WBS: ' + task.wbs_no + '\n' +
+          'Phase: ' + task.phase + '\n' +
+          'Type: ' + (task.task_type || 'N/A') + '\n' +
+          'Task: ' + task.task_name + '\n' +
+          'Duration: ' + (task.duration_bd || 'N/A') + ' BD\n' +
+          'Period: ' + task.start_date + ' ~ ' + task.finish_date + '\n' +
+          'Owner: ' + (task.primary_owner || 'N/A') + '\n' +
+          'Support: ' + (task.support_owner || 'N/A') + '\n' +
+          'Status: ' + task.status + '\n' +
+          'Predecessors: ' + (task.predecessors || 'N/A');
+
+        timelineHTML += '<div class="task-bar ' + statusClass + '"' +
+          ' style="left: ' + startOffset + '%; width: ' + duration + '%; cursor: move;"' +
+          ' title="' + barTooltipText + '"' +
+          ' data-wbs="' + task.wbs_no + '">' +
+          '</div>';
+
+        timelineHTML += '</div>';
+      });
+
+      timelineHTML += '</div>';
+
+      ganttTable.innerHTML = taskListHTML + timelineHTML;
+    }
+
+    function generateTimeline(mode) {
+      const cells = [];
+      const totalDays = Math.ceil((maxDate - minDate) / (1000 * 60 * 60 * 24));
+
+      if (mode === 'day') {
+        let current = new Date(minDate);
+        while (current <= maxDate) {
+          cells.push({
+            label: `${current.getMonth() + 1}/${current.getDate()}`,
+            date: new Date(current)
+          });
+          current.setDate(current.getDate() + 1);
+        }
+        return { cells, cellWidth: 50 };
+      } else if (mode === 'week') {
+        let current = new Date(minDate);
+        let weekNum = 1;
+        while (current <= maxDate) {
+          const weekStart = new Date(current);
+          const weekEnd = new Date(current);
+          weekEnd.setDate(weekEnd.getDate() + 6);
+
+          cells.push({
+            label: `W${weekNum} (${weekStart.getMonth() + 1}/${weekStart.getDate()})`,
+            date: weekStart
+          });
+          current.setDate(current.getDate() + 7);
+          weekNum++;
+        }
+        return { cells, cellWidth: 80 };
+      } else { // month
+        let current = new Date(minDate);
+        const seen = new Set();
+        while (current <= maxDate) {
+          const key = `${current.getFullYear()}-${current.getMonth()}`;
+          if (!seen.has(key)) {
+            seen.add(key);
+            cells.push({
+              label: `${current.getFullYear()}/${current.getMonth() + 1}`,
+              date: new Date(current)
+            });
+          }
+          current.setMonth(current.getMonth() + 1);
+        }
+        return { cells, cellWidth: 100 };
+      }
+    }
+
+    function getStatusClass(status) {
+      const map = {
+        '完了': 'completed',
+        '進行中': 'in-progress',
+        '未着手': 'not-started',
+        '保留': 'on-hold',
+        '延期': 'on-hold',
+        '中止': 'cancelled'
+      };
+      return map[status] || 'not-started';
+    }
+
+    function changeViewMode(mode) {
+      currentViewMode = mode;
+
+      // Update button states
+      document.querySelectorAll('.view-mode-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      document.getElementById('btn-' + mode).classList.add('active');
+
+      renderGantt();
+    }
+
+    function refreshData() {
+      if (window.opener && !window.opener.closed && window.opener.projectData) {
+        const newData = window.opener.projectData;
+        Object.assign(projectData, newData);
+        renderGantt();
+        alert('データを更新しました');
+      } else {
+        alert('メインウィンドウが閉じられているため、データを更新できません');
+      }
+    }
+
+    function openTaskInMainWindow(wbsNo) {
+      if (window.opener && !window.opener.closed) {
+        window.opener.openTaskDetail(wbsNo);
+        window.opener.focus();
+      } else {
+        alert('メインウィンドウが閉じられているため、タスク詳細を開けません');
+      }
+    }
+
+    // Auto-refresh every 5 seconds
+    setInterval(() => {
+      if (window.opener && !window.opener.closed && window.opener.projectData) {
+        const newData = window.opener.projectData;
+        Object.assign(projectData, newData);
+        renderGantt();
+      }
+    }, 5000);
+
+    // ==========================================
+    // Column Resizer
+    // ==========================================
+
+    // Restore saved column width from localStorage
+    const savedWidth = localStorage.getItem('gantt_task_column_width');
+    if (savedWidth) {
+      const width = parseInt(savedWidth, 10);
+      if (width >= 150 && width <= 500) {
+        document.documentElement.style.setProperty('--task-column-width', width + 'px');
+      }
+    }
+
+    // Setup column resizer
+    let isResizing = false;
+    let startX = 0;
+    let startWidth = 0;
+
+    function initResizer() {
+      const resizer = document.getElementById('column-resizer');
+      if (!resizer) return;
+
+      resizer.addEventListener('mousedown', (e) => {
+        isResizing = true;
+        startX = e.clientX;
+
+        const currentWidth = getComputedStyle(document.documentElement)
+          .getPropertyValue('--task-column-width');
+        startWidth = parseInt(currentWidth, 10);
+
+        resizer.classList.add('resizing');
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+
+        e.preventDefault();
+      });
+    }
+
+    document.addEventListener('mousemove', (e) => {
+      if (!isResizing) return;
+
+      const deltaX = e.clientX - startX;
+      let newWidth = startWidth + deltaX;
+
+      // Constrain width between 150px and 500px
+      newWidth = Math.max(150, Math.min(500, newWidth));
+
+      document.documentElement.style.setProperty('--task-column-width', newWidth + 'px');
+    });
+
+    document.addEventListener('mouseup', () => {
+      if (!isResizing) return;
+
+      isResizing = false;
+      const resizer = document.getElementById('column-resizer');
+      if (resizer) {
+        resizer.classList.remove('resizing');
+      }
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+
+      // Save to localStorage
+      const currentWidth = getComputedStyle(document.documentElement)
+        .getPropertyValue('--task-column-width');
+      localStorage.setItem('gantt_task_column_width', parseInt(currentWidth, 10));
+    });
+
+
+    // ==========================================
+    // Drag & Drop Functionality
+    // ==========================================
+
+    let dragState = null;
+
+    function attachDragToTaskBars() {
+      const taskBars = document.querySelectorAll('.task-bar');
+      taskBars.forEach(bar => {
+        bar.style.cursor = 'move';
+        bar.addEventListener('mousedown', startDrag);
+      });
+    }
+
+    function startDrag(e) {
+      const bar = e.target;
+      const wbsNo = bar.getAttribute('data-wbs');
+      if (!wbsNo) return;
+
+      const task = projectData.tasks.find(t => t.wbs_no === wbsNo);
+      if (!task) return;
+
+      console.log('[startDrag] WBS: ' + wbsNo + ', Start: ' + task.start_date + ', End: ' + task.finish_date);
+
+      dragState = {
+        wbsNo: wbsNo,
+        originalStartDate: task.start_date,
+        originalEndDate: task.finish_date,
+        startX: e.clientX,
+        barElement: bar
+      };
+
+      bar.classList.add('dragging');
+      document.addEventListener('mousemove', onDrag);
+      document.addEventListener('mouseup', endDrag);
+      e.preventDefault();
+    }
+
+    function onDrag(e) {
+      if (!dragState) return;
+
+      const deltaX = e.clientX - dragState.startX;
+      const cellWidth = currentViewMode === 'day' ? 40 : (currentViewMode === 'week' ? 80 : 120);
+      const deltaDays = Math.round(deltaX / cellWidth);
+
+      if (deltaDays !== 0) {
+        const newStartDate = shiftDateByDays(dragState.originalStartDate, deltaDays);
+        const newEndDate = shiftDateByDays(dragState.originalEndDate, deltaDays);
+        updatePreview(newStartDate, newEndDate);
+      }
+    }
+
+    function endDrag(e) {
+      if (!dragState) return;
+
+      document.removeEventListener('mousemove', onDrag);
+      document.removeEventListener('mouseup', endDrag);
+
+      const deltaX = e.clientX - dragState.startX;
+      const cellWidth = currentViewMode === 'day' ? 40 : (currentViewMode === 'week' ? 80 : 120);
+      const deltaDays = Math.round(deltaX / cellWidth);
+
+      if (deltaDays !== 0) {
+        const newStartDate = shiftDateByDays(dragState.originalStartDate, deltaDays);
+        const newEndDate = shiftDateByDays(dragState.originalEndDate, deltaDays);
+
+        console.log('[endDrag] deltaDays: ' + deltaDays);
+        console.log('[endDrag] Original: ' + dragState.originalStartDate + ' ~ ' + dragState.originalEndDate);
+        console.log('[endDrag] New: ' + newStartDate + ' ~ ' + newEndDate);
+
+        console.log('[endDrag] window.opener:', window.opener);
+        console.log('[endDrag] window.opener.updateTaskDates:', window.opener ? window.opener.updateTaskDates : 'no opener');
+
+        if (window.opener && window.opener.updateTaskDates) {
+          console.log('[endDrag] Calling window.opener.updateTaskDates...');
+          try {
+            window.opener.updateTaskDates(dragState.wbsNo, newStartDate, newEndDate);
+            console.log('[endDrag] updateTaskDates called successfully');
+          } catch (error) {
+            console.error('[endDrag] Error calling updateTaskDates:', error);
+          }
+
+          setTimeout(() => {
+            console.log('[endDrag] Refreshing gantt chart...');
+            if (window.opener && window.opener.getProjectData) {
+              try {
+                projectData = window.opener.getProjectData();
+                console.log('[endDrag] Updated projectData, calling renderGantt()');
+                renderGantt();
+              } catch (error) {
+                console.error('[endDrag] Error getting projectData:', error);
+              }
+            } else {
+              console.error('[endDrag] Cannot access window.opener.getProjectData');
+            }
+          }, 200);
+        } else {
+          console.error('[endDrag] window.opener or updateTaskDates not available');
+        }
+      }
+
+      // Remove preview element
+      if (dragState.barElement && dragState.barElement.parentElement) {
+        const preview = dragState.barElement.parentElement.querySelector('.task-bar-preview');
+        if (preview) {
+          preview.remove();
+        }
+      }
+
+      dragState.barElement.classList.remove('dragging');
+      dragState = null;
+    }
+
+    function shiftDateByDays(dateStr, days) {
+      const normalized = dateStr.split('/').join('-');
+      const date = new Date(normalized);
+      date.setDate(date.getDate() + days);
+      const year = date.getFullYear();
+      const month = date.getMonth() + 1;
+      const day = date.getDate();
+      return year + '/' + month + '/' + day;
+    }
+
+    function updatePreview(newStartDate, newEndDate) {
+      if (!dragState || !dragState.barElement) return;
+
+      const originalBar = dragState.barElement;
+      const timelineRow = originalBar.parentElement;
+
+      // Remove existing preview if any
+      const existingPreview = timelineRow.querySelector('.task-bar-preview');
+      if (existingPreview) {
+        existingPreview.remove();
+      }
+
+      // Calculate position for preview
+      const startDate = new Date(newStartDate.replace(///g, '-'));
+      const endDate = new Date(newEndDate.replace(///g, '-'));
+
+      // Use existing minDate/maxDate variables from outer scope
+      const totalDays = Math.ceil((maxDate - minDate) / (1000 * 60 * 60 * 24));
+      const startOffset = Math.ceil((startDate - minDate) / (1000 * 60 * 60 * 24));
+      const duration = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
+
+      const cellWidth = currentViewMode === 'day' ? 40 : (currentViewMode === 'week' ? 80 : 120);
+      const leftPos = startOffset * cellWidth;
+      const width = duration * cellWidth;
+
+      // Create preview element
+      const preview = document.createElement('div');
+      preview.className = 'task-bar task-bar-preview';
+      preview.style.position = 'absolute';
+      preview.style.left = leftPos + 'px';
+      preview.style.width = width + 'px';
+      preview.style.height = '30px';
+      preview.style.top = '50%';
+      preview.style.transform = 'translateY(-50%)';
+      preview.style.backgroundColor = 'rgba(52, 152, 219, 0.3)';
+      preview.style.border = '2px dashed #3498db';
+      preview.style.borderRadius = '4px';
+      preview.style.pointerEvents = 'none';
+      preview.style.zIndex = '5';
+
+      timelineRow.appendChild(preview);
+
+      console.log('Preview: ' + newStartDate + ' ~ ' + newEndDate);
+    }
+
+    // Attach drag functionality after render
+    const originalRenderGantt = renderGantt;
+    renderGantt = function() {
+      originalRenderGantt();
+      attachDragToTaskBars();
+    };
+
+    // Initialize when DOM is ready
+    window.addEventListener('DOMContentLoaded', function() {
+      console.log('[Gantt Window] DOM ready, starting initial render...');
+      renderGantt();
+      initResizer();
+    });
+
+  </script>
+</body>
+</html>
+      
