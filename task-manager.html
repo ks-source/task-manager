@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Task Manager - WBS Visualizer v2.14.0</title>
+  <title>Task Manager - WBS Visualizer v2.15.0</title>
   <meta name="description" content="A lightweight, browser-based Work Breakdown Structure (WBS) visualization and management tool">
   <meta name="keywords" content="task manager, WBS, project management, task tracking">
   <meta name="author" content="ks-source">
@@ -272,6 +272,30 @@
 
     .status-postponed { background-color: #f8d7da; color: #721c24; }
     .status-postponed .status-dot { background-color: var(--status-postponed); }
+
+    /* Deleted task styles */
+    .task-deleted {
+      opacity: 0.6;
+      background-color: #f8f9fa;
+    }
+
+    .task-deleted td {
+      text-decoration: line-through;
+      color: #6c757d;
+    }
+
+    .deleted-badge {
+      display: inline-block;
+      padding: 0.15rem 0.5rem;
+      margin-left: 0.5rem;
+      background-color: #dc3545;
+      color: white;
+      font-size: 0.7rem;
+      font-weight: 600;
+      border-radius: 10px;
+      text-decoration: none;
+      vertical-align: middle;
+    }
 
     /* ==========================================
      * Task Table
@@ -711,6 +735,14 @@
       background-color: #fee;
     }
 
+    .task-action-menu-item.success {
+      color: #28a745;
+    }
+
+    .task-action-menu-item.success:hover {
+      background-color: #e8f5e9;
+    }
+
     .task-action-menu-divider {
       height: 1px;
       background-color: var(--color-border);
@@ -1035,6 +1067,10 @@
             <option value="低">低</option>
           </select>
           <button class="btn-secondary" onclick="clearFilters()">フィルタクリア</button>
+          <label style="margin-left: 15px;">
+            <input type="checkbox" id="show-deleted-checkbox" onchange="toggleShowDeleted()">
+            <span style="margin-left: 5px;">削除済みタスクを表示</span>
+          </label>
         </div>
 
         <div class="task-table-container">
@@ -1510,6 +1546,7 @@
     let currentFileHandle = null;
     let currentFileName = '(新規ファイル)';
     let isEditingTaskInfo = false;
+    let showDeleted = false; // 削除済みタスク表示フラグ
 
     // Status mapping (Japanese to English keys)
     const STATUS_MAP = {
@@ -1960,9 +1997,31 @@
           '中': 'medium',
           '低': 'low'
         }[priority];
+
+        // Add deleted class for styling
+        const deletedClass = task.deleted ? 'task-deleted' : '';
+        const deletedBadge = task.deleted ? '<span class="deleted-badge">削除済み</span>' : '';
+
+        // Action menu items - show restore instead of delete for deleted tasks
+        const actionMenuItems = task.deleted ? `
+          <button class="task-action-menu-item" onclick="openTaskDetail('${task.wbs_no}')">📝 詳細を開く</button>
+          <div class="task-action-menu-divider"></div>
+          <button class="task-action-menu-item success" onclick="restoreTask('${task.wbs_no}')">♻️ 復元</button>
+        ` : `
+          <button class="task-action-menu-item" onclick="openTaskDetail('${task.wbs_no}')">📝 詳細を開く</button>
+          <div class="task-action-menu-divider"></div>
+          <button class="task-action-menu-item" onclick="openMoveDialog('${task.wbs_no}')">📌 指定位置へ移動...</button>
+          <button class="task-action-menu-item" onclick="moveTaskToPosition('${task.wbs_no}', 'first')">↑ 先頭へ移動</button>
+          <button class="task-action-menu-item" onclick="moveTaskByStep('${task.wbs_no}', -1)">⬆ 1つ上へ</button>
+          <button class="task-action-menu-item" onclick="moveTaskByStep('${task.wbs_no}', 1)">⬇ 1つ下へ</button>
+          <button class="task-action-menu-item" onclick="moveTaskToPosition('${task.wbs_no}', 'last')">↓ 末尾へ移動</button>
+          <div class="task-action-menu-divider"></div>
+          <button class="task-action-menu-item danger" onclick="deleteTask('${task.wbs_no}')">🗑️ 削除</button>
+        `;
+
         const row = `
-          <tr>
-            <td class="task-wbs-no" onclick="openTaskDetail('${task.wbs_no}')">${task.wbs_no}</td>
+          <tr class="${deletedClass}">
+            <td class="task-wbs-no" onclick="openTaskDetail('${task.wbs_no}')">${task.wbs_no} ${deletedBadge}</td>
             <td onclick="openTaskDetail('${task.wbs_no}')"><span class="priority-badge ${priorityClass}">${priority}</span></td>
             <td onclick="openTaskDetail('${task.wbs_no}')"><span class="task-phase">${task.phase}</span></td>
             <td onclick="openTaskDetail('${task.wbs_no}')">${task.task_name}</td>
@@ -1975,15 +2034,7 @@
             <td class="task-action-cell">
               <button class="task-action-btn" onclick="toggleTaskActionMenu(event, '${task.wbs_no}')">⋮</button>
               <div class="task-action-menu" id="action-menu-${task.wbs_no}">
-                <button class="task-action-menu-item" onclick="openTaskDetail('${task.wbs_no}')">📝 詳細を開く</button>
-                <div class="task-action-menu-divider"></div>
-                <button class="task-action-menu-item" onclick="openMoveDialog('${task.wbs_no}')">📌 指定位置へ移動...</button>
-                <button class="task-action-menu-item" onclick="moveTaskToPosition('${task.wbs_no}', 'first')">↑ 先頭へ移動</button>
-                <button class="task-action-menu-item" onclick="moveTaskByStep('${task.wbs_no}', -1)">⬆ 1つ上へ</button>
-                <button class="task-action-menu-item" onclick="moveTaskByStep('${task.wbs_no}', 1)">⬇ 1つ下へ</button>
-                <button class="task-action-menu-item" onclick="moveTaskToPosition('${task.wbs_no}', 'last')">↓ 末尾へ移動</button>
-                <div class="task-action-menu-divider"></div>
-                <button class="task-action-menu-item danger" onclick="deleteTask('${task.wbs_no}')">🗑️ 削除</button>
+                ${actionMenuItems}
               </div>
             </td>
           </tr>
@@ -2010,8 +2061,8 @@
 
       return projectData.tasks
         .filter(task => {
-          // Skip deleted tasks
-          if (task.deleted) return false;
+          // Skip deleted tasks (unless showDeleted is true)
+          if (task.deleted && !showDeleted) return false;
 
           // Search filter (task name or WBS number)
           const matchesSearch = !searchQuery ||
@@ -2048,6 +2099,13 @@
       document.getElementById('status-filter').value = '';
       document.getElementById('priority-filter').value = '';
       renderTaskTable();
+    }
+
+    function toggleShowDeleted() {
+      const checkbox = document.getElementById('show-deleted-checkbox');
+      showDeleted = checkbox.checked;
+      renderTaskTable();
+      console.log(`Show deleted tasks: ${showDeleted}`);
     }
 
     // ==========================================
@@ -3276,6 +3334,44 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
         type: 'success',
         title: '削除完了',
         content: `タスク「${task.task_name}」を削除しました`
+      });
+
+      // UIを再描画
+      renderTaskTable();
+      renderDashboard();
+      closeModal();
+    }
+
+    function restoreTask(wbsNo) {
+      const task = projectData.tasks.find(t => t.wbs_no === wbsNo);
+
+      if (!task) {
+        alert('タスクが見つかりません');
+        return;
+      }
+
+      if (!task.deleted) {
+        alert('このタスクは削除されていません');
+        return;
+      }
+
+      // 確認ダイアログ
+      if (!confirm(`タスク「${task.task_name}」(${wbsNo})を復元しますか？`)) {
+        return;
+      }
+
+      // 復元処理
+      task.deleted = false;
+      task.deleted_at = null;
+
+      // LocalStorageに保存
+      saveToLocalStorage();
+
+      // 通知表示
+      showNotification({
+        type: 'success',
+        title: '復元完了',
+        content: `タスク「${task.task_name}」を復元しました`
       });
 
       // UIを再描画

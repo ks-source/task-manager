@@ -5,28 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.15.0] - 2026-03-22 (Planned)
+## [2.15.0] - 2026-03-22
 
 ### Added
-- **データ連携機能（Phase 1）**: flowchart-editor.htmlからtask-manager.htmlへのデータ連携
-  - メモ・カスタムラベル・手動エッジを自動送信
-  - LocalStorage経由でシームレスに統合
-  - `publishFlowchartAttributes()`関数: フローチャート属性をtask-manager.htmlへ送信
-  - `loadTaskManagerData()`関数: タスクマネージャーデータの読み込みと接続確認
-  - 自動保存時（Ctrl+S）にデータ送信を実行
-- **UI改善**: タスク詳細・新規作成画面にMermaid IDs入力フィールド追加
-  - flowchart-editor.htmlとの連携が容易に
-  - UIから直接`mermaid_ids`を設定可能（従来はJSON直接編集が必要だった）
-  - `updateMermaidIds()`関数: mermaid_idsの更新と変更履歴の記録
+- **削除済みタスク表示トグル機能**
+  - フィルターバーに「削除済みタスクを表示」チェックボックスを追加
+  - グローバル変数 `showDeleted` でトグル状態を管理
+  - `toggleShowDeleted()` 関数: チェックボックス変更時の処理
+  - 削除済みタスクは薄暗く表示、取り消し線、「削除済み」バッジ付き
+
+- **タスク復元機能**
+  - `restoreTask(wbsNo)` 関数: 削除済みタスクを復元
+  - 削除済みタスクのアクションメニューに「♻️ 復元」ボタンを表示
+  - 復元時に `deleted: false`, `deleted_at: null` に設定
+  - 復元完了時に成功通知を表示
+
+### Changed
+- **タスク一覧の視覚的改善**
+  - 削除済みタスク行に `.task-deleted` CSSクラスを適用（グレー背景、透明度0.6）
+  - アクションメニューを動的に変更（通常タスク: 移動・削除、削除済みタスク: 復元のみ）
+  - `.success` CSSクラス追加（復元ボタン用、緑色）
 
 ### Documentation
-- データ連携ロードマップ（Phase 0～3）: `docs/specs/data-integration/future-roadmap.md`
-- Phase 1実装完了レポートと検証シナリオ: `docs/specs/data-integration/phase1-implementation-summary.md`
+- タスク管理Phase 2-A実装完了（削除済みタスク管理強化）
 
 ### Technical Details
-- **データフロー**: flowchart-editor.html → LocalStorage (flowchart-attributes) → task-manager.html
-- **通信方式**: LocalStorage + storage eventによるクロスHTML通信
-- **対象データ**: 各タスクの`mermaid_ids`に紐づくノード情報（メモ、カスタムラベル、関連手動エッジ）
+- **修正箇所1**: `renderTaskTable()` - 削除済みタスクの視覚的区別とアクションメニュー分岐（lines 1959-2010）
+- **修正箇所2**: `getFilteredTasks()` - showDeletedフラグによるフィルタリング（line 2019）
+- **新規CSS**: `.task-deleted`, `.deleted-badge`, `.task-action-menu-item.success`（lines 276-298, 714-720）
+- **新規関数**: `restoreTask()`, `toggleShowDeleted()`（lines 2064-2068, 3345-3381）
 
 ---
 
