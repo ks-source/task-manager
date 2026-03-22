@@ -5,6 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.18.9] - 2026-03-22
+
+### Fixed
+- **🔧 グローバルヘッダーの固定高さ設定でEdge to Edge接続を完全実現**
+  - **根本原因を特定**: グローバルヘッダーの実際の高さ（約43-50px）と、フィルターパネル・テーブルの配置基準（60px）にズレがあり、約10-17pxの隙間が発生していた
+  - **修正内容**: `.header`に`height: 60px`を追加し、上下paddingを削除（左右paddingは維持）
+  - **結果**: グローバルヘッダーが正確に60pxになり、フィルターパネル（`top: 60px`）とテーブルラッパー（`margin-top: 60px/140px`）が完全にEdge to Edge接続
+
+### Changed
+- **CSS変更 (`.header` - lines 55-67)**:
+  - `height: 60px;` を追加（固定高さ）
+  - `padding: 0.5rem 1.5rem;` → `padding: 0 1.5rem;` に変更（上下paddingを削除、左右は維持）
+  - `align-items: center;` で中身を垂直中央配置（既存のまま）
+
+### Technical Details
+- **配置の仕組み（完全版）**:
+  - グローバルヘッダー: `position: sticky, top: 0, height: 60px` （0-60px、固定）
+  - フィルターパネル（閉じている時）: `position: fixed, top: 60px, max-height: 0` （非表示）
+  - フィルターパネル（開いている時）: `position: fixed, top: 60px, max-height: 80px` （60-140px）
+  - テーブルラッパー（フィルター閉じている時）: `margin-top: 60px` でグローバルヘッダーの直下から開始
+  - テーブルラッパー（フィルター開いている時）: `margin-top: 140px` でフィルターパネルの直下から開始
+  - 結果: **完全にEdge to Edge接続、隙間0px**
+
+### User Experience
+- **完全にEdge to Edge**: グローバルヘッダー、フィルターパネル、テーブルヘッダーの間に隙間が完全に消滅
+- **一貫したレイアウト**: ヘッダー高さが常に60pxで固定、計算が不要で高パフォーマンス
+- **すっきりとした見た目**: 隙間がなく、プロフェッショナルな印象
+
+---
+
 ## [2.18.8] - 2026-03-22
 
 ### Fixed
