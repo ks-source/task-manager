@@ -5,6 +5,41 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.18.8] - 2026-03-22
+
+### Fixed
+- **🔧 フィルターパネル開閉時のテーブル位置調整を追加**
+  - **根本原因を特定**: フィルターパネルが開いている時、`.task-table-wrapper`の`margin-top`が固定60pxのままで、フィルターパネル（140pxまで占有）との間に隙間が発生していた
+  - **修正内容**: `toggleFilterPanel()`関数で`.task-table-wrapper`の`margin-top`を動的に調整
+  - **結果**: フィルターパネル閉じている時は60px、開いている時は140pxに設定され、隙間が完全に削除
+
+### Changed
+- **JavaScript変更 (`toggleFilterPanel()` - lines 2414-2481)**:
+  - フィルターパネル開いている時: `.task-table-wrapper { margin-top: 140px; }` を動的に設定
+  - フィルターパネル閉じている時: `.task-table-wrapper { margin-top: 60px; }` を動的に設定
+  - デバッグログを追加: テーブルラッパーの設定を確認可能
+
+### Technical Details
+- **配置の仕組み（フィルターパネル閉じている時）**:
+  - グローバルヘッダー: `position: fixed, top: 0` （0-60px）
+  - テーブルラッパー: `margin-top: 60px` でグローバルヘッダーの下から開始
+  - テーブルヘッダー: `position: sticky, top: 60px` で固定
+  - 結果: 60px位置にEdge to Edge接続
+
+- **配置の仕組み（フィルターパネル開いている時）**:
+  - グローバルヘッダー: `position: fixed, top: 0` （0-60px）
+  - フィルターパネル: `position: fixed, top: 60px, max-height: 80px` （60-140px）
+  - テーブルラッパー: `margin-top: 140px` でフィルターパネルの下から開始
+  - テーブルヘッダー: `position: sticky, top: 140px` で固定
+  - 結果: 140px位置にEdge to Edge接続、隙間なし
+
+### User Experience
+- **フィルターパネル閉じている時**: グローバルヘッダーとテーブルヘッダーが隙間なく接続
+- **フィルターパネル開いている時**: フィルターパネルとテーブルヘッダーが隙間なく接続
+- **一貫した表示**: どちらの状態でも隙間がなく、すっきりとした見た目
+
+---
+
 ## [2.18.7] - 2026-03-22
 
 ### Fixed

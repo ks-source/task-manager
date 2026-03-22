@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Task Manager - WBS Visualizer v2.18.7</title>
+  <title>Task Manager - WBS Visualizer v2.18.8</title>
   <meta name="description" content="A lightweight, browser-based Work Breakdown Structure (WBS) visualization and management tool">
   <meta name="keywords" content="task manager, WBS, project management, task tracking">
   <meta name="author" content="ks-source">
@@ -2418,15 +2418,24 @@
       const panel = document.getElementById('filter-panel');
       const toggleBtn = document.getElementById('filter-panel-toggle');
       const tableHeaders = document.querySelectorAll('.task-table thead');
+      const tableWrapper = document.querySelector('.task-table-wrapper');
 
       debugLog(3, 'FILTER', 'Elements found:');
       debugLog(3, 'FILTER', `  panel: ${!!panel}`);
       debugLog(3, 'FILTER', `  toggleBtn: ${!!toggleBtn}`);
       debugLog(3, 'FILTER', `  tableHeadersCount: ${tableHeaders.length}`);
+      debugLog(3, 'FILTER', `  tableWrapper: ${!!tableWrapper}`);
 
       if (filterPanelOpen) {
         panel.classList.add('active');
         toggleBtn.classList.add('active');
+
+        // テーブルラッパーをフィルターパネルの下に移動 (60px header + 80px panel)
+        if (tableWrapper) {
+          tableWrapper.style.marginTop = '140px';
+          debugLog(3, 'FILTER', 'Set table wrapper margin-top to 140px');
+        }
+
         // テーブルヘッダーをフィルターパネルの下に移動 (60px header + 80px panel)
         tableHeaders.forEach((th, index) => {
           th.style.top = '140px';
@@ -2446,6 +2455,13 @@
       } else {
         panel.classList.remove('active');
         toggleBtn.classList.remove('active');
+
+        // テーブルラッパーをヘッダーの下に移動 (60px header only)
+        if (tableWrapper) {
+          tableWrapper.style.marginTop = '60px';
+          debugLog(3, 'FILTER', 'Set table wrapper margin-top to 60px');
+        }
+
         // テーブルヘッダーをヘッダーの下に移動 (60px header only)
         tableHeaders.forEach((th, index) => {
           th.style.top = '60px';
