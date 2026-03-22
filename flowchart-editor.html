@@ -156,22 +156,22 @@
       width: 36px;
       height: 36px;
       padding: 0.5rem;
-      background-color: white;
-      border: 1px solid #dee2e6;
+      background-color: #2c3e50;
+      border: 1px solid #3d4f66;
       border-radius: 4px;
       cursor: pointer;
       transition: all 0.2s;
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #6c757d;
+      color: white;
       position: relative;
     }
 
     .icon-button:hover {
-      background-color: #f8f9fa;
-      border-color: #007bff;
-      color: #007bff;
+      background-color: #3d4f66;
+      border-color: #4a5f7f;
+      color: white;
     }
 
     .icon-button.active {
@@ -189,6 +189,13 @@
       opacity: 0.5;
       cursor: not-allowed;
       pointer-events: none;
+    }
+
+    /* Footer Settings Button - White background with navy icon, inverts on hover */
+    .footer-settings-btn:hover {
+      background-color: #2c3e50 !important;
+      color: white !important;
+      border-color: #2c3e50 !important;
     }
 
     /* Custom Tooltip Styles */
@@ -1618,7 +1625,7 @@
       width: 280px;
       background: white;
       border: 2px solid #2c3e50;
-      border-radius: 8px;
+      border-radius: 0;
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
       z-index: 10001;
       font-size: 13px;
@@ -1627,8 +1634,6 @@
     }
 
     .floating-panel.dragging {
-      opacity: 0.85;
-      box-shadow: 0 8px 30px rgba(0, 123, 255, 0.5);
       cursor: grabbing;
     }
 
@@ -1637,7 +1642,7 @@
       color: white;
       padding: 4px 8px;
       font-size: 11px;
-      border-radius: 6px 6px 0 0;
+      border-radius: 0;
       cursor: move;
       display: flex;
       justify-content: space-between;
@@ -1652,18 +1657,18 @@
 
     .panel-controls {
       display: flex;
-      gap: 0.25rem;
+      gap: 4px;
     }
 
     .panel-btn {
       background: rgba(255, 255, 255, 0.2);
       border: none;
       color: white;
-      width: 24px;
-      height: 24px;
-      border-radius: 4px;
+      width: 18px;
+      height: 18px;
+      border-radius: 3px;
       cursor: pointer;
-      font-size: 14px;
+      font-size: 10px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -2346,8 +2351,8 @@
       max-width: 400px;
       background: rgba(255, 255, 255, 0.95);
       backdrop-filter: blur(5px);
-      border: 2px solid #ddd;
-      border-radius: 8px;
+      border: 2px solid #2c3e50;
+      border-radius: 0;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
       overflow: visible;
       z-index: 1000;
@@ -2459,7 +2464,8 @@
     /* ミニマップズームコントロール */
     .minimap-zoom-controls {
       background: #f8f9fa;
-      border-top: 1px solid #dee2e6;
+      border-top: 1px solid #2c3e50;
+      border-bottom: 2px solid #2c3e50;
       padding: 4px;
       display: flex;
       gap: 4px;
@@ -2889,6 +2895,35 @@
     </h1>
     <div class="header-actions">
       <!-- File Operations Group -->
+      <button class="icon-button disabled has-custom-tooltip" id="save-btn" onclick="exportEditedSvg()" title="保存">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+          <polyline points="17 21 17 13 7 13 7 21"></polyline>
+          <polyline points="7 3 7 8 15 8"></polyline>
+        </svg>
+        <div class="custom-tooltip">
+          <div class="tooltip-title">💾 再編集用システムSVGとして保存</div>
+          <div class="tooltip-divider"></div>
+          <div class="tooltip-section">
+            <div class="tooltip-label">保存される内容:</div>
+            <div class="tooltip-items">
+              <div class="tooltip-item">✓ Mermaid SVG本体</div>
+              <div class="tooltip-item">✓ カスタムラベル</div>
+              <div class="tooltip-item">✓ メモノード・手動エッジ（視覚）</div>
+              <div class="tooltip-item">✓ すべてのメタデータ（埋め込み）</div>
+            </div>
+          </div>
+          <div class="tooltip-section">
+            <div class="tooltip-highlight">💡 次回このSVGを読み込めば完全復元可能</div>
+          </div>
+          <div class="tooltip-section">
+            <div class="tooltip-label">ファイル名例:</div>
+            <div class="tooltip-filename">flowchart_editable.svg</div>
+          </div>
+          <div class="tooltip-warning">⚠️ 保存しないと編集内容は次回失われます</div>
+        </div>
+      </button>
+
       <div class="dropdown">
         <button class="icon-button dropdown-toggle" id="data-exchange-dropdown-btn" onclick="toggleDropdown('data-exchange-dropdown')" title="データ交換">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -2956,35 +2991,6 @@
         </div>
       </div>
 
-      <button class="icon-button disabled has-custom-tooltip" id="save-btn" onclick="exportEditedSvg()" title="保存">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
-          <polyline points="17 21 17 13 7 13 7 21"></polyline>
-          <polyline points="7 3 7 8 15 8"></polyline>
-        </svg>
-        <div class="custom-tooltip">
-          <div class="tooltip-title">💾 再編集用システムSVGとして保存</div>
-          <div class="tooltip-divider"></div>
-          <div class="tooltip-section">
-            <div class="tooltip-label">保存される内容:</div>
-            <div class="tooltip-items">
-              <div class="tooltip-item">✓ Mermaid SVG本体</div>
-              <div class="tooltip-item">✓ カスタムラベル</div>
-              <div class="tooltip-item">✓ メモノード・手動エッジ（視覚）</div>
-              <div class="tooltip-item">✓ すべてのメタデータ（埋め込み）</div>
-            </div>
-          </div>
-          <div class="tooltip-section">
-            <div class="tooltip-highlight">💡 次回このSVGを読み込めば完全復元可能</div>
-          </div>
-          <div class="tooltip-section">
-            <div class="tooltip-label">ファイル名例:</div>
-            <div class="tooltip-filename">flowchart_editable.svg</div>
-          </div>
-          <div class="tooltip-warning">⚠️ 保存しないと編集内容は次回失われます</div>
-        </div>
-      </button>
-
       <div class="header-divider"></div>
 
       <!-- Edit Group -->
@@ -3033,16 +3039,6 @@
           <path d="M4 16v4h4"></path>
           <path d="M20 16v4h-4"></path>
           <rect x="9" y="9" width="6" height="6" rx="1"></rect>
-        </svg>
-      </button>
-
-      <div class="header-divider"></div>
-
-      <!-- Settings -->
-      <button class="icon-button" onclick="alert('設定機能は未実装です')" title="設定">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="3"></circle>
-          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
         </svg>
       </button>
     </div>
@@ -3266,21 +3262,6 @@
     </div>
     <div id="highlight-info">
       ハイライト: なし
-    </div>
-    <div class="status-controls">
-      <button class="status-icon-btn" id="toggle-panel-footer-btn" onclick="togglePanel()" title="パネル表示/非表示">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="panel-icon-svg">
-          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-          <line x1="9" y1="3" x2="9" y2="21"></line>
-        </svg>
-      </button>
-      <button class="status-icon-btn" id="toggle-minimap-footer-btn" onclick="toggleMinimapFooter()" title="ミニマップ表示" style="display: none;">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="minimap-icon-svg">
-          <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21 3 6"></polygon>
-          <line x1="9" y1="4" x2="9" y2="17"></line>
-          <line x1="15" y1="7" x2="15" y2="20"></line>
-        </svg>
-      </button>
     </div>
   </div>
 
@@ -3829,6 +3810,9 @@
 
       // フローティングパネルをデフォルトで表示
       showPanel();
+
+      // フッターボタンの初期色を設定
+      initializeFooterButtons();
 
       // デバッグ: 各要素の実際の高さを測定
       setTimeout(() => {
@@ -4812,7 +4796,13 @@
       panel.style.display = 'block';
       restorePanelPosition();
       const btn = document.getElementById('toggle-panel-footer-btn');
-      if (btn) btn.classList.add('active');
+      if (btn) {
+        btn.classList.add('active');
+        // パネル表示時: 背景=白、アイコン=暗いネイビー
+        btn.style.setProperty('background-color', 'white', 'important');
+        btn.style.setProperty('color', '#1a2332', 'important');
+        btn.style.setProperty('border-color', '#1a2332', 'important');
+      }
       updatePanelIcon(true);  // パネル表示中 → 非表示アイコン（斜線付き）
     }
 
@@ -4822,8 +4812,52 @@
     function closePanel() {
       panel.style.display = 'none';
       const btn = document.getElementById('toggle-panel-footer-btn');
-      if (btn) btn.classList.remove('active');
+      if (btn) {
+        btn.classList.remove('active');
+        // パネル非表示時: 背景=暗いネイビー、アイコン=白
+        btn.style.setProperty('background-color', '#1a2332', 'important');
+        btn.style.setProperty('color', 'white', 'important');
+        btn.style.setProperty('border-color', '#1a2332', 'important');
+      }
       updatePanelIcon(false);  // パネル非表示中 → 表示アイコン（通常）
+    }
+
+    /**
+     * フッターボタンの初期色を設定
+     */
+    function initializeFooterButtons() {
+      const panel = document.getElementById('element-info-panel');
+      const minimap = document.getElementById('minimap');
+      const panelBtn = document.getElementById('toggle-panel-footer-btn');
+      const minimapBtn = document.getElementById('toggle-minimap-footer-btn');
+
+      if (!panelBtn || !minimapBtn) return;
+
+      // パネルボタンの初期色
+      if (panel && panel.style.display !== 'none') {
+        // パネル表示中 → 白背景 + 暗Navyアイコン
+        panelBtn.style.setProperty('background-color', 'white', 'important');
+        panelBtn.style.setProperty('color', '#1a2332', 'important');
+        panelBtn.style.setProperty('border-color', '#1a2332', 'important');
+      } else {
+        // パネル非表示 → 暗Navy背景 + 白アイコン
+        panelBtn.style.setProperty('background-color', '#1a2332', 'important');
+        panelBtn.style.setProperty('color', 'white', 'important');
+        panelBtn.style.setProperty('border-color', '#1a2332', 'important');
+      }
+
+      // ミニマップボタンの初期色
+      if (minimap && minimap.style.display !== 'none') {
+        // ミニマップ表示中 → 白背景 + 暗Navyアイコン
+        minimapBtn.style.setProperty('background-color', 'white', 'important');
+        minimapBtn.style.setProperty('color', '#1a2332', 'important');
+        minimapBtn.style.setProperty('border-color', '#1a2332', 'important');
+      } else {
+        // ミニマップ非表示 → 暗Navy背景 + 白アイコン
+        minimapBtn.style.setProperty('background-color', '#1a2332', 'important');
+        minimapBtn.style.setProperty('color', 'white', 'important');
+        minimapBtn.style.setProperty('border-color', '#1a2332', 'important');
+      }
     }
 
     /**
@@ -5422,6 +5456,10 @@
       if (showBtn) {
         showBtn.classList.remove('active');
         showBtn.title = 'ミニマップ表示';
+        // ミニマップ非表示時: 背景=暗いネイビー、アイコン=白
+        showBtn.style.setProperty('background-color', '#1a2332', 'important');
+        showBtn.style.setProperty('color', 'white', 'important');
+        showBtn.style.setProperty('border-color', '#1a2332', 'important');
         updateMinimapIcon(false);
       }
     }
@@ -5442,6 +5480,10 @@
         if (showBtn) {
           showBtn.classList.add('active');
           showBtn.title = 'ミニマップ非表示';
+          // ミニマップ表示時: 背景=白、アイコン=暗いネイビー
+          showBtn.style.setProperty('background-color', 'white', 'important');
+          showBtn.style.setProperty('color', '#1a2332', 'important');
+          showBtn.style.setProperty('border-color', '#1a2332', 'important');
           updateMinimapIcon(true);
         }
       }
@@ -6232,6 +6274,11 @@
           // ミニマップを初期化
           setTimeout(() => {
             initMinimap();
+
+            // ★ ミニマップ表示後、フッターボタンの色を更新
+            setTimeout(() => {
+              initializeFooterButtons();
+            }, 50);
 
             // SVGの中央が画面中央に来るようにスクロール位置を初期化（初回ズーム問題の根本解決）
             setTimeout(() => {
@@ -11672,9 +11719,35 @@ ${metadataJson}
       <span>最終保存: <span id="last-svg-save-time">未保存</span></span>
     </div>
 
-    <!-- 右側: 保存ステータス -->
-    <div class="status-indicator unsaved" id="svg-save-status">
-      <span>● 未保存の変更あり</span>
+    <!-- 中央: ツール名とバージョン -->
+    <div style="position: absolute; left: 50%; transform: translateX(-50%); font-size: 0.8rem; font-weight: 500; opacity: 0.7;">
+      Flowchart Editor v2.16.0
+    </div>
+
+    <!-- 右側: 保存ステータス & パネル切り替えボタン & 設定ボタン -->
+    <div style="display: flex; align-items: center; gap: 0.75rem;">
+      <div class="status-indicator unsaved" id="svg-save-status">
+        <span>● 未保存の変更あり</span>
+      </div>
+      <button class="icon-button" id="toggle-panel-footer-btn" onclick="togglePanel()" title="要素情報パネル表示/非表示" style="width: 28px; height: 28px;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="9" y1="3" x2="9" y2="21"></line>
+        </svg>
+      </button>
+      <button class="icon-button" id="toggle-minimap-footer-btn" onclick="toggleMinimapFooter()" title="ミニマップ表示/非表示" style="width: 28px; height: 28px;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21 3 6"></polygon>
+          <line x1="9" y1="4" x2="9" y2="17"></line>
+          <line x1="15" y1="7" x2="15" y2="20"></line>
+        </svg>
+      </button>
+      <button class="icon-button footer-settings-btn" onclick="alert('設定機能は未実装です')" title="設定" style="width: 28px; height: 28px; background-color: white !important; color: #2c3e50 !important; border-color: #2c3e50 !important;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+      </button>
     </div>
   </div>
 
