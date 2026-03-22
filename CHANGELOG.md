@@ -5,6 +5,41 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.18.2] - 2026-03-22
+
+### Fixed
+- **🔧 テーブルヘッダーの固定表示とHTML構造の簡素化**
+  - **テーブルヘッダーがスクロールで消える問題を完全解決**: HTML構造を簡素化し、`position: sticky` が確実に効くように修正
+  - **テーブル上部の不要な空白を完全削除**: `.card` コンテナによる `padding: 1.5rem` を削除
+  - **見出し（WBS No、優先度、フェーズ、タスク名、担当、期限、ステータス、操作）を常時固定表示**: スクロール時も画面上部に固定
+
+### Changed
+- **HTML構造の簡素化**:
+  - **変更前**: `.dashboard` → `.card.task-list-card` → `.task-table-container` → `.task-table`
+  - **変更後**: `.dashboard` → `.task-table-wrapper` → `.task-table`
+  - `.card` と `.task-table-container` を削除し、新しい `.task-table-wrapper` に置き換え
+
+- **CSS変更**:
+  - **削除**: `.task-list-card`, `.task-table-container` スタイル
+  - **新規追加**: `.task-table-wrapper` スタイル
+    - `background-color: white`, `border: 1px solid`, `border-radius: 8px`
+    - `padding: 0`, `margin: 0`, `overflow: hidden`
+  - **テーブルヘッダー角丸**: `.task-table thead th:first-child` / `:last-child` に `border-top-left-radius` / `border-top-right-radius` を追加
+  - **フィルター結果カウント**: `#filter-result-count` に `padding: 0.5rem 1rem` を追加
+
+### Technical Details
+- **シンプルな3層構造**: `.task-table-wrapper` → `.task-table` → `thead` (sticky)
+- **`padding: 0`**: テーブル上部に空白なし、見出しが直接表示される
+- **`position: sticky`**: `body` 全体に対して確実に動作
+- **角丸デザイン維持**: テーブルヘッダーの左上・右上に角丸を適用
+
+### User Experience
+- **テーブルヘッダー常時固定**: スクロールしても「WBS No」等の見出しが常に見える
+- **空白完全削除**: タスク一覧が画面上部から直接開始、表示領域を最大化
+- **デザイン一貫性**: 角丸とシャドウを維持し、視覚的な美しさを保持
+
+---
+
 ## [2.18.1] - 2026-03-22
 
 ### Fixed

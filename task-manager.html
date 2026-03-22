@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Task Manager - WBS Visualizer v2.18.1</title>
+  <title>Task Manager - WBS Visualizer v2.18.2</title>
   <meta name="description" content="A lightweight, browser-based Work Breakdown Structure (WBS) visualization and management tool">
   <meta name="keywords" content="task manager, WBS, project management, task tracking">
   <meta name="author" content="ks-source">
@@ -965,19 +965,20 @@
       cursor: pointer;
     }
 
-    /* Task List Card - No Padding */
-    .task-list-card {
-      padding: 0;
-    }
-
-    /* Sticky Table Header */
-    .task-table-container {
-      position: relative;
+    /* Task Table Wrapper */
+    .task-table-wrapper {
+      background-color: white;
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
       margin: 0;
       padding: 0;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      overflow: hidden;
     }
 
     .task-table {
+      width: 100%;
+      border-collapse: collapse;
       margin: 0;
     }
 
@@ -996,6 +997,19 @@
       color: var(--color-gray-dark);
       border-bottom: 2px solid var(--color-border);
       box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+
+    .task-table thead th:first-child {
+      border-top-left-radius: 8px;
+    }
+
+    .task-table thead th:last-child {
+      border-top-right-radius: 8px;
+    }
+
+    #filter-result-count {
+      padding: 0.5rem 1rem;
+      margin: 0;
     }
 
     /* ==========================================
@@ -1164,27 +1178,25 @@
   <div class="container">
     <!-- Dashboard -->
     <div class="dashboard" id="dashboard">
-      <!-- Task List Card -->
-      <div class="card task-list-card">
-        <div class="task-table-container">
-          <table class="task-table">
-            <thead>
-              <tr>
-                <th>WBS No</th>
-                <th>優先度</th>
-                <th>フェーズ</th>
-                <th>タスク名</th>
-                <th>担当</th>
-                <th>期限</th>
-                <th>ステータス</th>
-                <th style="width: 60px;">操作</th>
-              </tr>
-            </thead>
-            <tbody id="task-table-body">
-              <!-- Tasks will be rendered here by JavaScript -->
-            </tbody>
-          </table>
-        </div>
+      <!-- Task List -->
+      <div class="task-table-wrapper">
+        <table class="task-table">
+          <thead>
+            <tr>
+              <th>WBS No</th>
+              <th>優先度</th>
+              <th>フェーズ</th>
+              <th>タスク名</th>
+              <th>担当</th>
+              <th>期限</th>
+              <th>ステータス</th>
+              <th style="width: 60px;">操作</th>
+            </tr>
+          </thead>
+          <tbody id="task-table-body">
+            <!-- Tasks will be rendered here by JavaScript -->
+          </tbody>
+        </table>
         <p class="text-muted mt-1" id="filter-result-count"></p>
       </div>
     </div>
@@ -4868,6 +4880,120 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
       box-shadow: 0 1px 2px rgba(0,0,0,0.2);
     }
 
+    .glossary-section {
+      background: #fffbeb;
+      border: 1px solid #fbbf24;
+      border-radius: 6px;
+      padding: 1rem;
+      margin: 1rem 0 1.5rem 0;
+    }
+
+    .glossary-section h4 {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+      font-size: 0.95rem;
+      color: #92400e;
+      font-weight: 600;
+    }
+
+    .glossary-intro {
+      font-size: 0.9rem;
+      color: #92400e;
+      margin-bottom: 1rem;
+      line-height: 1.6;
+    }
+
+    .glossary-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 4px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .glossary-table thead {
+      background: #f59e0b;
+      color: white;
+    }
+
+    .glossary-table th {
+      padding: 0.75rem;
+      text-align: left;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    .glossary-table td {
+      padding: 0.75rem;
+      border-bottom: 1px solid #fef3c7;
+      font-size: 0.85rem;
+      line-height: 1.6;
+      vertical-align: top;
+    }
+
+    .glossary-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .glossary-table tbody tr:hover {
+      background: #fef3c7;
+    }
+
+    .glossary-term {
+      font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+      font-weight: 600;
+      color: #92400e;
+      white-space: nowrap;
+    }
+
+    .glossary-not-used {
+      color: #dc2626;
+      font-weight: 500;
+    }
+
+    @media (max-width: 600px) {
+      .glossary-table,
+      .glossary-table thead,
+      .glossary-table tbody,
+      .glossary-table tr,
+      .glossary-table th,
+      .glossary-table td {
+        display: block;
+        width: 100%;
+      }
+
+      .glossary-table thead {
+        display: none;
+      }
+
+      .glossary-table tr {
+        margin-bottom: 1rem;
+        border: 1px solid #fbbf24;
+        border-radius: 4px;
+        padding: 0.75rem;
+        background: white;
+      }
+
+      .glossary-table td {
+        padding: 0;
+        border-bottom: none;
+      }
+
+      .glossary-table td:first-child {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid #fef3c7;
+      }
+
+      .glossary-table td:last-child {
+        padding-top: 0.5rem;
+      }
+    }
+
     @media (max-width: 768px) {
       .security-modal {
         padding: 1rem 0;
@@ -4894,6 +5020,10 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
       }
 
       .tech-highlight span {
+        font-size: 0.85rem;
+      }
+
+      .glossary-intro {
         font-size: 0.85rem;
       }
     }
@@ -5053,10 +5183,83 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
           <svg class="toggle-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
             <polygon points="9,6 15,12 9,18"></polygon>
           </svg>
-          <span>技術スタック詳細（玄人向け）</span>
+          <span>技術スタック詳細</span>
         </div>
 
         <div class="tech-details-content" id="techDetailsContent">
+
+          <!-- 用語集セクション -->
+          <div class="glossary-section">
+            <h4>📖 用語集</h4>
+            <p class="glossary-intro">
+              このセクションで使われている専門用語を、わかりやすく解説します。
+            </p>
+
+            <table class="glossary-table">
+              <thead>
+                <tr>
+                  <th style="width: 25%;">用語</th>
+                  <th style="width: 75%;">説明</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><span class="glossary-term">file://</span></td>
+                  <td>
+                    あなたのPC内のファイルをブラウザで開くための仕組みです。<br>
+                    例: <code>C:\Users\...\task-manager.html</code>
+                  </td>
+                </tr>
+                <tr>
+                  <td><span class="glossary-term">Blob URL</span></td>
+                  <td>
+                    ブラウザが一時的に作る「メモリ上のデータの住所」です。<br>
+                    インターネット接続は不要で、ブラウザを閉じると消えます。
+                  </td>
+                </tr>
+                <tr>
+                  <td><span class="glossary-term">LocalStorage</span></td>
+                  <td>
+                    ブラウザ内の「保存箱」です。PCのハードディスク内に保存されます（最大5MB、外部への送信はありません）。
+                  </td>
+                </tr>
+                <tr>
+                  <td><span class="glossary-term">storage event</span></td>
+                  <td>
+                    ブラウザ内のタブ同士が「データが更新されたよ！」と教え合う仕組みです。同じPC内でのみ動作します。
+                  </td>
+                </tr>
+                <tr>
+                  <td><span class="glossary-term">postMessage</span></td>
+                  <td>
+                    同じPC内のウィンドウ同士がメッセージを送り合う機能です。<br>
+                    メールではなく、ブラウザ内部の通信です。
+                  </td>
+                </tr>
+                <tr>
+                  <td><span class="glossary-term">fetch()<br>XMLHttpRequest</span></td>
+                  <td>
+                    インターネットからデータを取得する機能です。<br>
+                    <span class="glossary-not-used">→ 本ツールは使用していません</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td><span class="glossary-term">WebSocket</span></td>
+                  <td>
+                    リアルタイムでサーバーと通信する技術です。<br>
+                    <span class="glossary-not-used">→ 本ツールは使用していません</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td><span class="glossary-term">CDN</span></td>
+                  <td>
+                    インターネット上のプログラム保管庫です（Content Delivery Network）。<br>
+                    <span class="glossary-not-used">→ 本ツールは使用していません</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
 
           <!-- 総括文章 -->
           <div class="tech-summary">
