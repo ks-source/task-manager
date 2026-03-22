@@ -309,15 +309,6 @@
       display: inline-block;
     }
 
-    .dropdown-toggle::after {
-      content: '▾';
-      position: absolute;
-      bottom: 2px;
-      right: 2px;
-      font-size: 8px;
-      opacity: 0.7;
-    }
-
     .dropdown-menu {
       position: absolute;
       top: 100%;
@@ -365,6 +356,167 @@
       height: 1px;
       background: #dee2e6;
       margin: 0.25rem 0;
+    }
+
+    .dropdown-item-content {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .dropdown-item-label {
+      font-size: 13px;
+      color: #495057;
+    }
+
+    .dropdown-item-subtext {
+      font-size: 11px;
+      color: #6c757d;
+      opacity: 0.85;
+    }
+
+    .dropdown-info-btn {
+      padding: 0.75rem 1rem;
+      cursor: pointer;
+      font-size: 12px;
+      color: #007bff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      transition: background 0.2s;
+      border: none;
+      background: #f8f9fa;
+      width: 100%;
+      text-align: center;
+      font-weight: 500;
+      border-top: 1px solid #dee2e6;
+    }
+
+    .dropdown-info-btn:hover {
+      background-color: #e9ecef;
+      color: #0056b3;
+    }
+
+    /* Data Format Info Modal */
+    .format-info-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .format-info-modal.show {
+      display: flex;
+    }
+
+    .format-info-content {
+      background: white;
+      border-radius: 8px;
+      width: 90%;
+      max-width: 600px;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .format-info-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid #dee2e6;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #f8f9fa;
+      border-radius: 8px 8px 0 0;
+    }
+
+    .format-info-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #212529;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .format-info-close {
+      width: 32px;
+      height: 32px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      font-size: 24px;
+      color: #6c757d;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      transition: background 0.2s;
+    }
+
+    .format-info-close:hover {
+      background: #e9ecef;
+      color: #495057;
+    }
+
+    .format-info-body {
+      padding: 24px;
+    }
+
+    .format-info-section {
+      margin-bottom: 24px;
+    }
+
+    .format-info-section:last-child {
+      margin-bottom: 0;
+    }
+
+    .format-info-section-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #495057;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .format-info-item {
+      background: #f8f9fa;
+      border-left: 3px solid #007bff;
+      padding: 12px 16px;
+      margin-bottom: 12px;
+      border-radius: 4px;
+    }
+
+    .format-info-item-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #212529;
+      margin-bottom: 6px;
+    }
+
+    .format-info-item-desc {
+      font-size: 12px;
+      color: #6c757d;
+      line-height: 1.5;
+    }
+
+    .format-info-note {
+      background: #fff3cd;
+      border-left: 3px solid #ffc107;
+      padding: 12px 16px;
+      margin-top: 16px;
+      border-radius: 4px;
+      font-size: 12px;
+      color: #856404;
+      line-height: 1.5;
     }
 
     .toolbar-divider {
@@ -2754,34 +2906,52 @@
               <polyline points="7 10 12 15 17 10"></polyline>
               <line x1="12" y1="15" x2="12" y2="3"></line>
             </svg>
-            📥 SVG読込
+            <div class="dropdown-item-content">
+              <div class="dropdown-item-label">📥 SVG読込</div>
+              <div class="dropdown-item-subtext">SVG + メタデータ</div>
+            </div>
           </button>
           <button class="dropdown-item disabled" id="reload-svg-item" onclick="reloadSVGFile(); closeDropdown('data-exchange-dropdown');">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;">
               <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"></path>
             </svg>
-            📥 SVG変更
+            <div class="dropdown-item-content">
+              <div class="dropdown-item-label">📥 SVG変更</div>
+              <div class="dropdown-item-subtext">別のSVGに切り替え</div>
+            </div>
           </button>
           <button class="dropdown-item disabled" id="load-memo-item" onclick="loadFromFile(); closeDropdown('data-exchange-dropdown');">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
               <polyline points="14 2 14 8 20 8"></polyline>
             </svg>
-            📥 メモ読込
+            <div class="dropdown-item-content">
+              <div class="dropdown-item-label">📥 メモ読込</div>
+              <div class="dropdown-item-subtext">JSONメタデータのみ</div>
+            </div>
           </button>
           <div class="dropdown-divider"></div>
           <button class="dropdown-item disabled" id="export-svg-item" onclick="exportEditedSvg(); closeDropdown('data-exchange-dropdown');" title="視覚表示用SVG（カスタムラベル・手動要素表示、メタデータ含む）">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;">
               <polygon points="16 3 21 8 8 21 3 21 3 16 16 3"></polygon>
             </svg>
-            📤 SVG保存（完全版）
+            <div class="dropdown-item-content">
+              <div class="dropdown-item-label">📤 SVG保存（完全版）</div>
+              <div class="dropdown-item-subtext">SVG + メタデータ</div>
+            </div>
           </button>
           <button class="dropdown-item disabled" id="export-json-item" onclick="saveToFileAs(); closeDropdown('data-exchange-dropdown');" title="JSONデータ（すべてのメモ・ラベル・手動要素のメタデータ）">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
               <polyline points="14 2 14 8 20 8"></polyline>
             </svg>
-            📤 JSONメタデータ保存
+            <div class="dropdown-item-content">
+              <div class="dropdown-item-label">📤 JSONメタデータ保存</div>
+              <div class="dropdown-item-subtext">JSONメタデータのみ</div>
+            </div>
+          </button>
+          <button class="dropdown-info-btn" onclick="showDataFormatInfo(); closeDropdown('data-exchange-dropdown');">
+            ℹ️ 形式について
           </button>
         </div>
       </div>
@@ -4534,6 +4704,26 @@
     }
 
     /**
+     * データ形式情報モーダルを表示
+     */
+    function showDataFormatInfo() {
+      const modal = document.getElementById('format-info-modal');
+      if (modal) {
+        modal.classList.add('show');
+      }
+    }
+
+    /**
+     * データ形式情報モーダルを閉じる
+     */
+    function hideDataFormatInfo() {
+      const modal = document.getElementById('format-info-modal');
+      if (modal) {
+        modal.classList.remove('show');
+      }
+    }
+
+    /**
      * 警告モーダルを表示（初回のみ）
      */
     function showWarningModal() {
@@ -4573,6 +4763,20 @@
     document.addEventListener('click', (e) => {
       if (!e.target.closest('.dropdown')) {
         closeAllDropdowns();
+      }
+    });
+
+    // モーダル背景クリックで閉じる
+    document.addEventListener('click', (e) => {
+      if (e.target.classList.contains('format-info-modal')) {
+        hideDataFormatInfo();
+      }
+    });
+
+    // ESCキーでモーダルを閉じる
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        hideDataFormatInfo();
       }
     });
 
@@ -11455,6 +11659,76 @@ ${metadataJson}
     <!-- 右側: 保存ステータス -->
     <div class="status-indicator unsaved" id="svg-save-status">
       <span>● 未保存の変更あり</span>
+    </div>
+  </div>
+
+  <!-- Data Format Info Modal -->
+  <div class="format-info-modal" id="format-info-modal">
+    <div class="format-info-content">
+      <div class="format-info-header">
+        <div class="format-info-title">📊 データ形式について</div>
+        <button class="format-info-close" onclick="hideDataFormatInfo()">×</button>
+      </div>
+      <div class="format-info-body">
+        <!-- Import Section -->
+        <div class="format-info-section">
+          <div class="format-info-section-title">📥 読込形式</div>
+
+          <div class="format-info-item">
+            <div class="format-info-item-title">SVG読込</div>
+            <div class="format-info-item-desc">
+              <strong>含まれるデータ:</strong> Mermaid生成SVG + 編集済みメタデータ（メモ、ラベル、手動エッジ、参照関係）<br>
+              <strong>用途:</strong> このエディタで保存したSVGファイルの再読込<br>
+              <strong>推奨:</strong> 編集を再開する場合、完全な状態を復元したい場合
+            </div>
+          </div>
+
+          <div class="format-info-item">
+            <div class="format-info-item-title">SVG変更</div>
+            <div class="format-info-item-desc">
+              <strong>含まれるデータ:</strong> 新しいMermaid生成SVG（メタデータは既存を維持）<br>
+              <strong>用途:</strong> フローチャートの構造を変更しながら、既存のメモやラベルを保持<br>
+              <strong>推奨:</strong> Mermaid図を更新しつつ、編集内容を引き継ぎたい場合
+            </div>
+          </div>
+
+          <div class="format-info-item">
+            <div class="format-info-item-title">メモ読込</div>
+            <div class="format-info-item-desc">
+              <strong>含まれるデータ:</strong> JSONメタデータのみ（メモ、ラベル、手動エッジ、参照関係）<br>
+              <strong>用途:</strong> 別のSVGに対して同じ編集データを適用<br>
+              <strong>推奨:</strong> 編集データのみを別のフローチャートに転用したい場合
+            </div>
+          </div>
+        </div>
+
+        <!-- Export Section -->
+        <div class="format-info-section">
+          <div class="format-info-section-title">📤 保存形式</div>
+
+          <div class="format-info-item">
+            <div class="format-info-item-title">SVG保存（完全版）</div>
+            <div class="format-info-item-desc">
+              <strong>含まれるデータ:</strong> Mermaid生成SVG + 編集済みメタデータ（メモ、ラベル、手動エッジ、参照関係）<br>
+              <strong>用途:</strong> 視覚表示用ファイル + 再編集可能な完全版として保存<br>
+              <strong>推奨:</strong> ブラウザで表示しながら、後で編集も再開したい場合
+            </div>
+          </div>
+
+          <div class="format-info-item">
+            <div class="format-info-item-title">JSONメタデータ保存</div>
+            <div class="format-info-item-desc">
+              <strong>含まれるデータ:</strong> JSONメタデータのみ（メモ、ラベル、手動エッジ、参照関係）<br>
+              <strong>用途:</strong> 編集データの軽量バックアップ、他システムとの連携<br>
+              <strong>推奨:</strong> 編集データのみを保存したい場合、外部ツールで処理する場合
+            </div>
+          </div>
+        </div>
+
+        <div class="format-info-note">
+          <strong>💡 ヒント:</strong> 通常の保存は「SVG保存（完全版）」を使用してください。視覚的な表示と再編集の両方に対応できます。「JSONメタデータ保存」は編集データのみが必要な特殊用途向けです。
+        </div>
+      </div>
     </div>
   </div>
 
