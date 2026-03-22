@@ -1,10 +1,20 @@
-# Task Manager - WBS Visualizer
+# Task Manager - WBS Visualizer & Flowchart Editor
 
-A lightweight, browser-based Work Breakdown Structure (WBS) visualization and project management tool. No installation required, no external dependencies, works completely offline.
+A lightweight, browser-based Work Breakdown Structure (WBS) visualization and project management tool with integrated flowchart editor. No installation required, no external dependencies, works completely offline.
 
-![Version](https://img.shields.io/badge/version-2.3.0-blue)
+![Version](https://img.shields.io/badge/version-2.4.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Browser](https://img.shields.io/badge/browser-Edge%2090%2B-blue)
+
+## 📁 Quick Start Files
+
+```
+/dev/task-manager/
+  ├── task-manager.html           ← タスク管理メイン画面
+  └── flowchart-editor.html       ← フローチャート編集画面（新機能）
+```
+
+**新機能**: タスクとフローチャートの自動同期機能を追加しました。詳細は下記「フローチャート連携」セクションをご覧ください。
 
 ## 🌟 Features
 
@@ -26,15 +36,92 @@ A lightweight, browser-based Work Breakdown Structure (WBS) visualization and pr
 - **🎨 Visual Indicators**: Color-coded status badges and progress indicators
 - **🔍 Responsive UI**: Adapts to different screen sizes
 
+### 🆕 Flowchart Editor Features (v2.4.0)
+- **🔄 Real-time Sync**: Automatic synchronization between task manager and flowchart editor
+- **🎨 Drag & Drop**: Link tasks to flowchart nodes by dragging from task panel
+- **📊 Visual Workflow**: Visualize project flow with SVG-based flowchart
+- **🔵 Status Colors**: Nodes automatically colored based on task status
+- **📋 Task Panel**: Side panel showing all tasks with sync status
+- **💾 Dual Storage**: LocalStorage for sync + File System for permanent storage
+
 ## 🚀 Quick Start
 
 ### Option 1: Direct Usage (Recommended)
-1. Download `task-manager.html` to your computer
-2. Double-click the file to open it in Microsoft Edge
+1. Download `task-manager.html` and `flowchart-editor.html` to your computer
+2. Double-click `task-manager.html` to open it in Microsoft Edge
 3. Start creating tasks or import a CSV file
+4. (Optional) Open `flowchart-editor.html` in a separate tab for flowchart visualization
 
 ### Option 2: GitHub Pages
 Visit the hosted version at: [https://ks-source.github.io/task-manager](https://ks-source.github.io/task-manager)
+
+---
+
+## 🔄 Flowchart Editor Integration (NEW)
+
+### How It Works
+
+The flowchart editor automatically synchronizes with your task manager using **LocalStorage + File System Access API**.
+
+```
+┌─────────────────────────────────────────────────┐
+│ 1. task-manager.html でタスク編集               │
+│    ↓                                            │
+│ 2. LocalStorage へ即座に保存（リアルタイム同期）│
+│    ↓                                            │
+│ 3. 本体ファイルへ自動保存（3秒デバウンス）       │
+│    ↓                                            │
+│ 4. flowchart-editor.html が検知（storage event）│
+│    ↓                                            │
+│ 5. フローチャートが自動更新                      │
+└─────────────────────────────────────────────────┘
+```
+
+### Step-by-Step Guide
+
+#### Step 1: Open Task Manager
+```
+file:///C:/dev/task-manager/task-manager.html
+```
+1. Create or edit tasks
+2. Tasks are automatically saved to LocalStorage and file
+
+#### Step 2: Open Flowchart Editor (別タブ)
+```
+file:///C:/dev/task-manager/flowchart-editor.html
+```
+1. Task panel automatically loads your tasks
+2. Drag tasks from panel to flowchart nodes
+3. Nodes are linked to tasks and sync automatically
+
+#### Step 3: Real-time Sync
+- Edit task status in task-manager → Flowchart colors update
+- Link tasks to nodes in flowchart → Task manager shows flowchart info
+- Both files stay in sync automatically
+
+### Data Storage Architecture
+
+**Two-layer protection**:
+1. **LocalStorage** (5MB): Real-time sync buffer
+2. **File System** (unlimited): Permanent master data
+
+**Important**: Even if LocalStorage reaches capacity, your data in files is safe.
+
+### Troubleshooting
+
+**Q: Files don't sync?**
+- Ensure both files are opened with `file://` protocol
+- Check both are in the same directory
+
+**Q: LocalStorage quota exceeded?**
+- Archive completed tasks (button in task-manager)
+- Data in files remains safe
+
+**Q: Lost data?**
+- Open task-manager.html → "Open from File"
+- Select your .json file → All data restored
+
+For detailed specifications, see [docs/specs/cross-html-sync/README.md](./docs/specs/cross-html-sync/README.md)
 
 ## 📖 Usage Guide
 
@@ -180,13 +267,21 @@ WBS1.2.0,PH1,Development,Frontend Implementation,F_01,Developer,,5,2026-03-27,20
 
 ```
 task-manager/
-├── task-manager.html          # Main application (single file)
+├── task-manager.html          # Main task management application
+├── flowchart-editor.html      # Flowchart editor (NEW in v2.4.0)
+├── index.html                 # Entry point
 ├── README.md                  # This file
 ├── LICENSE                    # MIT License
 ├── CHANGELOG.md              # Version history
 ├── .gitignore                # Git ignore rules
 ├── docs/                     # Documentation
-│   └── screenshots/          # UI screenshots
+│   ├── specs/                # Technical specifications
+│   │   ├── cross-html-sync/           # LocalStorage sync specs
+│   │   ├── flowchart-manual-editing/  # Flowchart editing specs
+│   │   └── gantt-interactive-editing/ # Gantt chart specs
+│   ├── screenshots/          # UI screenshots
+│   └── ui/                   # UI mockups and prototypes
+│       └── flowchart-mockup-interactive.html  # Archive (development history)
 ├── examples/                 # Sample files
 │   ├── sample-wbs.csv       # Example CSV import
 │   └── templates/           # Project templates
@@ -242,17 +337,29 @@ Please use [GitHub Issues](https://github.com/ks-source/task-manager/issues) to 
 - ✅ Sample CSV file for import testing
 - ✅ GitHub repository setup with Pages support
 
-### v2.4.0 (Planned)
-- [ ] CSV import functionality
-- [ ] Import validation and error handling
-- [ ] User confirmation dialogs for data replacement
+### v2.4.0 (Released - 2026-03-21)
+- ✅ Flowchart editor (SVG-based, no external libraries)
+- ✅ Task-to-flowchart linking via drag & drop
+- ✅ Real-time sync between task manager and flowchart
+- ✅ LocalStorage + File System Access API integration
+- ✅ Complete technical specifications (cross-html-sync)
+- ✅ Dual-layer data protection architecture
 
-### v2.5.0 (Future)
-- [ ] Flowchart visualization (SVG-based, no Mermaid.js)
-- [ ] Task-to-flowchart linking
+### v2.5.0 (In Progress)
+- [ ] LocalStorage sync implementation (Phase 1)
+- [ ] Storage event handlers
+- [ ] Automatic file save (3-second debounce)
+- [ ] Task panel UI in flowchart editor
+- [ ] Drag & drop node linking
+
+### v2.6.0 (Planned)
+- [ ] LocalStorage capacity management
+- [ ] Completed task archiving
+- [ ] Error handling & recovery
+- [ ] CSV import functionality
 - [ ] Search and filter capabilities
 
-### v2.6.0 (Future)
+### v2.7.0 (Future)
 - [ ] Dark mode support
 - [ ] Keyboard shortcuts
 - [ ] Undo/redo functionality
@@ -268,4 +375,4 @@ Please use [GitHub Issues](https://github.com/ks-source/task-manager/issues) to 
 
 **Made with ❤️ by [ks-source](https://github.com/ks-source)**
 
-*Version 2.3.0 | Last Updated: 2026-03-20*
+*Version 2.4.0 | Last Updated: 2026-03-21*
