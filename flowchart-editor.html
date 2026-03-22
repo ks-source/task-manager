@@ -4199,9 +4199,15 @@
           task.flowchartLinks.edges.push(elementId);
         }
 
+        // mermaidIds フィールドを更新（後方互換性のため）
+        task.mermaidIds = task.flowchartLinks.nodes.join(',');
+
         // UIを更新
         renderTaskList();
         updatePanelInfo(targetElement);
+
+        // ★Phase 2-A改善: ドラッグ&ドロップ時にA側へ即座に送信
+        publishFlowchartAttributes();
 
         // 成功通知
 
@@ -6233,6 +6239,10 @@ ${metadataJson}
       currentEditingTask.mermaidIds = currentEditingTask.flowchartLinks.nodes.join(',');
 
       renderTaskList();
+
+      // ★Phase 2-A改善: タスクモーダル保存時にA側へ即座に送信
+      publishFlowchartAttributes();
+
       closeTaskEditModal();
     }
 
