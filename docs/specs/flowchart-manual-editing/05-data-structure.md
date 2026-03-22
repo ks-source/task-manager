@@ -501,5 +501,465 @@ function migrateOldFormat(data) {
 
 ---
 
-**最終更新**: 2026-03-21
-**関連ドキュメント**: [README.md](./README.md), [02-manual-edge.md](./02-manual-edge.md)
+## ステータス管理（Phase 4: Status Color Management）
+
+### 概要
+
+フローチャート要素（正規ノード・サブグラフ・メモノード）に対して、視覚的なステータス（完了・進行中・未着手等）を設定し、色分け表示する機能。
+
+**重要**: このステータスは**フローチャート上の視覚的な状態管理**のみに使用され、task-manager.htmlの実タスクステータスとは完全に独立している。
+
+### グローバル変数
+
+```javascript
+// ========== 新規追加の変数（Phase 4） ==========
+let elementStatuses = {};  // { elementId: statusKey }
+```
+
+### elementStatuses の構造
+
+```javascript
+// 要素ごとのステータスマップ
+elementStatuses = {
+  'F_01': 'completed',         // 正規ノード（Mermaidノード）
+  'F_02': 'in-progress',       // 正規ノード
+  'subgraph_1': 'on-hold',     // サブグラフ
+  'memo_node_1': 'postponed',  // メモノード
+  'F_03': 'not-started'        // 正規ノード
+};
+
+// ステータス未設定の要素はキーが存在しない（undefinedまたはnull）
+```
+
+### ステータス定義（task-manager.htmlと同一）
+
+```javascript
+/**
+ * ステータス色定義
+ * task-manager.htmlのステータス仕様と完全同一
+ */
+const STATUS_COLORS = {
+  'not-started': {
+    bg: '#e2e3e5',       // 背景色（薄グレー）
+    text: '#383d41',     // テキスト色（ダークグレー）
+    border: '#6c757d',   // ボーダー色
+    label: '未着手'
+  },
+  'in-progress': {
+    bg: '#fff3cd',       // 背景色（薄イエロー）
+    text: '#856404',     // テキスト色（ダークイエロー）
+    border: '#ffc107',   // ボーダー色
+    label: '進行中'
+  },
+  'completed': {
+    bg: '#d4edda',       // 背景色（薄グリーン）
+    text: '#155724',     // テキスト色（ダークグリーン）
+    border: '#28a745',   // ボーダー色
+    label: '完了'
+  },
+  'on-hold': {
+    bg: '#ffe5d0',       // 背景色（薄オレンジ）
+    text: '#8a4a0e',     // テキスト色（ダークオレンジ）
+    border: '#fd7e14',   // ボーダー色
+    label: '保留'
+  },
+  'postponed': {
+    bg: '#f8d7da',       // 背景色（薄ピンク）
+    text: '#721c24',     // テキスト色（ダークレッド）
+    border: '#dc3545',   // ボーダー色
+    label: '延期'
+  },
+  'cancelled': {
+    bg: '#f5f5f5',       // 背景色（薄グレー）
+    text: '#666',        // テキスト色（グレー）
+    border: '#999',      // ボーダー色
+    label: '中止'
+  },
+  'unknown': {
+    bg: '#e9ecef',       // 背景色（薄グレー）
+    text: '#495057',     // テキスト色（グレー）
+    border: '#adb5bd',   // ボーダー色
+    label: '不明'
+  }
+};
+```
+
+### JSON保存形式（v2.0）
+
+#### ファイル構造（統合版 v2.0）
+
+```json
+{
+  "version": "2.0",
+  "exportedAt": "2026-03-22T12:00:00Z",
+  "svgFile": "workflow.svg",
+
+  "elements": {
+    "flowchart-A": {
+      "type": "node",
+      "displayText": "開始",
+      "memo": "プロジェクトキックオフ会議で決定",
+      "customLabel": "Phase 1開始",
+      "originalLabel": "開始"
+    },
+    "flowchart-B": {
+      "type": "node",
+      "displayText": "設計",
+      "memo": "要件定義書を基に設計",
+      "customLabel": "",
+      "originalLabel": "設計"
+    }
+  },
+
+  "originalLabels": {
+    "flowchart-A": "開始",
+    "flowchart-B": "設計",
+    "flowchart-C": "実装"
+  },
+
+  "manualEdges": {
+    "manual-edge-1710000000000": {
+      "id": "manual-edge-1710000000000",
+      "startX": 100,
+      "startY": 50,
+      "startNodeId": "flowchart-A",
+      "endX": 300,
+      "endY": 200,
+      "endNodeId": "flowchart-B",
+      "label": "承認後に実施",
+      "style": {
+        "color": "#666",
+        "width": 2,
+        "dashArray": "5,5"
+      },
+      "createdAt": "2026-03-21T10:30:00Z"
+    }
+  },
+
+  "manualNodes": {
+    "memo_node_1": {
+      "id": "memo_node_1",
+      "x": 500,
+      "y": 300,
+      "width": 200,
+      "height": 100,
+      "label": "会議メモ",
+      "content": "次回レビュー時に確認",
+      "createdAt": "2026-03-22T10:00:00Z"
+    }
+  },
+
+  "elementStatuses": {
+    "flowchart-A": "completed",
+    "flowchart-B": "in-progress",
+    "flowchart-C": "not-started",
+    "subgraph_1": "on-hold",
+    "memo_node_1": "postponed"
+  }
+}
+```
+
+#### elementStatuses フィールド仕様
+
+| フィールド | 型 | 説明 | 必須 |
+|-----------|---|------|------|
+| `elementStatuses` | object | 要素IDとステータスキーのマップ | ✅ (v2.0以降) |
+| キー | string | 要素ID（正規ノード・サブグラフ・メモノード） | ✅ |
+| 値 | string | ステータスキー（`STATUS_COLORS`のキー） | ✅ |
+
+**値の制約**:
+- `not-started`, `in-progress`, `completed`, `on-hold`, `postponed`, `cancelled`, `unknown`のいずれか
+- ステータス未設定の要素はキーが存在しない
+
+### データ永続化
+
+#### buildMemoData()への追加
+
+```javascript
+function buildMemoData() {
+  const elements = {};
+
+  // 既存のメモ・ラベル情報を収集
+  for (const elementId of allElementIds) {
+    const element = document.querySelector(`[data-id="${elementId}"]`);
+    const type = element?.getAttribute('data-et') || 'unknown';
+    const displayText = getElementDisplayText(element);
+    const memo = elementMemos[elementId] || '';
+    const customLabel = elementCustomLabels[elementId] || '';
+
+    elements[elementId] = {
+      type: type,
+      displayText: displayText,
+      memo: memo,
+      customLabel: customLabel,
+      originalLabel: originalLabels[elementId] || ''
+    };
+  }
+
+  return {
+    version: "2.0",                    // ★ v1.0 → v2.0にバージョンアップ
+    flowchartId: currentSvgFileName?.replace('.svg', '') || 'untitled',
+    svgFile: currentSvgFileName,
+    savedAt: new Date().toISOString(),
+    elements: elements,
+    originalLabels: originalLabels,
+    manualEdges: manualEdges,
+    manualNodes: manualNodes,
+    elementStatuses: elementStatuses   // ★ 新規追加（Phase 4）
+  };
+}
+```
+
+#### SVG埋め込みメタデータへの追加
+
+```javascript
+// exportSystemSvg()関数内
+const metadata = {
+  version: "2.0",                    // ★ v2.0
+  exportedAt: new Date().toISOString(),
+  svgFile: currentSvgFileName || 'unknown.svg',
+  elements: {},
+  originalLabels: originalLabels,
+  manualNodes: manualNodes,
+  manualEdges: manualEdges,
+  elementStatuses: elementStatuses   // ★ 新規追加
+};
+```
+
+#### 復元処理
+
+```javascript
+/**
+ * SVG読み込み時にステータスを復元
+ * @param {Object} metadata - 埋め込みメタデータ
+ */
+function restoreStatusesFromMetadata(metadata) {
+  if (!metadata || !metadata.elementStatuses) {
+    console.log('[Status] ステータス情報なし（v1.0以前のファイル）');
+    elementStatuses = {};
+    return;
+  }
+
+  elementStatuses = metadata.elementStatuses;
+
+  // 各要素にステータススタイルを適用
+  for (const [elementId, status] of Object.entries(elementStatuses)) {
+    if (!STATUS_COLORS[status]) {
+      console.warn(`[Status] 不正なステータス値: ${status} (要素ID: ${elementId})`);
+      continue;
+    }
+
+    applyStatusStyle(elementId, status);
+  }
+
+  console.log(`[Status] ✅ 復元完了: ${Object.keys(elementStatuses).length}個の要素`);
+}
+```
+
+### SVG要素へのスタイル適用
+
+#### 正規ノード（Mermaidノード）
+
+```javascript
+/**
+ * 正規ノードにステータス色を適用
+ * @param {string} nodeId - ノードID
+ * @param {string} status - ステータスキー
+ */
+function applyStatusToNode(nodeId, status) {
+  const nodeGroup = svg.querySelector(`[data-id="${nodeId}"]`);
+  if (!nodeGroup) return;
+
+  const colorDef = STATUS_COLORS[status];
+  if (!colorDef) return;
+
+  // ノードの図形要素（rect, circle, polygon, path）
+  const shape = nodeGroup.querySelector('rect, circle, polygon, path');
+  if (shape) {
+    shape.setAttribute('fill', colorDef.bg);
+    shape.setAttribute('stroke', colorDef.border);
+    shape.setAttribute('stroke-width', '2');
+  }
+
+  // テキスト要素
+  const text = nodeGroup.querySelector('text');
+  if (text) {
+    text.setAttribute('fill', colorDef.text);
+  }
+
+  // data属性でステータスを記録
+  nodeGroup.setAttribute('data-status', status);
+}
+```
+
+#### サブグラフ
+
+```javascript
+/**
+ * サブグラフにステータス色を適用（薄めの背景）
+ * @param {string} clusterId - クラスタID
+ * @param {string} status - ステータスキー
+ */
+function applyStatusToSubgraph(clusterId, status) {
+  const cluster = svg.querySelector(`[data-cluster-id="${clusterId}"]`);
+  if (!cluster) return;
+
+  const colorDef = STATUS_COLORS[status];
+  if (!colorDef) return;
+
+  const rect = cluster.querySelector('rect');
+  if (rect) {
+    // サブグラフは背景を30%透明化（視認性確保）
+    const fadedBg = adjustAlpha(colorDef.bg, 0.3);
+    rect.setAttribute('fill', fadedBg);
+    rect.setAttribute('stroke', colorDef.border);
+    rect.setAttribute('stroke-width', '2');
+  }
+
+  cluster.setAttribute('data-status', status);
+}
+
+/**
+ * 色の透明度を調整
+ * @param {string} color - CSSカラー（#RRGGBB）
+ * @param {number} alpha - 透明度（0.0-1.0）
+ * @returns {string} rgba形式の色
+ */
+function adjustAlpha(color, alpha) {
+  const r = parseInt(color.slice(1, 3), 16);
+  const g = parseInt(color.slice(3, 5), 16);
+  const b = parseInt(color.slice(5, 7), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+```
+
+#### メモノード
+
+```javascript
+/**
+ * メモノードにステータス色を適用
+ * @param {string} memoId - メモノードID
+ * @param {string} status - ステータスキー
+ */
+function applyStatusToMemoNode(memoId, status) {
+  const memoNode = document.querySelector(`[data-memo-id="${memoId}"]`);
+  if (!memoNode) return;
+
+  const colorDef = STATUS_COLORS[status];
+  if (!colorDef) return;
+
+  const content = memoNode.querySelector('.memo-content');
+  if (content) {
+    content.style.background = colorDef.bg;
+    content.style.borderColor = colorDef.border;
+    content.style.color = colorDef.text;
+  }
+
+  memoNode.setAttribute('data-status', status);
+}
+```
+
+### バージョン管理とマイグレーション
+
+#### v1.0 → v2.0 マイグレーション
+
+```javascript
+/**
+ * メタデータのバージョンマイグレーション
+ * @param {Object} data - メタデータ
+ * @returns {Object} マイグレーション後のデータ
+ */
+function migrateMetadata(data) {
+  if (!data.version || data.version === "1.0") {
+    console.log('[Migration] v1.0 → v2.0 マイグレーション開始');
+
+    data.version = "2.0";
+
+    // elementStatusesフィールドが存在しない場合は空で初期化
+    if (!data.elementStatuses) {
+      data.elementStatuses = {};
+    }
+
+    console.log('[Migration] ✅ マイグレーション完了');
+  }
+
+  return data;
+}
+```
+
+#### バージョン互換性マトリクス
+
+| バージョン | elementStatuses | 後方互換性 | 前方互換性 |
+|-----------|----------------|-----------|-----------|
+| v1.0 | なし | - | ✅ v2.0で読み込み可（空で初期化） |
+| v2.0 | あり | ❌ v1.0で読み込み不可 | - |
+
+**注意事項**:
+- v2.0ファイルをv1.0実装で開くと`elementStatuses`が無視される
+- v1.0ファイルをv2.0実装で開くと自動マイグレーションされる
+- マイグレーション後は再保存でv2.0形式になる
+
+### タスクステータスとの独立性（設計原則）
+
+#### フローチャートステータス（このドキュメント）
+
+```javascript
+// flowchart-editor.html内で管理
+elementStatuses = {
+  'F_01': 'completed'  // フローチャート要素の視覚的な状態
+};
+```
+
+**用途**:
+- フローチャート図面上の視覚的な進捗表示
+- 会議中のメモ書き・議論の可視化
+- SVGファイルに埋め込んで保存
+
+**保存場所**: SVGファイル内のメタデータコメント
+
+---
+
+#### タスクステータス（task-manager.html）
+
+```javascript
+// task-manager.html内で管理
+task = {
+  wbs_no: "WBS1.1.0",
+  status: "進行中"  // 実タスクの進捗状態
+};
+```
+
+**用途**:
+- WBSタスクの実際の進捗管理
+- プロジェクト管理・工数管理
+- ガントチャート表示
+
+**保存場所**: JSONファイル（`task-manager-data`）
+
+---
+
+#### 両者の関係
+
+```
+┌─────────────────────────┐         ┌─────────────────────────┐
+│ flowchart-editor.html   │         │ task-manager.html       │
+│                         │         │                         │
+│ elementStatuses {       │         │ projectData.tasks [{    │
+│   'F_01': 'completed'   │         │   wbs_no: "WBS1.1.0",   │
+│ }                       │         │   status: "進行中"      │
+│                         │ 🚫 連携なし │ }]                      │
+│ 用途: 視覚的な状態管理    │         │ 用途: 実タスク進捗管理   │
+│ 保存: SVGファイル         │         │ 保存: JSONファイル       │
+└─────────────────────────┘         └─────────────────────────┘
+
+理由:
+1. フローチャートとタスクは1:Nの関係（1つのノードに複数タスク）
+2. フローチャートステータスは「工程全体」の状態を表す
+3. タスクステータスは「個別作業」の状態を表す
+4. データ同期による複雑性を回避
+```
+
+---
+
+**最終更新**: 2026-03-22
+**関連ドキュメント**: [README.md](./README.md), [02-manual-edge.md](./02-manual-edge.md), [06-implementation-plan.md](./06-implementation-plan.md)
