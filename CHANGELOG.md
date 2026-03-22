@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.19.1] - 2026-03-22
+
+### Added
+- **💾 flowchart-editor.html: フッターに保存状況表示を追加**
+  - **機能**: 保存成功後にフッターへファイル名・保存時刻・保存ステータスを表示
+  - **対象**: JSON保存とSVG保存の両方に対応
+  - **UX改善**: 保存が成功したかどうかが一目でわかる（「✓ 保存済み」表示）
+  - **詳細**:
+    - JSON保存情報（左側）: ファイル名、最終保存時刻、ステータス
+    - SVG保存情報（右側）: ファイル名、最終保存時刻、ステータス
+    - ページ読み込み時にファイルハンドルが復元された場合、ファイル名のみ表示（保存時刻は"未保存"）
+
+### Changed
+- **flowchart-editor.html**:
+  - フッターのレイアウトを変更（凡例を削除し、保存情報を左右に配置）
+  - `updateJsonFileStatus()`関数を追加（JSON保存状況をフッターに表示）
+  - `updateSvgFileStatus()`関数を追加（SVG保存状況をフッターに表示）
+  - `saveToFileAuto()`、`saveToFileAs()`、`exportEditedSvg()`から保存成功後にupdateFileStatus()を呼び出し
+  - `restoreFileHandleFromDB()`でファイルハンドル復元時にフッターへファイル名を表示
+  - フッターのCSSを更新（`.file-info`、`.status-indicator`スタイルを追加）
+
+### User Experience
+- **保存成功の視覚的フィードバック**: 保存ボタンを押した後、フッターに「✓ 保存済み」と表示され、保存が成功したことが明確に分かる
+- **保存時刻の記録**: 最後に保存した時刻が表示されるため、いつ保存したかが分かる
+- **ファイル名の確認**: 現在の保存先ファイル名が常に表示される
+
+---
+
 ## [2.19.0] - 2026-03-22
 
 ### Added
