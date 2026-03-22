@@ -1589,6 +1589,110 @@
     }
 
     /* ==========================================
+     * Phase 2: 参照関係管理
+     * ========================================== */
+    .references-list {
+      margin-bottom: 8px;
+      max-height: 150px;
+      overflow-y: auto;
+    }
+
+    .reference-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 8px;
+      margin-bottom: 4px;
+      background: #f0f8ff;
+      border: 1px solid #b3d9ff;
+      border-radius: 4px;
+      font-size: 12px;
+      gap: 8px;
+    }
+
+    .reference-label {
+      flex: 1;
+      color: #333;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .btn-icon-small {
+      background: transparent;
+      border: none;
+      color: #dc3545;
+      cursor: pointer;
+      font-size: 16px;
+      padding: 0 4px;
+      opacity: 0.6;
+      transition: opacity 0.2s;
+    }
+
+    .btn-icon-small:hover {
+      opacity: 1;
+    }
+
+    .btn-secondary {
+      width: 100%;
+      padding: 8px 12px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: background 0.2s;
+    }
+
+    .btn-secondary:hover {
+      background: #0056b3;
+    }
+
+    .btn-secondary svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    /* 参照追加モード中のスタイル */
+    body.adding-reference-mode {
+      cursor: crosshair !important;
+    }
+
+    body.adding-reference-mode * {
+      cursor: crosshair !important;
+    }
+
+    body.adding-reference-mode [data-et="node"]:hover,
+    body.adding-reference-mode [data-et="cluster"]:hover,
+    body.adding-reference-mode .manual-memo-node:hover {
+      opacity: 0.7;
+      outline: 2px dashed #007bff;
+      outline-offset: 2px;
+    }
+
+    .reference-mode-notification {
+      position: fixed;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #007bff;
+      color: white;
+      padding: 8px 16px;
+      border-radius: 4px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      z-index: 10000;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* ==========================================
      * Task Item Dragging
      * ========================================== */
     .task-item {
@@ -2958,6 +3062,27 @@
         </div>
       </div>
 
+      <!-- 参照関係セクション (Phase 2) -->
+      <div class="info-section" id="element-references-section" style="display: none;">
+        <div class="info-section-title">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+          </svg>
+          <span>参照関係</span>
+        </div>
+        <div id="element-references-list" class="references-list">
+          <!-- 動的生成 -->
+        </div>
+        <button class="btn-secondary" onclick="startAddingReference()" id="btn-add-reference">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          <span>参照を追加</span>
+        </button>
+      </div>
+
       <div class="info-section memo-section">
         <div class="info-section-title">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -3356,6 +3481,12 @@
       setupDragDetection();
       updateStatusBar();
       setupStatusMenu();
+
+      // Phase 2: フローチャートエリアにクリックリスナー追加（参照追加モード用）
+      const svgContainer = document.getElementById('svg-container');
+      if (svgContainer) {
+        svgContainer.addEventListener('click', handleNodeClickInReferenceMode, true);
+      }
 
       // フローティングパネルをデフォルトで表示
       showPanel();
@@ -3888,6 +4019,18 @@
      * @example { "flowchart-A": ["flowchart-B", "memo_node_1"] }
      */
     let elementReferences = {}; // { elementId: [refId1, refId2, ...] }
+
+    /**
+     * 参照追加モード管理 (Phase 2-2)
+     * @type {boolean}
+     */
+    let isAddingReference = false;
+
+    /**
+     * 参照追加モード中の参照元要素ID (Phase 2-2)
+     * @type {string|null}
+     */
+    let addingReferenceSourceId = null;
 
     // ========================================
     // Data Integration Functions (Task Manager ⇔ Flowchart Editor)
@@ -5769,6 +5912,9 @@
 
       // 要素IDを取得
       const elementId = element.getAttribute('data-id') || element.id;
+
+      // Phase 2: 参照関係UIを更新
+      updateElementReferencesUI(elementId);
 
       // メモエリアを有効化
       const memoTextarea = document.getElementById('element-memo');
@@ -10026,6 +10172,217 @@ ${metadataJson}
       }
 
       alert('タスク連携を再スナップショットしました');
+    }
+
+    // ========== Phase 2: 参照関係管理機能 ==========
+
+    /**
+     * 参照追加モードを開始
+     */
+    function startAddingReference() {
+      if (!selectedElement) {
+        console.warn('[Reference] 要素が選択されていません');
+        return;
+      }
+
+      const elementId = selectedElement.getAttribute('data-id') || selectedElement.id;
+
+      isAddingReference = true;
+      addingReferenceSourceId = elementId;
+
+      // UI更新
+      document.body.classList.add('adding-reference-mode');
+
+      // 通知表示
+      const notification = document.createElement('div');
+      notification.id = 'reference-mode-notification';
+      notification.className = 'reference-mode-notification';
+      notification.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px; height:16px;">
+          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+        </svg>
+        <span>参照追加モード | クリックして関連ノードを選択... (ESCでキャンセル)</span>
+      `;
+      document.body.appendChild(notification);
+
+      // ESCキーでキャンセル
+      document.addEventListener('keydown', handleReferenceModeCancelKey);
+
+      console.log('[Reference] 参照追加モード開始:', elementId);
+    }
+
+    /**
+     * 参照追加モードをキャンセル
+     */
+    function cancelAddingReference() {
+      isAddingReference = false;
+      addingReferenceSourceId = null;
+
+      // UI更新
+      document.body.classList.remove('adding-reference-mode');
+
+      // 通知削除
+      const notification = document.getElementById('reference-mode-notification');
+      if (notification) {
+        notification.remove();
+      }
+
+      // ESCキーリスナー削除
+      document.removeEventListener('keydown', handleReferenceModeCancelKey);
+
+      console.log('[Reference] 参照追加モード終了');
+    }
+
+    /**
+     * ESCキーでキャンセル
+     * @param {KeyboardEvent} event - キーボードイベント
+     */
+    function handleReferenceModeCancelKey(event) {
+      if (event.key === 'Escape') {
+        cancelAddingReference();
+      }
+    }
+
+    /**
+     * ノードクリック時の処理（参照追加モード中）
+     * @param {MouseEvent} event - マウスイベント
+     */
+    function handleNodeClickInReferenceMode(event) {
+      if (!isAddingReference) return;
+
+      const clickedElement = event.target.closest('[data-et="node"], [data-et="cluster"], .manual-memo-node');
+      if (!clickedElement) return;
+
+      const targetNodeId = clickedElement.getAttribute('data-id') || clickedElement.id;
+
+      // 参照を追加
+      const success = addReferenceByClick(addingReferenceSourceId, targetNodeId);
+
+      if (success) {
+        // UI更新
+        updateElementReferencesUI(addingReferenceSourceId);
+
+        // 自動保存
+        if (currentFileHandle) {
+          saveToFileAuto().catch(err => {
+            console.warn('[Reference] 自動保存に失敗:', err);
+          });
+        }
+
+        // モード終了
+        cancelAddingReference();
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+    }
+
+    /**
+     * 参照を追加（重複・自己参照チェック付き）
+     * @param {string} sourceElementId - 参照元の要素ID
+     * @param {string} targetNodeId - 参照先のノードID
+     * @returns {boolean} 成功したかどうか
+     */
+    function addReferenceByClick(sourceElementId, targetNodeId) {
+      // 初期化
+      if (!elementReferences[sourceElementId]) {
+        elementReferences[sourceElementId] = [];
+      }
+
+      // 重複チェック
+      if (elementReferences[sourceElementId].includes(targetNodeId)) {
+        alert('既に参照済みです');
+        return false;
+      }
+
+      // 自己参照チェック
+      if (sourceElementId === targetNodeId) {
+        alert('自己参照はできません');
+        return false;
+      }
+
+      // 参照を追加
+      elementReferences[sourceElementId].push(targetNodeId);
+
+      console.log(`[Reference] 参照追加: ${sourceElementId} → ${targetNodeId}`);
+      return true;
+    }
+
+    /**
+     * 参照リストUIを更新
+     * @param {string} elementId - 要素ID
+     */
+    function updateElementReferencesUI(elementId) {
+      const section = document.getElementById('element-references-section');
+      const list = document.getElementById('element-references-list');
+
+      if (!section || !list) return;
+
+      const refs = elementReferences[elementId] || [];
+
+      if (refs.length === 0) {
+        section.style.display = 'none';
+        return;
+      }
+
+      section.style.display = 'block';
+
+      // リストをクリア
+      list.innerHTML = '';
+
+      // 各参照を表示
+      for (const refId of refs) {
+        const refElement = document.querySelector(`[data-id="${CSS.escape(refId)}"]`);
+        const refNode = manualNodes[refId];
+
+        let refLabel = refId;
+        if (refElement) {
+          refLabel = getElementDisplayText(refElement);
+        } else if (refNode) {
+          refLabel = refNode.label || refId;
+        }
+
+        const item = document.createElement('div');
+        item.className = 'reference-item';
+        item.innerHTML = `
+          <span class="reference-label">→ ${refLabel}</span>
+          <button class="btn-icon-small" onclick="removeReference('${elementId}', '${refId}')" title="参照を削除">×</button>
+        `;
+
+        list.appendChild(item);
+      }
+    }
+
+    /**
+     * 参照を削除
+     * @param {string} sourceElementId - 参照元の要素ID
+     * @param {string} targetNodeId - 参照先のノードID
+     */
+    function removeReference(sourceElementId, targetNodeId) {
+      if (!elementReferences[sourceElementId]) return;
+
+      const index = elementReferences[sourceElementId].indexOf(targetNodeId);
+      if (index > -1) {
+        elementReferences[sourceElementId].splice(index, 1);
+
+        // 空配列になったらキーを削除
+        if (elementReferences[sourceElementId].length === 0) {
+          delete elementReferences[sourceElementId];
+        }
+
+        // UI更新
+        updateElementReferencesUI(sourceElementId);
+
+        // 自動保存
+        if (currentFileHandle) {
+          saveToFileAuto().catch(err => {
+            console.warn('[Reference] 自動保存に失敗:', err);
+          });
+        }
+
+        console.log(`[Reference] 参照削除: ${sourceElementId} → ${targetNodeId}`);
+      }
     }
 
     // ========== Phase 4: ステータス色分け機能 ==========
