@@ -66,19 +66,32 @@
     .header-actions {
       display: flex;
       gap: 0.5rem;
+      align-items: center;
+    }
+
+    .header-divider {
+      width: 1px;
+      height: 24px;
+      background: rgba(255, 255, 255, 0.2);
+      margin: 0 0.25rem;
     }
 
     /* ==========================================
-     * Toolbar
+     * Footer
      * ========================================== */
-    .toolbar {
+    .footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
       background: white;
-      padding: 0.25rem 0.5rem;
+      border-top: 1px solid #dee2e6;
+      padding: 0.5rem;
       display: flex;
-      gap: 0.5rem;
+      justify-content: center;
       align-items: center;
-      border-bottom: 1px solid #dee2e6;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+      box-shadow: 0 -2px 4px rgba(0,0,0,0.05);
+      z-index: 900;
     }
 
     .btn {
@@ -364,7 +377,7 @@
      * ========================================== */
     .main-container {
       display: flex;
-      height: calc(100vh - 115px); /* ヘッダー(45px) + ツールバー(40px) + ステータスバー(30px) */
+      height: calc(100vh - 85px); /* ヘッダー(~45px) + フッター(~40px) */
     }
 
     /* ==========================================
@@ -2586,186 +2599,166 @@
         <path d="M9 12h2a2 2 0 0 0 2-2V6h2"></path>
         <path d="M9 12h2a2 2 0 0 1 2 2v4h2"></path>
       </svg>
+      フローチャート表示
     </h1>
-  </div>
-
-  <!-- Toolbar -->
-  <div class="toolbar">
-    <!-- File Operations Group -->
-    <div class="dropdown">
-      <button class="icon-button dropdown-toggle" id="load-dropdown-btn" onclick="toggleDropdown('load-dropdown')" title="読込">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-          <polyline points="7 10 12 15 17 10"></polyline>
-          <line x1="12" y1="15" x2="12" y2="3"></line>
-        </svg>
-      </button>
-      <div class="dropdown-menu" id="load-dropdown">
-        <button class="dropdown-item" onclick="document.getElementById('svg-file-input').click(); closeDropdown('load-dropdown');">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;">
+    <div class="header-actions">
+      <!-- File Operations Group -->
+      <div class="dropdown">
+        <button class="icon-button dropdown-toggle" id="load-dropdown-btn" onclick="toggleDropdown('load-dropdown')" title="読込">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
             <polyline points="7 10 12 15 17 10"></polyline>
             <line x1="12" y1="15" x2="12" y2="3"></line>
           </svg>
-          SVG読込
         </button>
-        <button class="dropdown-item disabled" id="reload-svg-item" onclick="reloadSVGFile(); closeDropdown('load-dropdown');">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;">
-            <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"></path>
-          </svg>
-          SVG変更
-        </button>
-        <div class="dropdown-divider"></div>
-        <button class="dropdown-item disabled" id="load-memo-item" onclick="loadFromFile(); closeDropdown('load-dropdown');">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-            <polyline points="14 2 14 8 20 8"></polyline>
-          </svg>
-          メモ読込
-        </button>
+        <div class="dropdown-menu" id="load-dropdown">
+          <button class="dropdown-item" onclick="document.getElementById('svg-file-input').click(); closeDropdown('load-dropdown');">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            SVG読込
+          </button>
+          <button class="dropdown-item disabled" id="reload-svg-item" onclick="reloadSVGFile(); closeDropdown('load-dropdown');">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;">
+              <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"></path>
+            </svg>
+            SVG変更
+          </button>
+          <div class="dropdown-divider"></div>
+          <button class="dropdown-item disabled" id="load-memo-item" onclick="loadFromFile(); closeDropdown('load-dropdown');">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+            </svg>
+            メモ読込
+          </button>
+        </div>
       </div>
-    </div>
 
-    <button class="icon-button disabled has-custom-tooltip" id="save-btn" onclick="exportEditedSvg()" title="保存">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
-        <polyline points="17 21 17 13 7 13 7 21"></polyline>
-        <polyline points="7 3 7 8 15 8"></polyline>
-      </svg>
-      <div class="custom-tooltip">
-        <div class="tooltip-title">💾 再編集用システムSVGとして保存</div>
-        <div class="tooltip-divider"></div>
-        <div class="tooltip-section">
-          <div class="tooltip-label">保存される内容:</div>
-          <div class="tooltip-items">
-            <div class="tooltip-item">✓ Mermaid SVG本体</div>
-            <div class="tooltip-item">✓ カスタムラベル</div>
-            <div class="tooltip-item">✓ メモノード・手動エッジ（視覚）</div>
-            <div class="tooltip-item">✓ すべてのメタデータ（埋め込み）</div>
-          </div>
-        </div>
-        <div class="tooltip-section">
-          <div class="tooltip-highlight">💡 次回このSVGを読み込めば完全復元可能</div>
-        </div>
-        <div class="tooltip-section">
-          <div class="tooltip-label">ファイル名例:</div>
-          <div class="tooltip-filename">flowchart_editable.svg</div>
-        </div>
-        <div class="tooltip-warning">⚠️ 保存しないと編集内容は次回失われます</div>
-      </div>
-    </button>
-
-    <div class="dropdown">
-      <button class="icon-button dropdown-toggle disabled" id="export-dropdown-btn" onclick="toggleDropdown('export-dropdown')" title="エクスポート">
+      <button class="icon-button disabled has-custom-tooltip" id="save-btn" onclick="exportEditedSvg()" title="保存">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-          <polyline points="17 8 12 3 7 8"></polyline>
-          <line x1="12" y1="3" x2="12" y2="15"></line>
+          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+          <polyline points="17 21 17 13 7 13 7 21"></polyline>
+          <polyline points="7 3 7 8 15 8"></polyline>
+        </svg>
+        <div class="custom-tooltip">
+          <div class="tooltip-title">💾 再編集用システムSVGとして保存</div>
+          <div class="tooltip-divider"></div>
+          <div class="tooltip-section">
+            <div class="tooltip-label">保存される内容:</div>
+            <div class="tooltip-items">
+              <div class="tooltip-item">✓ Mermaid SVG本体</div>
+              <div class="tooltip-item">✓ カスタムラベル</div>
+              <div class="tooltip-item">✓ メモノード・手動エッジ（視覚）</div>
+              <div class="tooltip-item">✓ すべてのメタデータ（埋め込み）</div>
+            </div>
+          </div>
+          <div class="tooltip-section">
+            <div class="tooltip-highlight">💡 次回このSVGを読み込めば完全復元可能</div>
+          </div>
+          <div class="tooltip-section">
+            <div class="tooltip-label">ファイル名例:</div>
+            <div class="tooltip-filename">flowchart_editable.svg</div>
+          </div>
+          <div class="tooltip-warning">⚠️ 保存しないと編集内容は次回失われます</div>
+        </div>
+      </button>
+
+      <div class="dropdown">
+        <button class="icon-button dropdown-toggle disabled" id="export-dropdown-btn" onclick="toggleDropdown('export-dropdown')" title="エクスポート">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+        </button>
+        <div class="dropdown-menu" id="export-dropdown">
+          <button class="dropdown-item" onclick="exportEditedSvg(); closeDropdown('export-dropdown');" title="視覚表示用SVG（カスタムラベル・手動要素表示、メタデータ含む）">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;">
+              <polygon points="16 3 21 8 8 21 3 21 3 16 16 3"></polygon>
+            </svg>
+            <div style="display: flex; flex-direction: column; align-items: flex-start; line-height: 1.4;">
+              <span style="font-weight: 600;">📄 SVG（完全版）</span>
+              <span style="font-size: 11px; color: #666; margin-top: 2px;">視覚+メタデータ・次回復元可能</span>
+            </div>
+          </button>
+          <button class="dropdown-item" onclick="saveToFileAs(); closeDropdown('export-dropdown');" title="JSONデータ（すべてのメモ・ラベル・手動要素のメタデータ）">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+            </svg>
+            <div style="display: flex; flex-direction: column; align-items: flex-start; line-height: 1.4;">
+              <span style="font-weight: 600;">💾 JSON（データのみ）</span>
+              <span style="font-size: 11px; color: #666; margin-top: 2px;">従来形式・JSONのみで復元可能</span>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      <div class="header-divider"></div>
+
+      <!-- Edit Group -->
+      <button class="icon-button disabled" id="edge-add-mode-btn" onclick="toggleEdgeAddMode()" title="手動エッジ追加" style="display: none;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="6" cy="18" r="3"></circle>
+          <circle cx="18" cy="6" r="3"></circle>
+          <path d="M8.1 15.9L15.9 8.1"></path>
+          <path d="M19 14v6"></path>
+          <path d="M16 17h6"></path>
         </svg>
       </button>
-      <div class="dropdown-menu" id="export-dropdown">
-        <button class="dropdown-item" onclick="exportEditedSvg(); closeDropdown('export-dropdown');" title="視覚表示用SVG（カスタムラベル・手動要素表示、メタデータ含む）">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;">
-            <polygon points="16 3 21 8 8 21 3 21 3 16 16 3"></polygon>
-          </svg>
-          <div style="display: flex; flex-direction: column; align-items: flex-start; line-height: 1.4;">
-            <span style="font-weight: 600;">📄 SVG（完全版）</span>
-            <span style="font-size: 11px; color: #666; margin-top: 2px;">視覚+メタデータ・次回復元可能</span>
-          </div>
-        </button>
-        <button class="dropdown-item" onclick="saveToFileAs(); closeDropdown('export-dropdown');" title="JSONデータ（すべてのメモ・ラベル・手動要素のメタデータ）">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-            <polyline points="14 2 14 8 20 8"></polyline>
-          </svg>
-          <div style="display: flex; flex-direction: column; align-items: flex-start; line-height: 1.4;">
-            <span style="font-weight: 600;">💾 JSON（データのみ）</span>
-            <span style="font-size: 11px; color: #666; margin-top: 2px;">従来形式・JSONのみで復元可能</span>
-          </div>
-        </button>
-      </div>
-    </div>
 
-    <div class="toolbar-divider"></div>
+      <button class="icon-button disabled" id="node-add-mode-btn" onclick="toggleNodeAddMode()" title="メモノード追加" style="display: none;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="12" y1="18" x2="12" y2="12"></line>
+          <line x1="9" y1="15" x2="15" y2="15"></line>
+        </svg>
+      </button>
 
-    <!-- Edit Group -->
-    <!-- Edge Add Mode Button -->
-    <button class="icon-button disabled" id="edge-add-mode-btn" onclick="toggleEdgeAddMode()" title="手動エッジ追加" style="display: none;">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-  <circle cx="6" cy="18" r="3"></circle>
-  <circle cx="18" cy="6" r="3"></circle>
-  <path d="M8.1 15.9L15.9 8.1"></path>
-  <path d="M19 14v6"></path>
-  <path d="M16 17h6"></path>
-</svg>
-    </button>
+      <div class="header-divider" id="zoom-divider" style="display: none;"></div>
 
-    <!-- Memo Node Add Mode Button (Phase 1) -->
-    <button class="icon-button disabled" id="node-add-mode-btn" onclick="toggleNodeAddMode()" title="メモノード追加" style="display: none;">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-  <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
-  <polyline points="14 2 14 8 20 8"></polyline>
-  <line x1="12" y1="18" x2="12" y2="12"></line>
-  <line x1="9" y1="15" x2="15" y2="15"></line>
-</svg>
-    </button>
+      <!-- Zoom Controls -->
+      <button class="icon-button disabled" id="zoom-out-btn" onclick="zoomOut()" title="縮小" style="display: none;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <path d="M21 21l-4.35-4.35"></path>
+          <path d="M8 11h6"></path>
+        </svg>
+      </button>
+      <span id="zoom-level" style="display: none; padding: 0 0.5rem; font-weight: 600; color: white;">100%</span>
+      <button class="icon-button disabled" id="zoom-in-btn" onclick="zoomIn()" title="拡大" style="display: none;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <path d="M21 21l-4.35-4.35"></path>
+          <path d="M11 8v6"></path>
+          <path d="M8 11h6"></path>
+        </svg>
+      </button>
+      <button class="icon-button disabled" id="zoom-reset-btn" onclick="zoomReset()" title="リセット（全体表示）" style="display: none;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 8V4h4"></path>
+          <path d="M20 8V4h-4"></path>
+          <path d="M4 16v4h4"></path>
+          <path d="M20 16v4h-4"></path>
+          <rect x="9" y="9" width="6" height="6" rx="1"></rect>
+        </svg>
+      </button>
 
-    <div class="toolbar-divider" id="zoom-divider" style="display: none;"></div>
+      <div class="header-divider"></div>
 
-    <!-- Zoom Controls -->
-    <button class="icon-button disabled" id="zoom-out-btn" onclick="zoomOut()" title="縮小" style="display: none;">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="11" cy="11" r="8"></circle>
-        <path d="M21 21l-4.35-4.35"></path>
-        <path d="M8 11h6"></path>
-      </svg>
-    </button>
-    <span id="zoom-level" style="display: none; padding: 0 0.5rem; font-weight: 600; color: #495057;">100%</span>
-    <button class="icon-button disabled" id="zoom-in-btn" onclick="zoomIn()" title="拡大" style="display: none;">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="11" cy="11" r="8"></circle>
-        <path d="M21 21l-4.35-4.35"></path>
-        <path d="M11 8v6"></path>
-        <path d="M8 11h6"></path>
-      </svg>
-    </button>
-    <button class="icon-button disabled" id="zoom-reset-btn" onclick="zoomReset()" title="リセット（全体表示）" style="display: none;">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M4 8V4h4"></path>
-        <path d="M20 8V4h-4"></path>
-        <path d="M4 16v4h4"></path>
-        <path d="M20 16v4h-4"></path>
-        <rect x="9" y="9" width="6" height="6" rx="1"></rect>
-      </svg>
-    </button>
-
-    <div class="toolbar-divider"></div>
-
-    <!-- Settings -->
-    <button class="icon-button" onclick="alert('設定機能は未実装です')" title="設定">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-  <circle cx="12" cy="12" r="3"></circle>
-  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-</svg>
-    </button>
-
-    <!-- Legend (moved to right) -->
-    <div class="legend">
-      <div class="legend-item">
-        <div class="legend-color" style="background: #d4edda;"></div>
-        <span>完了</span>
-      </div>
-      <div class="legend-item">
-        <div class="legend-color" style="background: #cfe2ff;"></div>
-        <span>進行中</span>
-      </div>
-      <div class="legend-item">
-        <div class="legend-color" style="background: #e9ecef;"></div>
-        <span>未着手</span>
-      </div>
+      <!-- Settings -->
+      <button class="icon-button" onclick="alert('設定機能は未実装です')" title="設定">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+      </button>
     </div>
   </div>
-
 
   <!-- Main Container -->
   <div class="main-container">
@@ -3469,7 +3462,7 @@
     // 初期化
     // ========================================
 
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', async () => {
       renderTaskList();
       setupFileUpload();
       setupTooltipListeners();
@@ -3481,6 +3474,9 @@
       setupDragDetection();
       updateStatusBar();
       setupStatusMenu();
+
+      // ファイルハンドルをIndexedDBから復元
+      await restoreFileHandleFromDB();
 
       // Phase 2: フローチャートエリアにクリックリスナー追加（参照追加モード用）
       const svgContainer = document.getElementById('flowchart-container');
@@ -3985,7 +3981,8 @@
     let elementCustomLabels = {}; // { elementId: customLabel }
     let originalLabels = {}; // { elementId: originalLabel } - SVG読み込み時の元のラベル
     let autoSaveTimer = null;
-    let currentFileHandle = null; // File System Access API用のファイルハンドル
+    let currentFileHandle = null; // File System Access API用のファイルハンドル（JSON保存用）
+    let currentSvgFileHandle = null; // File System Access API用のファイルハンドル（SVG保存用）
     let currentSvgFileName = null; // 読み込んだSVGファイル名
 
     // ========== 手動エッジ追加機能用の変数 ==========
@@ -4034,6 +4031,94 @@
      * @type {string|null}
      */
     let addingReferenceSourceId = null;
+
+    // ========================================
+    // IndexedDB Helper Functions (File Handle Persistence)
+    // ========================================
+
+    /**
+     * IndexedDBを開く（ファイルハンドル保存用）
+     */
+    async function openFileHandleDB() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open('FlowchartEditorFileHandlesDB', 1);
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => resolve(request.result);
+        request.onupgradeneeded = (event) => {
+          const db = event.target.result;
+          if (!db.objectStoreNames.contains('handles')) {
+            db.createObjectStore('handles');
+          }
+        };
+      });
+    }
+
+    /**
+     * ファイルハンドルをIndexedDBに保存
+     */
+    async function saveFileHandleToDB(key, handle) {
+      try {
+        const db = await openFileHandleDB();
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction(['handles'], 'readwrite');
+          const store = tx.objectStore('handles');
+          const request = store.put(handle, key);
+          request.onsuccess = () => {
+            console.log('✅ ファイルハンドルをIndexedDBに保存:', key);
+            resolve();
+          };
+          request.onerror = () => reject(request.error);
+        });
+      } catch (error) {
+        console.warn('⚠️ ファイルハンドル保存失敗:', error);
+        throw error;
+      }
+    }
+
+    /**
+     * ファイルハンドルをIndexedDBから復元
+     */
+    async function loadFileHandleFromDB(key) {
+      try {
+        const db = await openFileHandleDB();
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction(['handles'], 'readonly');
+          const store = tx.objectStore('handles');
+          const request = store.get(key);
+          request.onsuccess = () => {
+            if (request.result) {
+              console.log('✅ ファイルハンドルをIndexedDBから復元:', key);
+            }
+            resolve(request.result);
+          };
+          request.onerror = () => reject(request.error);
+        });
+      } catch (error) {
+        console.warn('⚠️ ファイルハンドル復元失敗:', error);
+        return null;
+      }
+    }
+
+    /**
+     * ファイルハンドルをIndexedDBから削除
+     */
+    async function deleteFileHandleFromDB(key) {
+      try {
+        const db = await openFileHandleDB();
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction(['handles'], 'readwrite');
+          const store = tx.objectStore('handles');
+          const request = store.delete(key);
+          request.onsuccess = () => {
+            console.log('🗑️ ファイルハンドルをIndexedDBから削除:', key);
+            resolve();
+          };
+          request.onerror = () => reject(request.error);
+        });
+      } catch (error) {
+        console.warn('⚠️ ファイルハンドル削除失敗:', error);
+      }
+    }
 
     // ========================================
     // Data Integration Functions (Task Manager ⇔ Flowchart Editor)
@@ -6457,12 +6542,32 @@
      * File System Access API: 自動保存（既存のファイルハンドルに保存）
      */
     async function saveToFileAuto() {
+      // ① ファイルハンドルがない場合、IndexedDBから復元を試みる
       if (!currentFileHandle) {
-        console.warn('ファイルハンドルが設定されていません');
+        console.log('🔄 IndexedDBからファイルハンドルを復元を試みます...');
+        currentFileHandle = await loadFileHandleFromDB('flowchart-editor-file');
+      }
+
+      if (!currentFileHandle) {
+        console.warn('⚠️ ファイルハンドルが設定されていません。自動保存をスキップします。');
         return;
       }
 
       try {
+        // ② 権限チェック & 再要求（必要な場合）
+        const permission = await currentFileHandle.queryPermission({ mode: 'readwrite' });
+        if (permission !== 'granted') {
+          console.log('🔒 ファイル書き込み権限を要求中...');
+          const newPermission = await currentFileHandle.requestPermission({ mode: 'readwrite' });
+          if (newPermission !== 'granted') {
+            console.error('❌ ファイルへの書き込み権限が拒否されました');
+            currentFileHandle = null;
+            await deleteFileHandleFromDB('flowchart-editor-file');
+            return;
+          }
+        }
+
+        // ③ 自動保存実行
         const data = buildMemoData();
         const jsonStr = JSON.stringify(data, null, 2);
 
@@ -6470,12 +6575,15 @@
         await writable.write(jsonStr);
         await writable.close();
 
-        console.log('メモを自動保存しました:', currentFileHandle.name);
+        console.log('✅ メモを自動保存しました:', currentFileHandle.name);
+
+        // IndexedDBに保存（権限チェック後に再保存）
+        await saveFileHandleToDB('flowchart-editor-file', currentFileHandle);
 
         // フローチャート属性をtask-manager.htmlへ送信
         publishFlowchartAttributes();
       } catch (err) {
-        console.error('自動保存エラー:', err);
+        console.error('❌ 自動保存エラー:', err);
         throw err;
       }
     }
@@ -6514,16 +6622,72 @@
         // ファイルハンドルを保存（今後の自動保存用）
         currentFileHandle = handle;
 
-        console.log('メモを保存しました:', handle.name);
+        // IndexedDBに保存（次回起動時に復元可能に）
+        await saveFileHandleToDB('flowchart-editor-file', currentFileHandle);
+
+        console.log('✅ メモを保存しました:', handle.name);
 
         // フローチャート属性をtask-manager.htmlへ送信
         publishFlowchartAttributes();
 
       } catch (err) {
         if (err.name !== 'AbortError') {
-          console.error('保存エラー:', err);
+          console.error('❌ 保存エラー:', err);
           alert('保存に失敗しました: ' + err.message);
         }
+      }
+    }
+
+    /**
+     * ページ読み込み時にファイルハンドルをIndexedDBから復元
+     */
+    async function restoreFileHandleFromDB() {
+      // JSON保存用のファイルハンドルを復元
+      try {
+        currentFileHandle = await loadFileHandleFromDB('flowchart-editor-file');
+
+        if (currentFileHandle) {
+          // ファイルハンドルが有効か確認 & 権限チェック
+          const permission = await currentFileHandle.queryPermission({ mode: 'readwrite' });
+          if (permission === 'granted') {
+            console.log('✅ JSONファイルハンドル復元成功:', currentFileHandle.name);
+          } else if (permission === 'prompt') {
+            // 権限が失われている場合、次回保存時に再要求
+            console.log('⚠️ JSONファイルハンドル復元（権限確認が必要）:', currentFileHandle.name);
+          } else {
+            // 権限が拒否されている場合、削除
+            console.log('❌ JSONファイルハンドル権限が拒否されているため削除');
+            currentFileHandle = null;
+            await deleteFileHandleFromDB('flowchart-editor-file');
+          }
+        }
+      } catch (e) {
+        console.warn('⚠️ JSONファイルハンドル復元失敗:', e);
+        currentFileHandle = null;
+      }
+
+      // SVG保存用のファイルハンドルを復元
+      try {
+        currentSvgFileHandle = await loadFileHandleFromDB('flowchart-editor-svg-file');
+
+        if (currentSvgFileHandle) {
+          // ファイルハンドルが有効か確認 & 権限チェック
+          const permission = await currentSvgFileHandle.queryPermission({ mode: 'readwrite' });
+          if (permission === 'granted') {
+            console.log('✅ SVGファイルハンドル復元成功:', currentSvgFileHandle.name);
+          } else if (permission === 'prompt') {
+            // 権限が失われている場合、次回保存時に再要求
+            console.log('⚠️ SVGファイルハンドル復元（権限確認が必要）:', currentSvgFileHandle.name);
+          } else {
+            // 権限が拒否されている場合、削除
+            console.log('❌ SVGファイルハンドル権限が拒否されているため削除');
+            currentSvgFileHandle = null;
+            await deleteFileHandleFromDB('flowchart-editor-svg-file');
+          }
+        }
+      } catch (e) {
+        console.warn('⚠️ SVGファイルハンドル復元失敗:', e);
+        currentSvgFileHandle = null;
       }
     }
 
@@ -6768,31 +6932,64 @@ ${metadataJson}
         const serializer = new XMLSerializer();
         const svgString = serializer.serializeToString(svgClone);
 
-        // ファイル名の提案（再編集可能システムSVGとして保存）
-        let baseName = currentSvgFileName ? currentSvgFileName.replace(/\.svg$/i, '') : 'flowchart';
-        // 既存のサフィックスを削除（重複防止）
-        baseName = baseName.replace(/_(editable|edited)$/i, '');
-        const suggestedName = `${baseName}_editable.svg`;
+        // ① ファイルハンドルがない場合、IndexedDBから復元を試みる
+        if (!currentSvgFileHandle) {
+          console.log('🔄 IndexedDBからSVGファイルハンドルを復元を試みます...');
+          currentSvgFileHandle = await loadFileHandleFromDB('flowchart-editor-svg-file');
+        }
 
-        // ファイルピッカーを表示
-        const handle = await window.showSaveFilePicker({
-          suggestedName: suggestedName,
-          types: [{
-            description: 'SVG Files',
-            accept: { 'image/svg+xml': ['.svg'] }
-          }]
-        });
+        // ② それでもない場合、新規保存ダイアログ表示
+        if (!currentSvgFileHandle) {
+          console.log('📁 新規SVG保存ダイアログを表示');
+          // ファイル名の提案（再編集可能システムSVGとして保存）
+          let baseName = currentSvgFileName ? currentSvgFileName.replace(/\.svg$/i, '') : 'flowchart';
+          // 既存のサフィックスを削除（重複防止）
+          baseName = baseName.replace(/_(editable|edited)$/i, '');
+          const suggestedName = `${baseName}_editable.svg`;
 
-        // ファイルに書き込み
-        const writable = await handle.createWritable();
+          currentSvgFileHandle = await window.showSaveFilePicker({
+            suggestedName: suggestedName,
+            types: [{
+              description: 'SVG Files',
+              accept: { 'image/svg+xml': ['.svg'] }
+            }]
+          });
+
+          // IndexedDBに保存（次回起動時に復元可能に）
+          await saveFileHandleToDB('flowchart-editor-svg-file', currentSvgFileHandle);
+        }
+
+        // ③ 権限チェック & 再要求（必要な場合）
+        const permission = await currentSvgFileHandle.queryPermission({ mode: 'readwrite' });
+        if (permission !== 'granted') {
+          console.log('🔒 SVGファイル書き込み権限を要求中...');
+          const newPermission = await currentSvgFileHandle.requestPermission({ mode: 'readwrite' });
+          if (newPermission !== 'granted') {
+            throw new Error('ファイルへの書き込み権限が拒否されました');
+          }
+        }
+
+        // ④ 上書き保存
+        const writable = await currentSvgFileHandle.createWritable();
         await writable.write(svgString);
         await writable.close();
 
-        console.log('編集済みSVGをエクスポートしました:', handle.name);
+        // IndexedDBに保存（権限チェック後に再保存）
+        await saveFileHandleToDB('flowchart-editor-svg-file', currentSvgFileHandle);
+
+        console.log('✅ 編集済みSVGを保存しました:', currentSvgFileHandle.name);
 
       } catch (err) {
-        if (err.name !== 'AbortError') {
-          console.error('エクスポートエラー:', err);
+        if (err.name === 'AbortError') {
+          console.log('保存キャンセル');
+        } else if (err.name === 'NotAllowedError') {
+          console.error('❌ SVGファイル権限エラー:', err);
+          alert('ファイルへのアクセス権限がありません。\n別のファイルを選択してください。');
+          // 権限エラーの場合、ファイルハンドルをクリア
+          currentSvgFileHandle = null;
+          await deleteFileHandleFromDB('flowchart-editor-svg-file');
+        } else {
+          console.error('❌ エクスポートエラー:', err);
           alert('エクスポートに失敗しました: ' + err.message);
         }
       }
@@ -10947,6 +11144,24 @@ ${metadataJson}
         <button class="warning-modal-btn warning-modal-btn-primary" onclick="closeWarningModal()">
           理解しました
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <div class="legend">
+      <div class="legend-item">
+        <div class="legend-color" style="background: #d4edda;"></div>
+        <span>完了</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background: #cfe2ff;"></div>
+        <span>進行中</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background: #e9ecef;"></div>
+        <span>未着手</span>
       </div>
     </div>
   </div>

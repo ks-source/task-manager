@@ -5,6 +5,59 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.19.0] - 2026-03-22
+
+### Added
+- **💾 IndexedDB File Handle Persistence - 保存ボタンUX大幅改善**
+  - **機能**: ファイルハンドルをIndexedDBに保存することで、ページリロード後も保存先を記憶
+  - **Before**: 保存ボタンを押すたびに毎回エクスプローラーダイアログが表示される
+  - **After**: 初回のみファイルを選択、2回目以降は即座に上書き保存（ダイアログなし）
+  - **対象**: task-manager.html、flowchart-editor.html両方に実装
+  - **技術**: Chrome/Edge 102+ の File Handle Persistence API
+
+### Changed
+- **task-manager.html**:
+  - IndexedDBヘルパー関数を追加（`openFileHandleDB()`, `saveFileHandleToDB()`, `loadFileHandleFromDB()`, `deleteFileHandleFromDB()`）
+  - `saveToFile()`を更新:
+    - ファイルハンドルがない場合、IndexedDBから復元を試みる
+    - 権限チェック & 再要求処理を追加
+    - 保存成功後、IndexedDBにファイルハンドルを保存
+  - `init()`を`async`に変更、`restoreFileHandleFromDB()`を追加
+  - ページ読み込み時にファイルハンドルを自動復元
+
+- **flowchart-editor.html**:
+  - IndexedDBヘルパー関数を追加（task-manager.htmlと同じ）
+  - `saveToFileAuto()`を更新（JSON保存用）:
+    - ファイルハンドルがない場合、IndexedDBから復元を試みる
+    - 権限チェック & 再要求処理を追加
+    - 保存成功後、IndexedDBにファイルハンドルを保存
+  - `saveToFileAs()`を更新（JSON保存用）: 保存成功後、IndexedDBにファイルハンドルを保存
+  - **`exportEditedSvg()`を更新（SVG保存用）**:
+    - SVG専用のファイルハンドル `currentSvgFileHandle` を追加
+    - ファイルハンドルがない場合、IndexedDBから復元を試みる
+    - 権限チェック & 再要求処理を追加
+    - 保存成功後、IndexedDBにファイルハンドルを保存
+  - DOMContentLoadedを`async`に変更、`restoreFileHandleFromDB()`を追加
+  - `restoreFileHandleFromDB()`を更新: JSON用とSVG用の両方のファイルハンドルを復元
+
+### Technical Details
+- **IndexedDBデータベース名**:
+  - task-manager.html: `TaskManagerFileHandlesDB`
+  - flowchart-editor.html: `FlowchartEditorFileHandlesDB`
+- **保存キー**:
+  - task-manager.html: `task-manager-file`
+  - flowchart-editor.html (JSON保存): `flowchart-editor-file`
+  - flowchart-editor.html (SVG保存): `flowchart-editor-svg-file`
+- **保存場所**: `C:\Users\[ユーザー名]\AppData\Local\Microsoft\Edge\User Data\Default\IndexedDB\` （ブラウザ内蔵DB、ユーザーフォルダには何も生成されない）
+- **対応ブラウザ**: Chrome/Edge 102+ (2022年5月～)
+
+### User Experience
+- **UX大幅改善**: 2回目以降の保存がワンクリックで完了（ダイアログなし）
+- **ページリロード後も有効**: ブラウザを閉じて再起動しても、前回の保存先を記憶
+- **権限管理**: ファイルへのアクセス権限が失われた場合、自動的に再要求
+
+---
+
 ## [2.18.10] - 2026-03-22
 
 ### Fixed

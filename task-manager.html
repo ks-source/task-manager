@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Task Manager - WBS Visualizer v2.18.10</title>
+  <title>Task Manager - WBS Visualizer v2.19.0</title>
   <meta name="description" content="A lightweight, browser-based Work Breakdown Structure (WBS) visualization and management tool">
   <meta name="keywords" content="task manager, WBS, project management, task tracking">
   <meta name="author" content="ks-source">
@@ -1084,14 +1084,6 @@
       </button>
     </div>
     <nav class="header-nav">
-      <button class="icon-button" onclick="showDashboard()" title="ダッシュボード">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="3" width="7" height="7" rx="1"></rect>
-          <rect x="14" y="3" width="7" height="7" rx="1"></rect>
-          <rect x="14" y="14" width="7" height="7" rx="1"></rect>
-          <rect x="3" y="14" width="7" height="7" rx="1"></rect>
-        </svg>
-      </button>
       <button class="icon-button" onclick="showExport()" title="エクスポート">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 3v6"></path>
@@ -1121,6 +1113,15 @@
           <path d="M7 8h4"></path>
           <path d="M10 12h4"></path>
           <path d="M13 16h4"></path>
+        </svg>
+      </button>
+      <button class="icon-button" onclick="openFlowchartEditor(event)" oncontextmenu="showFlowchartEditorMenu(event); return false;" title="フローチャートエディター（右クリックでファイル選択）">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="9" width="6" height="6" rx="1"></rect>
+          <rect x="15" y="3" width="6" height="6" rx="1"></rect>
+          <rect x="15" y="15" width="6" height="6" rx="1"></rect>
+          <path d="M9 12h2a2 2 0 0 0 2-2V6h2"></path>
+          <path d="M9 12h2a2 2 0 0 1 2 2v4h2"></path>
         </svg>
       </button>
       <button class="icon-button" onclick="openSettingsModal()" title="設定">
@@ -1754,7 +1755,7 @@
     // ==========================================
     document.addEventListener('DOMContentLoaded', init);
 
-    function init() {
+    async function init() {
       console.log('WBS Visualizer initializing...');
       loadInitialData();
       loadFromLocalStorage();
@@ -1767,6 +1768,9 @@
       // プロジェクト名をヘッダーに反映
       updateProjectNameDisplay();
 
+      // ファイルハンドルをIndexedDBから復元
+      await restoreFileHandleFromDB();
+
       // デバッグ: DOM構造チェック
       debugLog(3, 'INIT', '=== DOM Structure Check ===');
       checkDOMStructure();
@@ -1774,6 +1778,38 @@
 
       // デバッグ: スクロールイベント監視
       setupScrollDebug();
+    }
+
+    /**
+     * ページ読み込み時にファイルハンドルをIndexedDBから復元
+     */
+    async function restoreFileHandleFromDB() {
+      try {
+        currentFileHandle = await loadFileHandleFromDB('task-manager-file');
+
+        if (currentFileHandle) {
+          // ファイルハンドルが有効か確認 & 権限チェック
+          const permission = await currentFileHandle.queryPermission({ mode: 'readwrite' });
+          if (permission === 'granted') {
+            console.log('✅ ファイルハンドル復元成功:', currentFileHandle.name);
+            currentFileName = currentFileHandle.name;
+            updateFileStatus();
+          } else if (permission === 'prompt') {
+            // 権限が失われている場合、次回保存時に再要求
+            console.log('⚠️ ファイルハンドル復元（権限確認が必要）:', currentFileHandle.name);
+            currentFileName = `${currentFileHandle.name} (権限確認が必要)`;
+            updateFileStatus();
+          } else {
+            // 権限が拒否されている場合、削除
+            console.log('❌ ファイルハンドル権限が拒否されているため削除');
+            currentFileHandle = null;
+            await deleteFileHandleFromDB('task-manager-file');
+          }
+        }
+      } catch (e) {
+        console.warn('⚠️ ファイルハンドル復元失敗:', e);
+        currentFileHandle = null;
+      }
     }
 
     function checkDOMStructure() {
@@ -1912,6 +1948,94 @@
             tasks: []
           };
         }
+      }
+    }
+
+    // ==========================================
+    // IndexedDB Helper Functions (File Handle Persistence)
+    // ==========================================
+
+    /**
+     * IndexedDBを開く（ファイルハンドル保存用）
+     */
+    async function openFileHandleDB() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open('TaskManagerFileHandlesDB', 1);
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => resolve(request.result);
+        request.onupgradeneeded = (event) => {
+          const db = event.target.result;
+          if (!db.objectStoreNames.contains('handles')) {
+            db.createObjectStore('handles');
+          }
+        };
+      });
+    }
+
+    /**
+     * ファイルハンドルをIndexedDBに保存
+     */
+    async function saveFileHandleToDB(key, handle) {
+      try {
+        const db = await openFileHandleDB();
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction(['handles'], 'readwrite');
+          const store = tx.objectStore('handles');
+          const request = store.put(handle, key);
+          request.onsuccess = () => {
+            console.log('✅ ファイルハンドルをIndexedDBに保存:', key);
+            resolve();
+          };
+          request.onerror = () => reject(request.error);
+        });
+      } catch (error) {
+        console.warn('⚠️ ファイルハンドル保存失敗:', error);
+        throw error;
+      }
+    }
+
+    /**
+     * ファイルハンドルをIndexedDBから復元
+     */
+    async function loadFileHandleFromDB(key) {
+      try {
+        const db = await openFileHandleDB();
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction(['handles'], 'readonly');
+          const store = tx.objectStore('handles');
+          const request = store.get(key);
+          request.onsuccess = () => {
+            if (request.result) {
+              console.log('✅ ファイルハンドルをIndexedDBから復元:', key);
+            }
+            resolve(request.result);
+          };
+          request.onerror = () => reject(request.error);
+        });
+      } catch (error) {
+        console.warn('⚠️ ファイルハンドル復元失敗:', error);
+        return null;
+      }
+    }
+
+    /**
+     * ファイルハンドルをIndexedDBから削除
+     */
+    async function deleteFileHandleFromDB(key) {
+      try {
+        const db = await openFileHandleDB();
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction(['handles'], 'readwrite');
+          const store = tx.objectStore('handles');
+          const request = store.delete(key);
+          request.onsuccess = () => {
+            console.log('🗑️ ファイルハンドルをIndexedDBから削除:', key);
+            resolve();
+          };
+          request.onerror = () => reject(request.error);
+        });
+      } catch (error) {
+        console.warn('⚠️ ファイルハンドル削除失敗:', error);
       }
     }
 
@@ -3065,8 +3189,15 @@
           return;
         }
 
-        // ファイルハンドルがない場合、新規保存ダイアログ表示
+        // ① ファイルハンドルがない場合、IndexedDBから復元を試みる
         if (!currentFileHandle) {
+          console.log('🔄 IndexedDBからファイルハンドルを復元を試みます...');
+          currentFileHandle = await loadFileHandleFromDB('task-manager-file');
+        }
+
+        // ② それでもない場合、新規保存ダイアログ表示
+        if (!currentFileHandle) {
+          console.log('📁 新規保存ダイアログを表示');
           const options = {
             suggestedName: `task-manager-${new Date().toISOString().split('T')[0]}.json`,
             types: [
@@ -3077,26 +3208,48 @@
             ]
           };
           currentFileHandle = await window.showSaveFilePicker(options);
+
+          // IndexedDBに保存（次回起動時に復元可能に）
+          await saveFileHandleToDB('task-manager-file', currentFileHandle);
         }
 
-        // ファイルに書き込み
+        // ③ 権限チェック & 再要求（必要な場合）
+        const permission = await currentFileHandle.queryPermission({ mode: 'readwrite' });
+        if (permission !== 'granted') {
+          console.log('🔒 ファイル書き込み権限を要求中...');
+          const newPermission = await currentFileHandle.requestPermission({ mode: 'readwrite' });
+          if (newPermission !== 'granted') {
+            throw new Error('ファイルへの書き込み権限が拒否されました');
+          }
+        }
+
+        // ④ 上書き保存
         const writable = await currentFileHandle.createWritable();
         const jsonData = JSON.stringify(projectData, null, 2);
         await writable.write(jsonData);
         await writable.close();
 
-        // ファイル名を更新
+        // ⑤ ファイル名を更新 & IndexedDBに保存（権限が付与された状態で保存）
         currentFileName = currentFileHandle.name;
         isDirty = false;
         updateFileStatus();
 
-        console.log('Saved to file:', currentFileName);
+        // IndexedDBに保存（権限チェック後に再保存）
+        await saveFileHandleToDB('task-manager-file', currentFileHandle);
+
+        console.log('✅ ファイル保存完了:', currentFileName);
         alert(`ファイル保存完了: ${currentFileName}`);
       } catch (error) {
         if (error.name === 'AbortError') {
-          console.log('Save cancelled by user');
+          console.log('保存キャンセル');
+        } else if (error.name === 'NotAllowedError') {
+          console.error('ファイル権限エラー:', error);
+          alert('ファイルへのアクセス権限がありません。\n別のファイルを選択してください。');
+          // 権限エラーの場合、ファイルハンドルをクリア
+          currentFileHandle = null;
+          await deleteFileHandleFromDB('task-manager-file');
         } else {
-          console.error('Error saving file:', error);
+          console.error('保存エラー:', error);
           alert(`ファイル保存エラー: ${error.message}\n\nLocalStorageに保存します。`);
           saveToLocalStorage();
         }
@@ -3161,10 +3314,6 @@
       }
     }
 
-    function showDashboard() {
-      // ダッシュボードは常に表示されているため、スクロールするだけ
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
 
     async function showExport() {
       if (!projectData || !projectData.tasks) {
@@ -6807,6 +6956,71 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
     function saveAssignees(assignees) {
       localStorage.setItem('taskManagerAssignees',
         JSON.stringify({ assignees: assignees }));
+    }
+
+    // フローチャートエディターを開く（相対パス方式 + フォールバック）
+    function openFlowchartEditor(event) {
+      // 右クリック防止（コンテキストメニューで処理）
+      if (event && event.button === 2) {
+        return;
+      }
+
+      // デフォルト: 相対パスで開く（./flowchart-editor.html）
+      const relativeURL = new URL('./flowchart-editor.html', window.location.href);
+      const win = window.open(relativeURL.href, '_blank');
+
+      if (!win || win.closed || typeof win.closed == 'undefined') {
+        alert('ポップアップがブロックされました。\nブラウザの設定でポップアップを許可してください。');
+      }
+    }
+
+    // 右クリックメニューを表示
+    function showFlowchartEditorMenu(event) {
+      event.preventDefault();
+      event.stopPropagation();
+
+      // シンプルなconfirmダイアログで選択肢を提示
+      const message = 'フローチャートエディターの開き方を選択してください:\n\n' +
+                      '✅ OK: 同じフォルダから開く（推奨）\n' +
+                      '❌ キャンセル: ファイルを選択して開く';
+
+      if (confirm(message)) {
+        // OK: 相対パスで開く
+        openFlowchartEditor(event);
+      } else {
+        // キャンセル: ファイル選択
+        selectFlowchartEditorFile();
+      }
+    }
+
+    // ファイル選択方式でフローチャートエディターを開く（フォールバック用）
+    function selectFlowchartEditorFile() {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.html';
+
+      input.onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // ファイル名チェック（flowchart-editor.htmlであることを推奨）
+        if (!file.name.includes('flowchart-editor')) {
+          if (!confirm(`選択されたファイル: ${file.name}\n\nこのファイルで間違いありませんか？`)) {
+            return;
+          }
+        }
+
+        // FileオブジェクトからBlob URLを生成
+        const fileURL = URL.createObjectURL(file);
+
+        // 新しいウィンドウで開く
+        const win = window.open(fileURL, '_blank');
+        if (!win || win.closed || typeof win.closed == 'undefined') {
+          alert('ポップアップがブロックされました。\nブラウザの設定でポップアップを許可してください。');
+        }
+      };
+
+      input.click();
     }
 
     // Open settings modal
