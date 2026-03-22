@@ -3483,9 +3483,12 @@
       setupStatusMenu();
 
       // Phase 2: フローチャートエリアにクリックリスナー追加（参照追加モード用）
-      const svgContainer = document.getElementById('svg-container');
+      const svgContainer = document.getElementById('flowchart-container');
       if (svgContainer) {
         svgContainer.addEventListener('click', handleNodeClickInReferenceMode, true);
+        console.log('[Reference] ✅ 参照追加モード用のクリックリスナーを登録しました');
+      } else {
+        console.error('[Reference] ❌ flowchart-container が見つかりません');
       }
 
       // フローティングパネルをデフォルトで表示
@@ -10249,12 +10252,23 @@ ${metadataJson}
      * @param {MouseEvent} event - マウスイベント
      */
     function handleNodeClickInReferenceMode(event) {
-      if (!isAddingReference) return;
+      console.log('[Reference] 🖱️ handleNodeClickInReferenceMode called', { isAddingReference, target: event.target });
 
-      const clickedElement = event.target.closest('[data-et="node"], [data-et="cluster"], .manual-memo-node');
-      if (!clickedElement) return;
+      if (!isAddingReference) {
+        console.log('[Reference] ⏭️ 参照追加モードではないため処理をスキップ');
+        return;
+      }
+
+      const clickedElement = event.target.closest('[data-et="node"], [data-et="cluster"], [data-et="manual-node"], .manual-memo-node');
+      console.log('[Reference] 🎯 クリックされた要素:', clickedElement);
+
+      if (!clickedElement) {
+        console.log('[Reference] ⚠️ クリックされた要素が対象外のため処理をスキップ');
+        return;
+      }
 
       const targetNodeId = clickedElement.getAttribute('data-id') || clickedElement.id;
+      console.log(`[Reference] ✅ 参照先ノードID: ${targetNodeId}`);
 
       // 参照を追加
       const success = addReferenceByClick(addingReferenceSourceId, targetNodeId);
