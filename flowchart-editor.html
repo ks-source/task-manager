@@ -437,6 +437,118 @@
       flex-shrink: 0;
     }
 
+    .btn-task-filter {
+      padding: 0.25rem 0.5rem;
+      background: #6c7a89;
+      color: white;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .btn-task-filter svg {
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0;
+    }
+
+    .btn-task-filter:hover {
+      background: #5a6c7d;
+    }
+
+    .btn-task-filter.active {
+      background: #007bff;
+    }
+
+    .task-filter-dropdown {
+      background: white;
+      border: 1px solid #dee2e6;
+      border-radius: 4px;
+      padding: 0.75rem;
+      margin: 0.5rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      z-index: 100;
+    }
+
+    .filter-search-box {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem;
+      border: 1px solid #dee2e6;
+      border-radius: 4px;
+      background: #f8f9fa;
+    }
+
+    .filter-search-box svg {
+      width: 14px;
+      height: 14px;
+      color: #6c757d;
+      flex-shrink: 0;
+    }
+
+    .filter-search-box input {
+      flex: 1;
+      border: none;
+      background: transparent;
+      outline: none;
+      font-size: 12px;
+    }
+
+    .filter-divider {
+      height: 1px;
+      background: #dee2e6;
+      margin: 0.75rem 0;
+    }
+
+    .filter-checkboxes {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .filter-checkboxes label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 12px;
+      cursor: pointer;
+      padding: 0.25rem;
+      border-radius: 3px;
+      transition: background 0.2s;
+    }
+
+    .filter-checkboxes label:hover {
+      background: #f8f9fa;
+    }
+
+    .filter-checkboxes input[type="checkbox"] {
+      width: 14px;
+      height: 14px;
+      cursor: pointer;
+    }
+
+    .btn-filter-clear {
+      width: 100%;
+      padding: 0.5rem;
+      background: #f8f9fa;
+      color: #495057;
+      border: 1px solid #dee2e6;
+      border-radius: 3px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-filter-clear:hover {
+      background: #e9ecef;
+      border-color: #adb5bd;
+    }
+
     .task-list {
       flex: 1;
       overflow-y: auto;
@@ -2781,10 +2893,47 @@
           </svg>
           <span>TODOタスク一覧</span>
         </div>
-        <label style="font-size: 12px; font-weight: normal;">
-          <input type="checkbox" id="hide-completed" onchange="toggleCompletedTasks()">
-          完了済みを隠す
-        </label>
+        <button class="btn-task-filter" id="btn-task-filter" onclick="toggleTaskFilterMenu()" title="検索 & フィルター">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="16.65" y1="16.65" x2="22" y2="22"></line>
+            <line x1="8" y1="8" x2="14" y2="8"></line>
+            <line x1="9" y1="11" x2="13" y2="11"></line>
+            <line x1="10.5" y1="14" x2="11.5" y2="14"></line>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Task Filter Dropdown Menu -->
+      <div class="task-filter-dropdown" id="task-filter-dropdown" style="display: none;">
+        <div class="filter-search-box">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input type="text" id="task-search-input" placeholder="タスク名を検索..." oninput="applyTaskFilters()">
+        </div>
+        <div class="filter-divider"></div>
+        <div class="filter-checkboxes">
+          <label>
+            <input type="checkbox" id="filter-hide-deleted" checked onchange="applyTaskFilters()">
+            <span>削除済みタスクを隠す</span>
+          </label>
+          <label>
+            <input type="checkbox" id="filter-hide-completed" onchange="applyTaskFilters()">
+            <span>完了済みタスクを隠す</span>
+          </label>
+          <label>
+            <input type="checkbox" id="filter-only-in-progress" onchange="applyTaskFilters()">
+            <span>進行中のみ表示</span>
+          </label>
+          <label>
+            <input type="checkbox" id="filter-only-not-started" onchange="applyTaskFilters()">
+            <span>未着手のみ表示</span>
+          </label>
+        </div>
+        <div class="filter-divider"></div>
+        <button class="btn-filter-clear" onclick="clearTaskFilters()">フィルタクリア</button>
       </div>
 
       <div class="task-list" id="task-list">
@@ -3407,6 +3556,7 @@
           wbs: task.wbs_no,
           taskName: task.task_name || task.taskName || "（名前なし）",
           status: task.status || "Not Started",
+          deleted: task.deleted || false,
           mermaidIds: mermaidIds,
           flowchartLinks: parseMermaidIds(mermaidIds)
         };
@@ -3541,10 +3691,36 @@
       const container = document.getElementById('task-list');
       container.innerHTML = '';
 
-      const hideCompleted = document.getElementById('hide-completed').checked;
+      // フィルター設定を取得
+      const searchQuery = document.getElementById('task-search-input')?.value.toLowerCase() || '';
+      const hideDeleted = document.getElementById('filter-hide-deleted')?.checked ?? true;
+      const hideCompleted = document.getElementById('filter-hide-completed')?.checked ?? false;
+      const onlyInProgress = document.getElementById('filter-only-in-progress')?.checked ?? false;
+      const onlyNotStarted = document.getElementById('filter-only-not-started')?.checked ?? false;
 
       mockTasks.forEach(task => {
+        // 削除済みフィルター
+        if (hideDeleted && task.deleted) {
+          return;
+        }
+
+        // 完了済みフィルター
         if (hideCompleted && task.status === 'Completed') {
+          return;
+        }
+
+        // 進行中のみフィルター
+        if (onlyInProgress && task.status !== 'In Progress') {
+          return;
+        }
+
+        // 未着手のみフィルター
+        if (onlyNotStarted && task.status !== 'Not Started') {
+          return;
+        }
+
+        // 検索フィルター
+        if (searchQuery && !task.taskName.toLowerCase().includes(searchQuery)) {
           return;
         }
 
@@ -3638,8 +3814,54 @@
       return map[status] || status;
     }
 
-    function toggleCompletedTasks() {
+    /**
+     * タスクフィルターメニューの表示/非表示を切り替え
+     */
+    function toggleTaskFilterMenu() {
+      const dropdown = document.getElementById('task-filter-dropdown');
+      const button = document.getElementById('btn-task-filter');
+
+      if (dropdown.style.display === 'none') {
+        dropdown.style.display = 'block';
+        button.classList.add('active');
+      } else {
+        dropdown.style.display = 'none';
+        button.classList.remove('active');
+      }
+    }
+
+    /**
+     * タスクフィルターを適用
+     */
+    function applyTaskFilters() {
       renderTaskList();
+
+      // フィルターが有効かチェック（削除済みを隠す以外）
+      const button = document.getElementById('btn-task-filter');
+      const hasActiveFilter =
+        document.getElementById('task-search-input').value !== '' ||
+        document.getElementById('filter-hide-completed').checked ||
+        document.getElementById('filter-only-in-progress').checked ||
+        document.getElementById('filter-only-not-started').checked;
+
+      if (hasActiveFilter) {
+        button.classList.add('active');
+      } else {
+        button.classList.remove('active');
+      }
+    }
+
+    /**
+     * タスクフィルターをクリア
+     */
+    function clearTaskFilters() {
+      document.getElementById('task-search-input').value = '';
+      document.getElementById('filter-hide-deleted').checked = true;
+      document.getElementById('filter-hide-completed').checked = false;
+      document.getElementById('filter-only-in-progress').checked = false;
+      document.getElementById('filter-only-not-started').checked = false;
+
+      applyTaskFilters();
     }
 
     // ========================================

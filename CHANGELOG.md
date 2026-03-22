@@ -5,6 +5,39 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.20.0] - 2026-03-22
+
+### Added
+- **🔍 flowchart-editor.html: タスク一覧に検索＆フィルター機能を追加**
+  - **機能**: 左パネルのタスク一覧に検索とフィルタリング機能を実装
+  - **検索機能**: タスク名で部分一致検索（リアルタイム検索）
+  - **フィルター機能**:
+    - ☑ 削除済みタスクを隠す（デフォルトON）← **最重要**
+    - ☐ 完了済みタスクを隠す
+    - ☐ 進行中のみ表示
+    - ☐ 未着手のみ表示
+  - **UI**: 検索＋フィルターボタン（SVGアイコン）をクリックでドロップダウンメニュー表示
+
+### Changed
+- **flowchart-editor.html**:
+  - 「完了済みを隠す」チェックボックスを削除
+  - 検索＋フィルターボタンに置き換え（task-manager.htmlと同様のデザイン）
+  - `mockTasks`変換時に`deleted`フィールドを追加
+  - `renderTaskList()`を更新して、複数フィルター条件をサポート
+  - 新規関数を追加:
+    - `toggleTaskFilterMenu()`: フィルターメニューの表示/非表示切り替え
+    - `applyTaskFilters()`: フィルター適用＆ボタン状態更新
+    - `clearTaskFilters()`: フィルタークリア
+  - `toggleCompletedTasks()`を削除
+
+### User Experience
+- **論理削除タスクの非表示**: 削除済みタスクがデフォルトで非表示になり、タスク一覧がすっきり
+- **柔軟な検索＆フィルター**: タスク名検索＋複数フィルター条件で、必要なタスクを素早く見つけられる
+- **視覚的フィードバック**: フィルター適用中はボタンが青色に変化し、フィルター状態が一目でわかる
+- **UI統一感**: task-manager.htmlと同様のフィルターUIで、操作感が統一
+
+---
+
 ## [2.19.3] - 2026-03-22
 
 ### Changed
