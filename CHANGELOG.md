@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.18.10] - 2026-03-22
+
+### Fixed
+- **🔧 フィルターパネルの固定高さ設定でEdge to Edge接続を完全実現**
+  - **根本原因を特定**: フィルターパネルの`max-height: 80px`は最大値であり、実際の内容がそれより小さい場合、実際の高さは80pxに達せず、テーブルヘッダーとの間に隙間が発生していた
+  - **修正内容**: `.filter-panel.active`に`height: 80px`を追加（v2.18.9のグローバルヘッダー修正と同じアプローチ）
+  - **結果**: フィルターパネルが正確に80pxになり、テーブルヘッダー（`margin-top: 140px` = 60px + 80px）が完全にEdge to Edge接続
+
+### Changed
+- **CSS変更 (`.filter-panel.active` - lines 916-921)**:
+  - `height: 80px;` を追加（固定高さ）
+  - `max-height: 80px;` は維持（アニメーション用）
+
+### Technical Details
+- **配置の仕組み（フィルターパネル開いている時）**:
+  - グローバルヘッダー: `position: sticky, top: 0, height: 60px` （0-60px、固定）
+  - フィルターパネル: `position: fixed, top: 60px, height: 80px` （60-140px、固定）
+  - テーブルラッパー: `margin-top: 140px` でフィルターパネルの直下から開始
+  - テーブルヘッダー: `position: sticky, top: 140px` で固定
+  - 結果: **完全にEdge to Edge接続、隙間0px**
+
+### User Experience
+- **完全にEdge to Edge**: フィルターパネルとテーブルヘッダーの間の隙間が完全に消滅
+- **一貫したレイアウト**: フィルターパネル高さが常に80pxで固定、計算が不要で高パフォーマンス
+- **すっきりとした見た目**: グローバルヘッダー → フィルターパネル → テーブルヘッダーが全て隙間なく接続
+
+---
+
 ## [2.18.9] - 2026-03-22
 
 ### Fixed
