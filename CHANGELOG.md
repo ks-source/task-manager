@@ -5,6 +5,40 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.18.1] - 2026-03-22
+
+### Fixed
+- **🔧 フィルターパネルとテーブルヘッダーのスティッキー表示を修正**
+  - **フィルターパネルがスクロールで消える問題**: `position: absolute` → `position: fixed` に変更
+    - フィルターパネルを開いている間、画面をスクロールしても常時表示されるように修正
+  - **フィルターパネルのアニメーション違和感**: `overflow: visible` を削除、`overflow: hidden` のまま維持
+    - 表示項目が先に見える問題を解消、滑らかなアニメーションに改善
+  - **テーブルヘッダーがスクロールで消える問題**: JavaScript で `top` 値を動的に調整
+    - フィルターパネル閉じている時: `top: 60px` (ヘッダーのみ)
+    - フィルターパネル開いている時: `top: 140px` (ヘッダー + パネル)
+    - スクロール時も常に表示される「WBS No」「優先度」「フェーズ」等の見出しを維持
+  - **テーブルヘッダー上の不要な空白を削除**: コンテナとカードの余白を削除
+    - `.container`: `padding: 1rem` → `padding: 0 1rem; padding-top: 60px`
+    - `.dashboard`: `gap: 2rem` → `gap: 0`
+    - `.card`, `.task-table-container`, `.task-table`: `margin: 0` を明示的に設定
+
+### Changed
+- **CSS変更**:
+  - `.filter-panel`: `position: fixed`, `max-height: 80px` (100px から調整)
+  - `.container`: 上下余白を最適化（上: 60px、左右: 1rem、下: 4rem）
+  - `.dashboard`: gap を削除
+  - `.task-table-container`, `.task-table`: マージン・パディングを明示的に0に設定
+- **JavaScript変更**:
+  - `toggleFilterPanel()`: テーブルヘッダーの `top` 値を動的に調整する処理を追加
+
+### User Experience
+- **3層の固定表示**: ヘッダー (z-index: 1000) → フィルターパネル (z-index: 999) → テーブルヘッダー (z-index: 100)
+- **スクロール時も常時表示**: すべての固定要素がスクロールしても画面上部に固定
+- **余白の最適化**: 不要な空白を削除し、タスク表示領域を最大化
+- **滑らかなアニメーション**: フィルターパネルの開閉が違和感なく動作
+
+---
+
 ## [2.18.0] - 2026-03-22
 
 ### Changed
