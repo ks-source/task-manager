@@ -2626,35 +2626,50 @@
     <div class="header-actions">
       <!-- File Operations Group -->
       <div class="dropdown">
-        <button class="icon-button dropdown-toggle" id="load-dropdown-btn" onclick="toggleDropdown('load-dropdown')" title="読込">
+        <button class="icon-button dropdown-toggle" id="data-exchange-dropdown-btn" onclick="toggleDropdown('data-exchange-dropdown')" title="データ交換">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="7 10 12 15 17 10"></polyline>
-            <line x1="12" y1="15" x2="12" y2="3"></line>
+            <path d="M4 14v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"></path>
+            <path d="M8 3v10"></path>
+            <polyline points="5 10 8 13 11 10"></polyline>
+            <path d="M16 13V3"></path>
+            <polyline points="13 6 16 3 19 6"></polyline>
           </svg>
         </button>
-        <div class="dropdown-menu" id="load-dropdown">
-          <button class="dropdown-item" onclick="document.getElementById('svg-file-input').click(); closeDropdown('load-dropdown');">
+        <div class="dropdown-menu" id="data-exchange-dropdown">
+          <button class="dropdown-item" onclick="document.getElementById('svg-file-input').click(); closeDropdown('data-exchange-dropdown');">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
               <polyline points="7 10 12 15 17 10"></polyline>
               <line x1="12" y1="15" x2="12" y2="3"></line>
             </svg>
-            SVG読込
+            📥 SVG読込
           </button>
-          <button class="dropdown-item disabled" id="reload-svg-item" onclick="reloadSVGFile(); closeDropdown('load-dropdown');">
+          <button class="dropdown-item disabled" id="reload-svg-item" onclick="reloadSVGFile(); closeDropdown('data-exchange-dropdown');">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;">
               <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"></path>
             </svg>
-            SVG変更
+            📥 SVG変更
           </button>
-          <div class="dropdown-divider"></div>
-          <button class="dropdown-item disabled" id="load-memo-item" onclick="loadFromFile(); closeDropdown('load-dropdown');">
+          <button class="dropdown-item disabled" id="load-memo-item" onclick="loadFromFile(); closeDropdown('data-exchange-dropdown');">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
               <polyline points="14 2 14 8 20 8"></polyline>
             </svg>
-            メモ読込
+            📥 メモ読込
+          </button>
+          <div class="dropdown-divider"></div>
+          <button class="dropdown-item disabled" id="export-svg-item" onclick="exportEditedSvg(); closeDropdown('data-exchange-dropdown');" title="視覚表示用SVG（カスタムラベル・手動要素表示、メタデータ含む）">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;">
+              <polygon points="16 3 21 8 8 21 3 21 3 16 16 3"></polygon>
+            </svg>
+            📤 SVG保存（完全版）
+          </button>
+          <button class="dropdown-item disabled" id="export-json-item" onclick="saveToFileAs(); closeDropdown('data-exchange-dropdown');" title="JSONデータ（すべてのメモ・ラベル・手動要素のメタデータ）">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+            </svg>
+            📤 JSONメタデータ保存
           </button>
         </div>
       </div>
@@ -2687,37 +2702,6 @@
           <div class="tooltip-warning">⚠️ 保存しないと編集内容は次回失われます</div>
         </div>
       </button>
-
-      <div class="dropdown">
-        <button class="icon-button dropdown-toggle disabled" id="export-dropdown-btn" onclick="toggleDropdown('export-dropdown')" title="エクスポート">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="17 8 12 3 7 8"></polyline>
-            <line x1="12" y1="3" x2="12" y2="15"></line>
-          </svg>
-        </button>
-        <div class="dropdown-menu" id="export-dropdown">
-          <button class="dropdown-item" onclick="exportEditedSvg(); closeDropdown('export-dropdown');" title="視覚表示用SVG（カスタムラベル・手動要素表示、メタデータ含む）">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;">
-              <polygon points="16 3 21 8 8 21 3 21 3 16 16 3"></polygon>
-            </svg>
-            <div style="display: flex; flex-direction: column; align-items: flex-start; line-height: 1.4;">
-              <span style="font-weight: 600;">📄 SVG（完全版）</span>
-              <span style="font-size: 11px; color: #666; margin-top: 2px;">視覚+メタデータ・次回復元可能</span>
-            </div>
-          </button>
-          <button class="dropdown-item" onclick="saveToFileAs(); closeDropdown('export-dropdown');" title="JSONデータ（すべてのメモ・ラベル・手動要素のメタデータ）">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-              <polyline points="14 2 14 8 20 8"></polyline>
-            </svg>
-            <div style="display: flex; flex-direction: column; align-items: flex-start; line-height: 1.4;">
-              <span style="font-weight: 600;">💾 JSON（データのみ）</span>
-              <span style="font-size: 11px; color: #666; margin-top: 2px;">従来形式・JSONのみで復元可能</span>
-            </div>
-          </button>
-        </div>
-      </div>
 
       <div class="header-divider"></div>
 
@@ -5617,7 +5601,8 @@
 
           // ツールバーのボタンを有効化
           document.getElementById('save-btn').classList.remove('disabled');
-          document.getElementById('export-dropdown-btn').classList.remove('disabled');
+          document.getElementById('export-svg-item').classList.remove('disabled');
+          document.getElementById('export-json-item').classList.remove('disabled');
           document.getElementById('edge-add-mode-btn').classList.remove('disabled');
           document.getElementById('edge-add-mode-btn').style.display = ''; // ボタンを表示
           document.getElementById('node-add-mode-btn').classList.remove('disabled'); // ★Phase 1

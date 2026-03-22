@@ -162,6 +162,72 @@
     }
 
     /* ==========================================
+     * Dropdown Menu
+     * ========================================== */
+    .dropdown {
+      position: relative;
+      display: inline-block;
+    }
+
+    .dropdown-toggle::after {
+      content: '▾';
+      position: absolute;
+      bottom: 2px;
+      right: 2px;
+      font-size: 8px;
+      opacity: 0.7;
+    }
+
+    .dropdown-menu {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      margin-top: 4px;
+      background: white;
+      border: 1px solid var(--color-border);
+      border-radius: 4px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      min-width: 180px;
+      z-index: 1100;
+      display: none;
+    }
+
+    .dropdown-menu.show {
+      display: block;
+    }
+
+    .dropdown-item {
+      padding: 0.75rem 1rem;
+      cursor: pointer;
+      font-size: 13px;
+      color: #495057;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: background 0.2s;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+    }
+
+    .dropdown-item:hover {
+      background-color: #f8f9fa;
+    }
+
+    .dropdown-item.disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    .dropdown-divider {
+      height: 1px;
+      background: var(--color-border);
+      margin: 0.25rem 0;
+    }
+
+    /* ==========================================
      * Footer / File Status Bar
      * ========================================== */
     .footer {
@@ -1084,22 +1150,52 @@
       </button>
     </div>
     <nav class="header-nav">
-      <button class="icon-button" onclick="showExport()" title="エクスポート">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 3v6"></path>
-          <path d="M21 3h-6"></path>
-          <path d="M21 3l-7 7"></path>
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-        </svg>
-      </button>
-      <button class="icon-button" onclick="showImportDialog()" title="インポート">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M14 3v7"></path>
-          <path d="M14 10h7"></path>
-          <path d="M21 3l-7 7"></path>
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-        </svg>
-      </button>
+      <div class="dropdown">
+        <button class="icon-button dropdown-toggle" onclick="toggleDropdown('data-exchange-dropdown')" title="データ交換">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 14v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"></path>
+            <path d="M8 3v10"></path>
+            <polyline points="5 10 8 13 11 10"></polyline>
+            <path d="M16 13V3"></path>
+            <polyline points="13 6 16 3 19 6"></polyline>
+          </svg>
+        </button>
+        <div class="dropdown-menu" id="data-exchange-dropdown">
+          <button class="dropdown-item" onclick="showImportDialog(); closeDropdown('data-exchange-dropdown');">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            📥 JSON読込
+          </button>
+          <button class="dropdown-item" onclick="importFromCSV(); closeDropdown('data-exchange-dropdown');">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            📥 CSV読込
+          </button>
+          <div class="dropdown-divider"></div>
+          <button class="dropdown-item" onclick="showExport(); closeDropdown('data-exchange-dropdown');">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+            📤 JSON保存
+          </button>
+          <button class="dropdown-item" onclick="exportToCSV(); closeDropdown('data-exchange-dropdown');">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+            📤 CSV保存
+          </button>
+        </div>
+      </div>
       <button class="icon-button" onclick="saveToFile()" title="保存">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
@@ -1749,6 +1845,53 @@
       '中止': 'cancelled',
       '不明': 'unknown'
     };
+
+    // ==========================================
+    // Dropdown Menu Utilities
+    // ==========================================
+    /**
+     * ドロップダウンメニューを開閉
+     */
+    function toggleDropdown(dropdownId) {
+      const dropdown = document.getElementById(dropdownId);
+      if (!dropdown) return;
+
+      // 他のドロップダウンを閉じる
+      document.querySelectorAll('.dropdown-menu').forEach(menu => {
+        if (menu.id !== dropdownId) {
+          menu.classList.remove('show');
+        }
+      });
+
+      // このドロップダウンをトグル
+      dropdown.classList.toggle('show');
+    }
+
+    /**
+     * ドロップダウンメニューを閉じる
+     */
+    function closeDropdown(dropdownId) {
+      const dropdown = document.getElementById(dropdownId);
+      if (dropdown) {
+        dropdown.classList.remove('show');
+      }
+    }
+
+    /**
+     * すべてのドロップダウンメニューを閉じる
+     */
+    function closeAllDropdowns() {
+      document.querySelectorAll('.dropdown-menu').forEach(menu => {
+        menu.classList.remove('show');
+      });
+    }
+
+    // ドロップダウン外クリックで閉じる
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.dropdown')) {
+        closeAllDropdowns();
+      }
+    });
 
     // ==========================================
     // Initialization
