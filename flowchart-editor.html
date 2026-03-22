@@ -3516,10 +3516,17 @@
 
       // 各タスクのmermaid_idsに紐づくフローチャート情報を収集
       taskManagerData.tasks.forEach(task => {
-        if (!task.mermaid_ids) return;
+        // ★修正: B側で編集されたタスクを探す
+        const localTask = mockTasks.find(t => t.wbs === task.wbs_no);
 
-        // mermaid_idsを分割してノードIDリストを取得
-        const nodeIds = task.mermaid_ids.split(',').map(id => id.trim()).filter(id => id);
+        // B側で編集されている場合は、B側の値を優先
+        let nodeIds = [];
+        if (localTask && localTask.mermaidIds) {
+          nodeIds = localTask.mermaidIds.split(',').map(id => id.trim()).filter(id => id);
+        } else if (task.mermaid_ids) {
+          nodeIds = task.mermaid_ids.split(',').map(id => id.trim()).filter(id => id);
+        }
+
         if (nodeIds.length === 0) return;
 
         const memos = {};
@@ -3547,6 +3554,7 @@
         // タスクのWBS番号をキーとしてflowchart属性を保存
         flowchartAttrs[task.wbs_no] = {
           nodeIds: nodeIds,
+          mermaidIds: nodeIds.join(', '),  // ★追加: A側のフォーマットで送信
           memos: memos,
           customLabels: customLabels,
           relatedManualEdges: relatedManualEdges

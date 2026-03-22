@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Task Manager - WBS Visualizer v2.13.0</title>
+  <title>Task Manager - WBS Visualizer v2.13.4</title>
   <meta name="description" content="A lightweight, browser-based Work Breakdown Structure (WBS) visualization and management tool">
   <meta name="keywords" content="task manager, WBS, project management, task tracking">
   <meta name="author" content="ks-source">
@@ -1737,6 +1737,18 @@
         projectData.tasks.forEach(task => {
           if (attrs[task.wbs_no]) {
             task.flowchart = attrs[task.wbs_no];
+
+            // ★追加: B側で編集されたmermaidIdsを反映
+            if (attrs[task.wbs_no].mermaidIds) {
+              const oldValue = task.mermaid_ids || '';
+              const newValue = attrs[task.wbs_no].mermaidIds;
+
+              if (oldValue !== newValue) {
+                task.mermaid_ids = newValue;
+                console.log(`[TaskManager] Updated mermaid_ids for ${task.wbs_no}: "${oldValue}" → "${newValue}"`);
+              }
+            }
+
             updatedCount++;
             console.log(`[TaskManager] Updated flowchart info for ${task.wbs_no}`);
           }
@@ -2362,6 +2374,27 @@
       const div = document.createElement('div');
       div.textContent = text;
       return div.innerHTML;
+    }
+
+    // Simple notification function
+    function showNotification(message) {
+      // Handle both object and string arguments
+      let displayMessage;
+
+      if (typeof message === 'object' && message !== null) {
+        // Object format: { type: 'success', title: '...', content: '...' }
+        const title = message.title || '';
+        const content = message.content || '';
+        displayMessage = title ? `${title}\n${content}` : content;
+      } else {
+        // String format
+        displayMessage = message;
+      }
+
+      // Simple alert-based notification (can be replaced with toast UI later)
+      if (displayMessage) {
+        alert(displayMessage);
+      }
     }
 
     function updateStatusButtonStates() {
@@ -3227,7 +3260,7 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
       }
 
       // 確認ダイアログ
-      if (!confirm(`タスク「${task.taskName}」(${wbsNo})を削除しますか？\n\n※削除されたタスクはエクスポートデータに残りますが、画面には表示されなくなります。`)) {
+      if (!confirm(`タスク「${task.task_name}」(${wbsNo})を削除しますか？\n\n※削除されたタスクはエクスポートデータに残りますが、画面には表示されなくなります。`)) {
         return;
       }
 
@@ -3242,12 +3275,13 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
       showNotification({
         type: 'success',
         title: '削除完了',
-        content: `タスク「${task.taskName}」を削除しました`
+        content: `タスク「${task.task_name}」を削除しました`
       });
 
       // UIを再描画
-      renderTaskList();
-      closeTaskDetailModal();
+      renderTaskTable();
+      renderDashboard();
+      closeModal();
     }
 
     // ==========================================
@@ -5254,7 +5288,7 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
           }
         });
         saveToLocalStorage();
-        renderTaskList();
+        renderTaskTable();
       }
 
       // Re-render
