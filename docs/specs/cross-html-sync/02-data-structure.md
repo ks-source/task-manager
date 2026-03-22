@@ -1,13 +1,32 @@
-# データ構造定義 - クロスHTML連携
+# ⚠️ このドキュメントは陳腐化しました
+
+---
+
+**このドキュメントは陳腐化し、最新版に統合されました。**
+
+## 📍 最新版の参照先
+
+**タスクデータ構造の最新仕様**:
+- [task-management/01-data-structure.md](../task-management/01-data-structure.md) - タスクデータ構造（完全版）
+
+**データ連携機能の最新仕様**:
+- [data-integration/README.md](../data-integration/README.md) - データ連携機能全体概要
+
+---
+
+# ~~データ構造定義 - クロスHTML連携~~ ⚠️ 陳腐化
 
 ---
 **feature**: クロスHTML連携
 **document**: データ構造定義
 **version**: 1.0
-**status**: design
+**status**: ⚠️ **陳腐化** - [task-management/01-data-structure.md](../task-management/01-data-structure.md) を参照
 **created**: 2026-03-21
 **updated**: 2026-03-21
+**deprecated**: 2026-03-22
 ---
+
+**⚠️ 注意**: 以下の内容は参考情報として保持していますが、最新仕様ではありません。
 
 ## LocalStorageキー一覧
 

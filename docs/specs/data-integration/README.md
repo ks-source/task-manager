@@ -243,6 +243,15 @@ flowchart-editor.html                     task-manager.html
 
 ## 🔗 関連ドキュメント
 
+### プロジェクト内仕様書
+
+- **[../task-management/](../task-management/)** ⭐ **NEW** - タスク管理コア仕様書
+  - [01-data-structure.md](../task-management/01-data-structure.md) - タスクデータ構造の完全版仕様（JSON Schema、全フィールド定義）
+  - [02-wbs-numbering-system.md](../task-management/02-wbs-numbering-system.md) - WBS番号体系、自動生成アルゴリズム
+  - [03-deletion-policy.md](../task-management/03-deletion-policy.md) - 削除ポリシー、WBS番号再利用管理
+- **[../flowchart-manual-editing/](../flowchart-manual-editing/)** - フローチャート手動編集機能
+- **[../gantt-interactive-editing/](../gantt-interactive-editing/)** - ガントチャート・インタラクティブ編集機能
+
 ### 陳腐化したドキュメント
 
 - **[../cross-html-sync/](../cross-html-sync/)**

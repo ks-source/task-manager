@@ -94,9 +94,10 @@ docs/
 
 ### 4. 過去の開発履歴を調べたい
 
-- **[CHANGELOG.md](../CHANGELOG.md)** - v1.0.0からv2.12.0までの全変更履歴
-- **[archive/sesson/](./archive/sesson/)** - 特定機能の開発セッション記録
-  - 例: `01_connector-adsorption/` - ノード吸着機能の試行錯誤記録
+- **[CHANGELOG.md](../CHANGELOG.md)** - v1.0.0からv2.13.4までの全変更履歴
+- **[archive/session/](./archive/session/)** - 特定機能の開発セッション記録
+  - `01_connector-adsorption/` - ノード吸着機能の試行錯誤記録
+  - `03_ID-policy/` ⭐ **NEW** - WBS番号再利用ポリシーの詳細分析（72KB、10ファイル）
   - 外部AI有識者（Claude Opus、GPT、Gemini）のフィードバック含む
 
 ---
@@ -123,6 +124,8 @@ docs/
 
 | ドキュメント | 説明 |
 |------------|------|
+| [task-management/README.md](./specs/task-management/README.md) | **NEW** タスク管理コア仕様書（データ構造、WBS番号、削除ポリシー）|
+| [task-management/03-deletion-policy.md](./specs/task-management/03-deletion-policy.md) | **重要** WBS番号再利用ポリシー、Option 1実装仕様 |
 | [task-edit-ui-flowchart-link.md](./task-edit-ui-flowchart-link.md) | タスクとフローチャートの連携仕様 |
 
 ---
@@ -199,6 +202,7 @@ docs/
 
 | 日付 | 変更内容 |
 |------|---------|
+| 2026-03-22 | タスク管理コア仕様書追加（task-management/）、WBS番号再利用ポリシー文書化 |
 | 2026-03-21 | ドキュメント構造整理、gantt-interactive-editing仕様書追加 |
 | 2026-03-21 | 本README.md作成、全体ナビゲーション確立 |
 

@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.15.0] - 2026-03-22
+## [2.15.0] - 2026-03-22 (Planned)
 
 ### Added
 - **データ連携機能（Phase 1）**: flowchart-editor.htmlからtask-manager.htmlへのデータ連携
@@ -27,6 +27,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **データフロー**: flowchart-editor.html → LocalStorage (flowchart-attributes) → task-manager.html
 - **通信方式**: LocalStorage + storage eventによるクロスHTML通信
 - **対象データ**: 各タスクの`mermaid_ids`に紐づくノード情報（メモ、カスタムラベル、関連手動エッジ）
+
+---
+
+## [2.14.0] - 2026-03-22
+
+### Fixed
+- **🔴 Critical: WBS番号自動生成のバグ修正**
+  - **問題**: Minor番号をMajor番号として使用していた（例: TEST.2.5 → TEST.6.1 を生成）
+  - **修正**: Major番号を正しく抽出（例: TEST.2.5 → TEST.3.1 を生成）
+  - **影響**: WBS番号の自動生成が正しく動作するように修正
+  - **発見者**: Claude Opus 4.5（外部AI評価）
+  - **詳細**: `docs/specs/task-management/02-wbs-numbering-system.md`
+
+### Changed
+- **WBS番号再利用ポリシー（Option 1実装）**
+  - **変更前**: 削除済みタスクのWBS番号を除外して履歴を確認（→ ID再利用が発生）
+  - **変更後**: 削除済みタスクも含めて全履歴を考慮（→ ID再利用を防止）
+  - **採用理由**: 業界標準準拠（GitHub, Jira, Asana等）、データ整合性維持
+  - **実装コスト**: 1行変更（`&& !t.deleted` を削除）
+  - **外部AI評価**: Claude Opus、GPT-4、Gemini 全AI一致で推奨
+  - **詳細**: `docs/specs/task-management/03-deletion-policy.md`
+
+### Documentation
+- **タスク管理コア仕様書の新設**: `docs/specs/task-management/`
+  - `01-data-structure.md` - タスクデータ構造（JSON Schema、全フィールド定義）
+  - `02-wbs-numbering-system.md` - WBS番号体系、自動生成アルゴリズム、バグ詳細
+  - `03-deletion-policy.md` - 削除ポリシー、WBS番号再利用管理（Option 1仕様）
+- **外部AI評価アーカイブ**: `docs/archive/session/03_ID-policy/`
+  - Claude Opus、GPT-4、Gemini による詳細評価（72KB、10ファイル）
+  - 業界標準比較分析、データ構造への影響分析
+
+### Technical Details
+- **修正箇所1**: `generateWBSNumber()` - Major番号抽出ロジック修正（line 3338）
+- **修正箇所2**: `generateWBSNumber()` - 削除済みタスク除外フィルタ削除（line 3330）
+- **ID不変性の原則**: 削除済みタスクのWBS番号は変更せず、論理削除で管理
 
 ---
 

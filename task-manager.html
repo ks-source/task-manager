@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Task Manager - WBS Visualizer v2.13.4</title>
+  <title>Task Manager - WBS Visualizer v2.14.0</title>
   <meta name="description" content="A lightweight, browser-based Work Breakdown Structure (WBS) visualization and management tool">
   <meta name="keywords" content="task manager, WBS, project management, task tracking">
   <meta name="author" content="ks-source">
@@ -3326,25 +3326,25 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
         return;
       }
 
-      // Find all tasks in the same phase
-      const phaseTasks = projectData.tasks.filter(t => t.phase === phase && !t.deleted);
+      // Find all tasks in the same phase (including deleted tasks for history)
+      const phaseTasks = projectData.tasks.filter(t => t.phase === phase);
 
-      // Extract numeric parts and find max
-      let maxNumber = 0;
+      // Extract Major number and find max
+      let maxMajor = 0;
       phaseTasks.forEach(t => {
-        // Try to extract number from WBS_No (e.g., "PH1.2.3" -> 2.3)
+        // Extract Major number from WBS_No (e.g., "PH1.2.3" -> 2)
         const parts = t.wbs_no.split('.');
-        if (parts.length > 1) {
-          const lastNum = parseFloat(parts[parts.length - 1]);
-          if (!isNaN(lastNum) && lastNum > maxNumber) {
-            maxNumber = lastNum;
+        if (parts.length >= 2) {
+          const majorNum = parseInt(parts[1], 10);
+          if (!isNaN(majorNum) && majorNum > maxMajor) {
+            maxMajor = majorNum;
           }
         }
       });
 
-      // Generate new number
-      const newNumber = Math.floor(maxNumber) + 1;
-      const generatedWbsNo = `${phase}.${newNumber}.1`;
+      // Generate new Major number
+      const newMajor = maxMajor + 1;
+      const generatedWbsNo = `${phase}.${newMajor}.1`;
 
       document.getElementById('new-wbs-no').value = generatedWbsNo;
       console.log(`Generated WBS Number: ${generatedWbsNo}`);
