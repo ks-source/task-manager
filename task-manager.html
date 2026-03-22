@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Task Manager - WBS Visualizer v2.18.2</title>
+  <title>Task Manager - WBS Visualizer v2.18.3-debug</title>
   <meta name="description" content="A lightweight, browser-based Work Breakdown Structure (WBS) visualization and management tool">
   <meta name="keywords" content="task manager, WBS, project management, task tracking">
   <meta name="author" content="ks-source">
@@ -1712,6 +1712,15 @@
     let showDeleted = false; // 削除済みタスク表示フラグ
     let filterPanelOpen = false; // フィルターパネル表示フラグ
 
+    // Debug logging configuration
+    const DEBUG_LEVEL = 4; // 1=Error, 2=Info, 3=Debug, 4=Trace
+    function debugLog(level, category, ...args) {
+      if (DEBUG_LEVEL >= level) {
+        const prefix = `[${category}]`;
+        console.log(prefix, ...args);
+      }
+    }
+
     // Status mapping (Japanese to English keys)
     const STATUS_MAP = {
       '未着手': 'not_started',
@@ -1740,6 +1749,97 @@
 
       // プロジェクト名をヘッダーに反映
       updateProjectNameDisplay();
+
+      // デバッグ: DOM構造チェック
+      debugLog(3, 'INIT', '=== DOM Structure Check ===');
+      checkDOMStructure();
+      checkStickyElements();
+
+      // デバッグ: スクロールイベント監視
+      setupScrollDebug();
+    }
+
+    function checkDOMStructure() {
+      debugLog(3, 'DOM', 'Checking DOM structure...');
+      const wrapper = document.querySelector('.task-table-wrapper');
+      const table = document.querySelector('.task-table');
+      const thead = document.querySelector('.task-table thead');
+
+      debugLog(3, 'DOM', 'Elements:', {
+        wrapper: !!wrapper,
+        table: !!table,
+        thead: !!thead
+      });
+
+      if (wrapper && table && thead) {
+        debugLog(3, 'DOM', 'Parent chain:', {
+          theadParent: thead.parentElement?.tagName,
+          tableParent: table.parentElement?.className,
+          wrapperParent: wrapper.parentElement?.className
+        });
+      } else {
+        debugLog(1, 'ERROR', 'Missing DOM elements!', { wrapper: !!wrapper, table: !!table, thead: !!thead });
+      }
+    }
+
+    function checkStickyElements() {
+      debugLog(3, 'STICKY', 'Checking sticky elements...');
+
+      const thead = document.querySelector('.task-table thead');
+      const panel = document.getElementById('filter-panel');
+
+      if (thead) {
+        const styles = window.getComputedStyle(thead);
+        debugLog(3, 'STICKY', 'Table header computed styles:', {
+          position: styles.position,
+          top: styles.top,
+          zIndex: styles.zIndex,
+          backgroundColor: styles.backgroundColor
+        });
+
+        const rect = thead.getBoundingClientRect();
+        debugLog(3, 'STICKY', 'Table header position:', {
+          top: rect.top,
+          bottom: rect.bottom,
+          height: rect.height
+        });
+      } else {
+        debugLog(1, 'ERROR', 'Table header not found!');
+      }
+
+      if (panel) {
+        const styles = window.getComputedStyle(panel);
+        debugLog(3, 'STICKY', 'Filter panel computed styles:', {
+          position: styles.position,
+          top: styles.top,
+          zIndex: styles.zIndex,
+          maxHeight: styles.maxHeight
+        });
+      }
+    }
+
+    function setupScrollDebug() {
+      let lastScrollCheck = 0;
+      window.addEventListener('scroll', () => {
+        const now = Date.now();
+        if (now - lastScrollCheck > 2000) { // 2秒に1回
+          lastScrollCheck = now;
+
+          const thead = document.querySelector('.task-table thead');
+          if (thead) {
+            const rect = thead.getBoundingClientRect();
+            const styles = window.getComputedStyle(thead);
+            debugLog(4, 'SCROLL', 'Table header during scroll:', {
+              scrollY: window.scrollY,
+              rectTop: rect.top,
+              rectBottom: rect.bottom,
+              computedPosition: styles.position,
+              computedTop: styles.top,
+              isSticky: rect.top === 60 || rect.top === 140
+            });
+          }
+        }
+      });
     }
 
     // プロジェクト名表示を更新
@@ -2071,11 +2171,14 @@
     }
 
     function renderTaskTable() {
+      debugLog(3, 'RENDER', 'renderTaskTable() called');
+
       const tbody = document.getElementById('task-table-body');
       tbody.innerHTML = '';
 
       // Get filtered tasks
       const filteredTasks = getFilteredTasks();
+      debugLog(3, 'RENDER', `Rendering ${filteredTasks.length} tasks`);
 
       filteredTasks.forEach(task => {
         const statusClass = 'status-' + (STATUS_MAP[task.status] || 'unknown');
@@ -2137,6 +2240,17 @@
         resultCount.textContent = `表示: ${filteredTasks.length}件 / 全${projectData.tasks.length}件`;
       } else {
         resultCount.textContent = `全${projectData.tasks.length}件を表示中`;
+      }
+
+      // デバッグ: テーブルヘッダーのスタイルを再確認
+      const thead = document.querySelector('.task-table thead');
+      if (thead) {
+        const styles = window.getComputedStyle(thead);
+        debugLog(3, 'RENDER', 'Table header styles after render:', {
+          position: styles.position,
+          top: styles.top,
+          zIndex: styles.zIndex
+        });
       }
     }
 
@@ -2231,20 +2345,57 @@
     // ==========================================
     function toggleFilterPanel() {
       filterPanelOpen = !filterPanelOpen;
+      debugLog(2, 'FILTER', `toggleFilterPanel() called, new state: ${filterPanelOpen}`);
+
       const panel = document.getElementById('filter-panel');
       const toggleBtn = document.getElementById('filter-panel-toggle');
       const tableHeaders = document.querySelectorAll('.task-table thead');
+
+      debugLog(3, 'FILTER', 'Elements found:', {
+        panel: !!panel,
+        toggleBtn: !!toggleBtn,
+        tableHeadersCount: tableHeaders.length
+      });
 
       if (filterPanelOpen) {
         panel.classList.add('active');
         toggleBtn.classList.add('active');
         // テーブルヘッダーをフィルターパネルの下に移動 (60px header + 80px panel)
-        tableHeaders.forEach(th => th.style.top = '140px');
+        tableHeaders.forEach((th, index) => {
+          th.style.top = '140px';
+          debugLog(4, 'FILTER', `Set table header ${index} top to 140px`);
+
+          // 設定後の実際の値を確認
+          const computedTop = window.getComputedStyle(th).top;
+          debugLog(4, 'FILTER', `Computed top after set: ${computedTop}`);
+        });
+
+        // パネルのスタイルも確認
+        const panelStyles = window.getComputedStyle(panel);
+        debugLog(3, 'FILTER', 'Filter panel styles (open):', {
+          maxHeight: panelStyles.maxHeight,
+          overflow: panelStyles.overflow,
+          position: panelStyles.position
+        });
       } else {
         panel.classList.remove('active');
         toggleBtn.classList.remove('active');
         // テーブルヘッダーをヘッダーの下に移動 (60px header only)
-        tableHeaders.forEach(th => th.style.top = '60px');
+        tableHeaders.forEach((th, index) => {
+          th.style.top = '60px';
+          debugLog(4, 'FILTER', `Set table header ${index} top to 60px`);
+
+          // 設定後の実際の値を確認
+          const computedTop = window.getComputedStyle(th).top;
+          debugLog(4, 'FILTER', `Computed top after set: ${computedTop}`);
+        });
+
+        // パネルのスタイルも確認
+        const panelStyles = window.getComputedStyle(panel);
+        debugLog(3, 'FILTER', 'Filter panel styles (closed):', {
+          maxHeight: panelStyles.maxHeight,
+          overflow: panelStyles.overflow
+        });
       }
     }
 
@@ -4954,6 +5105,66 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
       font-weight: 500;
     }
 
+    .verification-steps {
+      background: #f0f9ff;
+      border-left: 4px solid #3b82f6;
+      padding: 1rem;
+      margin: 1rem 0;
+      border-radius: 4px;
+    }
+
+    .verification-steps p {
+      margin: 0 0 0.5rem 0;
+      font-weight: 600;
+      color: #1e40af;
+    }
+
+    .verification-steps ol {
+      margin: 0.5rem 0 0 1.5rem;
+      padding: 0;
+    }
+
+    .verification-steps li {
+      margin: 0.5rem 0;
+      color: #1e40af;
+      line-height: 1.6;
+    }
+
+    .verification-result {
+      background: #f0fdf4;
+      border: 1px solid #86efac;
+      border-radius: 4px;
+      padding: 1rem;
+      margin: 1rem 0;
+    }
+
+    .verification-result p {
+      margin: 0 0 0.5rem 0;
+      font-weight: 600;
+      color: #065f46;
+    }
+
+    .verification-result ul {
+      list-style: none;
+      padding: 0;
+      margin: 0.5rem 0 0 0;
+    }
+
+    .verification-result li {
+      padding: 0.3rem 0;
+      color: #065f46;
+      font-size: 0.9rem;
+    }
+
+    .expert-note {
+      font-size: 0.85rem;
+      color: #6b7280;
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid #e5e7eb;
+      font-style: italic;
+    }
+
     @media (max-width: 600px) {
       .glossary-table,
       .glossary-table thead,
@@ -5348,9 +5559,17 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
           <!-- セキュリティ保証の技術的根拠 -->
           <div class="tech-section">
             <h4>🔒 セキュリティ保証の技術的根拠</h4>
+
+            <p>
+              <strong>なぜ「安全」と断言できるのか、3つの理由で説明します:</strong>
+            </p>
+
             <ul>
               <li>
                 <strong>1. ネットワークリクエスト不在</strong><br>
+                <span style="color: #6b7280; font-size: 0.9rem;">
+                  → インターネットに接続する機能そのものがありません
+                </span><br>
                 - <code>fetch()</code>, <code>XMLHttpRequest</code>使用なし<br>
                 - <code>WebSocket</code>接続なし<br>
                 - 外部CDN/ライブラリ読み込みなし<br>
@@ -5358,12 +5577,18 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
               </li>
               <li>
                 <strong>2. データ境界の明確化</strong><br>
+                <span style="color: #6b7280; font-size: 0.9rem;">
+                  → データがPCの外に出ない仕組みを使っています
+                </span><br>
                 - <code>postMessage</code> origin検証実装済み (同一PC内のみ許可)<br>
                 - <code>LocalStorage</code>はドメイン単位隔離<br>
                 - <code>Blob URL</code>は同一セッション内有効
               </li>
               <li>
                 <strong>3. 静的コンテンツ保証</strong><br>
+                <span style="color: #6b7280; font-size: 0.9rem;">
+                  → 動的にプログラムを書き換える危険な機能は使っていません
+                </span><br>
                 - サーバーサイド処理なし<br>
                 - <code>eval()</code>, <code>new Function()</code>不使用<br>
                 - すべてのロジックが検証可能
@@ -5373,14 +5598,50 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
 
           <!-- ネットワークトラフィック検証方法 -->
           <div class="tech-section">
-            <h4>📊 ネットワークトラフィック検証方法</h4>
-            <p>開発者ツール (<kbd>F12</kbd>キー) → ネットワークタブで確認可能:</p>
-            <ul>
-              <li>✓ HTTPリクエスト: <strong>0件</strong></li>
-              <li>✓ WebSocketコネクション: <strong>0件</strong></li>
-              <li>✓ 外部リソース読み込み: <strong>0件</strong></li>
-            </ul>
-            <p>→ 第三者による技術的検証が可能</p>
+            <h4>📊 あなた自身で安全性を確認できます</h4>
+
+            <p><strong>「本当に安全なの？」と思った方へ</strong></p>
+            <p>
+              このツールが本当に外部通信していないか、あなた自身の目で
+              確認する方法があります。ブラウザの「通信記録」を見ることで、
+              私たちの説明が正しいかチェックできます。
+            </p>
+
+            <div class="verification-steps">
+              <p>【確認手順】</p>
+              <ol>
+                <li>キーボードの <kbd>F12</kbd> キーを押す（開発者ツールが開く）</li>
+                <li>「ネットワーク」タブをクリック</li>
+                <li>ガントチャートを操作してみる（更新ボタンを押す等）</li>
+                <li>何も表示されなければ、通信は<strong>0件</strong>です</li>
+              </ol>
+            </div>
+
+            <div class="verification-result">
+              <p>確認結果:</p>
+              <ul>
+                <li>✓ インターネットへの通信（HTTPリクエスト）: <strong>0件</strong></li>
+                <li>✓ サーバーとの接続（WebSocket）: <strong>0件</strong></li>
+                <li>✓ 外部ファイルの読み込み: <strong>0件</strong></li>
+              </ul>
+            </div>
+
+            <div class="tech-highlight">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px; color: #10b981;">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              <span>
+                <strong>これが意味すること:</strong>
+                あなたのPCから外部へデータが送信された形跡がゼロです。
+                つまり、情報漏洩は物理的に不可能です。
+              </span>
+            </div>
+
+            <p class="expert-note">
+              <strong>セキュリティ専門家の方へ:</strong>
+              この検証方法により、第三者による技術的監査が可能です。
+              Network Waterfallが空であることで、外部通信不在を証明できます。
+            </p>
           </div>
 
         </div>
