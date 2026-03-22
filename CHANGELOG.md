@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.19.3] - 2026-03-22
+
+### Changed
+- **🎨 flowchart-editor.html: タスク編集ボタンのUI改善**
+  - **変更内容**:
+    - 左パネルの「編集」ボタンからテキストを削除し、アイコンのみ表示に変更
+    - ボタン背景色を目立たない薄めのネイビー系に変更（緑 → ネイビー）
+    - ホバー時の色も統一（濃いネイビー）
+    - ツールチップ（`title="タスク編集"`）を追加してアクセシビリティを確保
+  - **カラー変更**:
+    - 通常時: `#28a745` (緑) → `#6c7a89` (薄めのネイビー)
+    - ホバー時: `#218838` (濃い緑) → `#5a6c7d` (濃いネイビー)
+
+### User Experience
+- **UI簡潔化**: アイコンのみ表示により、左パネルがよりすっきりした
+- **視覚的統一感**: 緑色のボタンが目立ちすぎていたため、薄めのネイビー系に変更して全体的な統一感を向上
+- **アクセシビリティ**: ツールチップを追加して、アイコンのみでも機能が分かるように改善
+
+---
+
 ## [2.19.2] - 2026-03-22
 
 ### Changed
