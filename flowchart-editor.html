@@ -5767,6 +5767,9 @@
       showPanel();
       updatePanelInfo(element);
 
+      // 要素IDを取得
+      const elementId = element.getAttribute('data-id') || element.id;
+
       // メモエリアを有効化
       const memoTextarea = document.getElementById('element-memo');
       const clearBtn = document.getElementById('clear-memo-btn');
@@ -5776,9 +5779,6 @@
       const customLabelInput = document.getElementById('custom-label');
       const resetLabelBtn = document.getElementById('reset-label-btn');
       customLabelInput.disabled = false;
-
-      // 要素IDを取得
-      const elementId = element.getAttribute('data-id') || element.id;
 
       // メモを読み込み
       const memo = elementMemos[elementId] || '';
