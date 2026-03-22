@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.18.7] - 2026-03-22
+
+### Fixed
+- **🔧 グローバルヘッダーとテーブルヘッダーの配置を根本的に修正**
+  - **根本原因を特定**: `.container { padding-top: 60px; }` + `.task-table thead { top: 60px; }` により、テーブルヘッダーが120pxの位置に配置されていた
+  - **修正方針**: `.container`のpaddingではなく、`.task-table-wrapper`のmarginで位置調整
+  - **結果**: テーブルヘッダーがグローバルヘッダーの直下（60px）に正しく配置される
+
+### Changed
+- **CSS変更**:
+  - `.container`: `padding-top: 60px` → `padding-top: 0` に戻す（位置調整はwrapperのmarginで行う）
+  - `.task-table-wrapper`: `margin: 0` → `margin: 60px 0 0 0` に変更（上部に60pxのマージンを追加）
+
+### Technical Details
+- **配置の仕組み**:
+  - グローバルヘッダー: `position: fixed, top: 0` （0-60pxを占有）
+  - テーブルラッパー: `margin-top: 60px` でグローバルヘッダーの下から開始
+  - テーブルヘッダー: `position: sticky, top: 60px` でグローバルヘッダーの直下に固定
+  - 結果: ページロード時もスクロール時も、テーブルヘッダーは常に60pxの位置に配置される（隙間なし）
+
+### User Experience
+- **グローバルヘッダーとテーブルヘッダーが隙間なく接続**: Edge to Edge接続が実現
+- **検索結果が正しく表示**: 検索時、最初の検索結果がテーブルヘッダーのすぐ下に表示される
+- **一貫した表示**: ページロード時もスクロール時も、常に同じレイアウト
+
+---
+
 ## [2.18.6] - 2026-03-22
 
 ### Fixed

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Task Manager - WBS Visualizer v2.18.6</title>
+  <title>Task Manager - WBS Visualizer v2.18.7</title>
   <meta name="description" content="A lightweight, browser-based Work Breakdown Structure (WBS) visualization and management tool">
   <meta name="keywords" content="task manager, WBS, project management, task tracking">
   <meta name="author" content="ks-source">
@@ -208,7 +208,7 @@
       max-width: 1400px;
       margin: 0 auto;
       padding: 0 1rem;
-      padding-top: 60px; /* Push content below global header */
+      padding-top: 0; /* No padding - table-wrapper margin-top handles positioning */
       padding-bottom: 4rem; /* Space for fixed footer */
     }
 
@@ -974,7 +974,7 @@
       background-color: white;
       border: 1px solid var(--color-border);
       border-radius: 0 0 8px 8px; /* Remove top border-radius for edge-to-edge connection */
-      margin: 0;
+      margin: 60px 0 0 0; /* Top margin pushes table below global header */
       padding: 0;
       box-shadow: 0 1px 3px rgba(0,0,0,0.1);
       /* overflow: hidden removed - it disables position: sticky */
@@ -5863,12 +5863,12 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
             <!-- 詳細な手順セクション -->
             <details style="margin-top: 1.5rem; padding: 1rem; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb;">
               <summary style="cursor: pointer; font-weight: 600; color: #1f2937; user-select: none;">
-                📖 詳しい手順を見る（画像付き解説）
+                📖 詳しい手順を見る
               </summary>
               <div style="margin-top: 1rem; line-height: 1.8;">
                 <h5 style="color: #1f2937; margin-bottom: 0.75rem;">ステップ1: 開発者ツールを開く</h5>
                 <ol style="margin-left: 1.5rem; color: #374151;">
-                  <li>ガントチャート画面で、キーボードの <kbd style="background: #e5e7eb; padding: 0.2rem 0.4rem; border-radius: 3px; font-family: monospace;">F12</kbd> キーを押します</li>
+                  <li>ガントチャート画面で、キーボードの <kbd style="background: #e5e7eb; padding: 0.2rem 0.4rem; border-radius: 3px; font-family: monospace; color: #000;">F12</kbd> キーを押します</li>
                   <li>または、画面を右クリック → 「検証」をクリック</li>
                   <li>画面の右側または下側に「開発者ツール」というパネルが表示されます</li>
                 </ol>
@@ -5877,7 +5877,7 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
                 <ol style="margin-left: 1.5rem; color: #374151;">
                   <li>開発者ツールの上部にあるタブから「<strong>ネットワーク</strong>」（または「<strong>Network</strong>」）をクリック</li>
                   <li>「ネットワーク」タブに切り替わると、通信記録を表示する準備が整います</li>
-                  <li>もし「記録を開始するにはページを再読み込みしてください」と表示されたら、<kbd style="background: #e5e7eb; padding: 0.2rem 0.4rem; border-radius: 3px; font-family: monospace;">F5</kbd> キーを押してページを再読み込みします</li>
+                  <li>もし「記録を開始するにはページを再読み込みしてください」と表示されたら、<kbd style="background: #e5e7eb; padding: 0.2rem 0.4rem; border-radius: 3px; font-family: monospace; color: #000;">F5</kbd> キーを押してページを再読み込みします</li>
                 </ol>
 
                 <h5 style="color: #1f2937; margin: 1.5rem 0 0.75rem 0;">ステップ3: ガントチャートを操作</h5>
