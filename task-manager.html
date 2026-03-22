@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Task Manager - WBS Visualizer v2.15.0</title>
+  <title>Task Manager - WBS Visualizer v2.16.0</title>
   <meta name="description" content="A lightweight, browser-based Work Breakdown Structure (WBS) visualization and management tool">
   <meta name="keywords" content="task manager, WBS, project management, task tracking">
   <meta name="author" content="ks-source">
@@ -185,7 +185,66 @@
     }
 
     /* ==========================================
-     * Progress Summary
+     * Progress Summary (Sticky + Collapsible)
+     * ========================================== */
+    .progress-summary-card {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background-color: white;
+      transition: box-shadow 0.3s ease;
+    }
+
+    .progress-summary-card.collapsed {
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+
+    .progress-summary-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .progress-summary-header .card-title {
+      margin-bottom: 0;
+    }
+
+    .collapse-toggle-btn {
+      background: none;
+      border: 1px solid var(--color-border);
+      border-radius: 4px;
+      padding: 0.25rem 0.5rem;
+      cursor: pointer;
+      font-size: 0.9rem;
+      color: var(--color-gray-dark);
+      transition: all 0.2s ease;
+    }
+
+    .collapse-toggle-btn:hover {
+      background-color: var(--color-gray-light);
+      border-color: var(--color-primary);
+    }
+
+    .progress-summary-main {
+      margin-bottom: 1rem;
+    }
+
+    .progress-details-collapsible {
+      max-height: 1000px;
+      overflow: hidden;
+      transition: max-height 0.4s ease, opacity 0.4s ease, margin 0.4s ease;
+      opacity: 1;
+    }
+
+    .progress-details-collapsible.collapsed {
+      max-height: 0;
+      opacity: 0;
+      margin: 0;
+    }
+
+    /* ==========================================
+     * Progress Summary (Original Styles)
      * ========================================== */
     .progress-summary {
       display: grid;
@@ -988,10 +1047,18 @@
   <div class="container">
     <!-- Dashboard -->
     <div class="dashboard" id="dashboard">
-      <!-- Progress Summary Card -->
-      <div class="card">
-        <h2 class="card-title">プロジェクト進捗サマリー</h2>
-        <div class="progress-summary">
+      <!-- Progress Summary Card (Sticky Header with Collapsible Details) -->
+      <div class="card progress-summary-card" id="progress-summary-card">
+        <!-- Header Section -->
+        <div class="progress-summary-header" id="progress-summary-header">
+          <h2 class="card-title">プロジェクト進捗サマリー</h2>
+          <button class="collapse-toggle-btn" id="progress-collapse-btn" onclick="toggleProgressDetails()" title="詳細を展開/折りたたみ">
+            <span id="progress-collapse-icon">▼</span>
+          </button>
+        </div>
+
+        <!-- Always Visible Section: Overall Progress Bar -->
+        <div class="progress-summary-main">
           <div class="progress-item">
             <div class="progress-label">
               <span>全体進捗</span>
@@ -1003,31 +1070,34 @@
           </div>
         </div>
 
-        <div class="mt-2">
-          <h3 style="font-size: 1rem; margin-bottom: 0.5rem;">フェーズ別進捗</h3>
-          <div id="phase-progress-container"></div>
-        </div>
+        <!-- Collapsible Section: Phase Progress + Status Legend -->
+        <div class="progress-details-collapsible" id="progress-details">
+          <div class="mt-2">
+            <h3 style="font-size: 1rem; margin-bottom: 0.5rem;">フェーズ別進捗</h3>
+            <div id="phase-progress-container"></div>
+          </div>
 
-        <div class="status-legend mt-2">
-          <div class="status-badge status-completed">
-            <span class="status-dot"></span>
-            <span>完了: <strong id="count-completed">0</strong>件</span>
-          </div>
-          <div class="status-badge status-in-progress">
-            <span class="status-dot"></span>
-            <span>進行中: <strong id="count-in-progress">0</strong>件</span>
-          </div>
-          <div class="status-badge status-not-started">
-            <span class="status-dot"></span>
-            <span>未着手: <strong id="count-not-started">73</strong>件</span>
-          </div>
-          <div class="status-badge status-on-hold">
-            <span class="status-dot"></span>
-            <span>保留: <strong id="count-on-hold">0</strong>件</span>
-          </div>
-          <div class="status-badge status-postponed">
-            <span class="status-dot"></span>
-            <span>延期: <strong id="count-postponed">0</strong>件</span>
+          <div class="status-legend mt-2">
+            <div class="status-badge status-completed">
+              <span class="status-dot"></span>
+              <span>完了: <strong id="count-completed">0</strong>件</span>
+            </div>
+            <div class="status-badge status-in-progress">
+              <span class="status-dot"></span>
+              <span>進行中: <strong id="count-in-progress">0</strong>件</span>
+            </div>
+            <div class="status-badge status-not-started">
+              <span class="status-dot"></span>
+              <span>未着手: <strong id="count-not-started">73</strong>件</span>
+            </div>
+            <div class="status-badge status-on-hold">
+              <span class="status-dot"></span>
+              <span>保留: <strong id="count-on-hold">0</strong>件</span>
+            </div>
+            <div class="status-badge status-postponed">
+              <span class="status-dot"></span>
+              <span>延期: <strong id="count-postponed">0</strong>件</span>
+            </div>
           </div>
         </div>
       </div>
@@ -1547,6 +1617,7 @@
     let currentFileName = '(新規ファイル)';
     let isEditingTaskInfo = false;
     let showDeleted = false; // 削除済みタスク表示フラグ
+    let progressDetailsCollapsed = localStorage.getItem('progress-details-collapsed') === 'true'; // 進捗詳細の折りたたみ状態
 
     // Status mapping (Japanese to English keys)
     const STATUS_MAP = {
@@ -1573,6 +1644,7 @@
       setupCrossHTMLSync(); // 🆕 クロスHTML連携の初期化
       setupGanttCommunication(); // 🔧 ガントチャートとの通信（postMessage）
       setupSearchListener();
+      initProgressSummary(); // 🆕 進捗サマリーの折りたたみ状態を復元
 
       // プロジェクト名をヘッダーに反映
       updateProjectNameDisplay();
@@ -2106,6 +2178,43 @@
       showDeleted = checkbox.checked;
       renderTaskTable();
       console.log(`Show deleted tasks: ${showDeleted}`);
+    }
+
+    function toggleProgressDetails() {
+      progressDetailsCollapsed = !progressDetailsCollapsed;
+
+      const detailsElement = document.getElementById('progress-details');
+      const cardElement = document.getElementById('progress-summary-card');
+      const iconElement = document.getElementById('progress-collapse-icon');
+
+      if (progressDetailsCollapsed) {
+        // Collapse: Hide details
+        detailsElement.classList.add('collapsed');
+        cardElement.classList.add('collapsed');
+        iconElement.textContent = '▲';
+      } else {
+        // Expand: Show details
+        detailsElement.classList.remove('collapsed');
+        cardElement.classList.remove('collapsed');
+        iconElement.textContent = '▼';
+      }
+
+      // Save state to localStorage
+      localStorage.setItem('progress-details-collapsed', progressDetailsCollapsed);
+      console.log(`Progress details ${progressDetailsCollapsed ? 'collapsed' : 'expanded'}`);
+    }
+
+    function initProgressSummary() {
+      // Restore collapsed state from localStorage
+      if (progressDetailsCollapsed) {
+        const detailsElement = document.getElementById('progress-details');
+        const cardElement = document.getElementById('progress-summary-card');
+        const iconElement = document.getElementById('progress-collapse-icon');
+
+        detailsElement.classList.add('collapsed');
+        cardElement.classList.add('collapsed');
+        iconElement.textContent = '▲';
+      }
     }
 
     // ==========================================

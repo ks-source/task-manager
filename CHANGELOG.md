@@ -5,6 +5,41 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.16.0] - 2026-03-22
+
+### Added
+- **プロジェクト進捗サマリーの折りたたみ機能（パターンB: 2段階シンプル）**
+  - **上部固定**: ミニマルプレビュー（全体進捗バーのみ）が上部に固定表示（position: sticky）
+  - **詳細展開/折りたたみ**: ボタンクリックでフェーズ別進捗とステータス凡例を表示/非表示
+  - **状態保存**: localStorage に折りたたみ状態を保存、ページリロード時に復元
+  - **視覚的フィードバック**: 折りたたみ時にボックスシャドウ強調
+
+### Changed
+- **HTML構造変更**: プロジェクト進捗サマリーを3セクションに分割
+  - ヘッダー（タイトル + 折りたたみボタン）
+  - 常時表示部分（全体進捗バー）
+  - 折りたたみ可能部分（フェーズ別進捗 + ステータス凡例）
+
+### Technical Details
+- **新規CSS**:
+  - `.progress-summary-card`: 上部固定スタイル（position: sticky, z-index: 10）
+  - `.progress-summary-header`: ヘッダー部分（flexbox配置）
+  - `.collapse-toggle-btn`: 折りたたみボタン（ホバー効果付き）
+  - `.progress-details-collapsible`: 折りたたみアニメーション（max-height, opacity）
+- **新規JavaScript**:
+  - `toggleProgressDetails()`: 詳細の展開/折りたたみとlocalStorage保存（lines 2182-2204）
+  - `initProgressSummary()`: ページロード時の状態復元（lines 2206-2217）
+  - グローバル変数 `progressDetailsCollapsed`（line 1620）
+- **初期化**: `init()` 関数に `initProgressSummary()` 呼び出しを追加（line 1647）
+
+### User Experience
+- **デフォルト状態**: ミニマルプレビュー（折りたたみ）で上部固定
+- **スクロール時**: 全体進捗バーが常に表示され、進捗確認が容易
+- **詳細確認時**: ボタンクリックでフェーズ別進捗とステータス凡例を表示
+- **PC向け最適化**: モバイル対応は考慮せず、デスクトップ利用を想定
+
+---
+
 ## [2.15.0] - 2026-03-22
 
 ### Added
