@@ -9309,9 +9309,29 @@ ${metadataJson}
       const elementId = element.dataset.id || element.id;
 
       const menuItems = [
+        // ── 新規作成系 ──
+        {
+          icon: '➕',
+          label: 'メモノードを追加',
+          action: () => {
+            hideContextMenu();
+            promptAndCreateMemoNode(svgX, svgY);
+          }
+        },
+        {
+          icon: '↗️',
+          label: 'エッジ描画を開始',
+          action: () => {
+            hideContextMenu();
+            startOneShotEdgeMode(svgX, svgY);
+          }
+        },
+        { separator: true },
+
+        // ── クラスタ固有操作 ──
         {
           icon: '🎨',
-          label: 'ステータスを設定',
+          label: 'このクラスタのステータスを設定',
           action: () => {
             hideContextMenu();
             showStatusContextMenu(clientX, clientY, elementId);
