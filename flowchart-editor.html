@@ -5272,22 +5272,47 @@
 
         // 既にリンク済みかチェック
         const isAlreadyLinked =
-          (elementType === 'node' || elementType === 'cluster') && task.flowchartLinks.nodes.includes(elementId) ||
-          (elementType === 'edge') && task.flowchartLinks.edges.includes(elementId);
+          (elementType === 'node' || elementType === 'cluster') && task.flowchartLinks.nodes.some(n => n.id === elementId) ||
+          (elementType === 'edge') && task.flowchartLinks.edges.some(e => e.id === elementId);
 
         if (isAlreadyLinked) {
           return;
         }
 
-        // リンクを追加
+        // リンクを追加（オブジェクト形式で）
         if (elementType === 'node' || elementType === 'cluster') {
-          task.flowchartLinks.nodes.push(elementId);
+          // SVGからラベルを取得
+          let label = '';
+          const labelElement = targetElement.querySelector('.nodeLabel, .cluster-label');
+          if (labelElement) {
+            label = labelElement.textContent.trim();
+          }
+
+          task.flowchartLinks.nodes.push({
+            id: elementId,
+            label: label,
+            highlightType: 'primary'
+          });
         } else if (elementType === 'edge') {
-          task.flowchartLinks.edges.push(elementId);
+          // SVGからエッジ情報を取得
+          let label = '';
+          const labelElement = targetElement.querySelector('.edgeLabel');
+          if (labelElement) {
+            label = labelElement.textContent.trim();
+          }
+
+          task.flowchartLinks.edges.push({
+            id: elementId,
+            from: '',  // 実際のSVGから取得が必要な場合は追加
+            to: '',
+            label: label,
+            highlightType: 'primary',
+            highlightMode: 'full'
+          });
         }
 
         // mermaidIds フィールドを更新（後方互換性のため）
-        task.mermaidIds = task.flowchartLinks.nodes.join(',');
+        task.mermaidIds = task.flowchartLinks.nodes.map(n => n.id).join(',');
 
         // UIを更新
         renderTaskList();
@@ -7375,41 +7400,8 @@
         // SVGをクローン（元のDOMを変更しないため）
         const svgClone = svg.cloneNode(true);
 
-        // ★ メタデータをJSON形式で準備
-        const metadata = {
-          version: "1.0",
-          exportedAt: new Date().toISOString(),
-          svgFile: currentSvgFileName || 'unknown.svg',
-          elements: {},
-          originalLabels: originalLabels,
-          manualNodes: manualNodes,
-          manualEdges: manualEdges
-        };
-
-        // elementMemos と elementCustomLabels を elements に統合
-        const allElementIds = new Set([
-          ...Object.keys(elementMemos),
-          ...Object.keys(elementCustomLabels)
-        ]);
-
-        for (const elementId of allElementIds) {
-          const element = document.querySelector(`[data-id="${elementId}"]`) || document.getElementById(elementId);
-          if (!element) continue;
-
-          const type = element.getAttribute('data-et') || 'unknown';
-          const displayText = getElementDisplayText(element);
-          const memo = elementMemos[elementId] || '';
-          const customLabel = elementCustomLabels[elementId] || '';
-          const originalLabel = originalLabels[elementId] || '';
-
-          metadata.elements[elementId] = {
-            type: type,
-            displayText: displayText,
-            memo: memo,
-            customLabel: customLabel,
-            originalLabel: originalLabel
-          };
-        }
+        // ★ メタデータをv2.0形式で準備（buildMemoData()を使用）
+        const metadata = buildMemoData();
 
         // ★ メタデータをSVGコメントとして埋め込み
         const metadataJson = JSON.stringify(metadata, null, 2);
@@ -7682,7 +7674,7 @@ ${metadataJson}
       currentEditingTask.status = document.getElementById('edit-task-status').value;
 
       // mermaidIds フィールドを更新（後方互換性のため）
-      currentEditingTask.mermaidIds = currentEditingTask.flowchartLinks.nodes.join(',');
+      currentEditingTask.mermaidIds = currentEditingTask.flowchartLinks.nodes.map(n => n.id).join(',');
 
       renderTaskList();
 
@@ -7705,14 +7697,19 @@ ${metadataJson}
 
       noNodesMsg.style.display = 'none';
 
-      nodes.forEach(nodeId => {
-        // SVGから要素情報を取得
-        const svgElement = document.querySelector(`[data-et="node"][data-id="${nodeId}"], [data-et="cluster"][data-id="${nodeId}"]`);
-        let label = nodeId;
-        if (svgElement) {
-          const labelElement = svgElement.querySelector('.nodeLabel, .cluster-label');
-          if (labelElement) {
-            label = labelElement.textContent.trim();
+      nodes.forEach(node => {
+        // ノードオブジェクトから情報を取得
+        const nodeId = node.id;
+        let label = node.label || nodeId;
+
+        // ラベルが空の場合はSVGから取得を試みる
+        if (!node.label) {
+          const svgElement = document.querySelector(`[data-et="node"][data-id="${nodeId}"], [data-et="cluster"][data-id="${nodeId}"]`);
+          if (svgElement) {
+            const labelElement = svgElement.querySelector('.nodeLabel, .cluster-label');
+            if (labelElement) {
+              label = labelElement.textContent.trim();
+            }
           }
         }
 
@@ -7747,14 +7744,19 @@ ${metadataJson}
 
       noEdgesMsg.style.display = 'none';
 
-      edges.forEach(edgeId => {
-        // SVGから要素情報を取得
-        const svgElement = document.querySelector(`[data-et="edge"][data-id="${edgeId}"]`);
-        let label = '';
-        if (svgElement) {
-          const labelElement = svgElement.querySelector('.edgeLabel');
-          if (labelElement) {
-            label = labelElement.textContent.trim();
+      edges.forEach(edge => {
+        // エッジオブジェクトから情報を取得
+        const edgeId = edge.id;
+        let label = edge.label || '';
+
+        // ラベルが空の場合はSVGから取得を試みる
+        if (!edge.label) {
+          const svgElement = document.querySelector(`[data-et="edge"][data-id="${edgeId}"]`);
+          if (svgElement) {
+            const labelElement = svgElement.querySelector('.edgeLabel');
+            if (labelElement) {
+              label = labelElement.textContent.trim();
+            }
           }
         }
 
@@ -7926,7 +7928,7 @@ ${metadataJson}
       if (!confirm('このノードとの紐付けを削除しますか？')) return;
 
       currentEditingTask.flowchartLinks.nodes =
-        currentEditingTask.flowchartLinks.nodes.filter(id => id !== nodeId);
+        currentEditingTask.flowchartLinks.nodes.filter(n => n.id !== nodeId);
 
       renderLinkedNodesInModal(currentEditingTask.flowchartLinks.nodes);
       updateModalPreview();
@@ -7938,7 +7940,7 @@ ${metadataJson}
       if (!confirm('このエッジとの紐付けを削除しますか？')) return;
 
       currentEditingTask.flowchartLinks.edges =
-        currentEditingTask.flowchartLinks.edges.filter(id => id !== edgeId);
+        currentEditingTask.flowchartLinks.edges.filter(e => e.id !== edgeId);
 
       renderLinkedEdgesInModal(currentEditingTask.flowchartLinks.edges);
       updateModalPreview();
