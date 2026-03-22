@@ -49,9 +49,12 @@ task-manager.htmlとflowchart-editor.htmlの間でデータを連携し、タス
 
 ---
 
-### Phase 1: 最小限のデータ連携（実装中）
+### Phase 1: 最小限のデータ連携（✅ 完了）
 
-**目的**: flowchart-editor.htmlで編集したメモ・ラベルをtask-manager.htmlで参照できるようにする
+**目的**: flowchart-editor.htmlで編集したメモ・ラベル・リンク情報をtask-manager.htmlで参照できるようにする
+
+**完了日**: 2026-03-22
+**バージョン**: v2.15.0（基本実装）、v2.16.0予定（修正完了）
 
 **実装内容**:
 
@@ -85,20 +88,39 @@ flowchart-editor.html                     task-manager.html
 └────────────────────┘                   └────────────────────┘
 ```
 
-**成功基準**:
+**成功基準（基本実装）**:
 - ✅ flowchart-editor.htmlで保存したメモがLocalStorageに送信される
 - ✅ task-manager.htmlのタスクにflowchart属性が追加される
 - ✅ JSONエクスポート時にflowchart属性が含まれる
 - ✅ コンソールエラーなし
 
-**工数**: 3-4時間
-- flowchart-editor.html修正: 2-2.5時間
-- 動作確認・デバッグ: 1-1.5時間
+**工数**: 3-4時間（基本実装完了）
 
 **リスク**: 🟢 低
-- 既存機能への影響なし
-- 受信側は既に実装済み
-- ロールバック容易
+
+#### Phase 1修正: mermaid_ids双方向同期の追加
+
+**発見された問題**: Phase 1基本実装では、メモ・カスタムラベルは送信されていたが、**リンク情報（mermaid_ids）自体**がB→A送信されていなかった
+
+**仕様書**: [phase1-mermaid-ids-fix.md](./phase1-mermaid-ids-fix.md)
+
+**修正内容**:
+1. **publishFlowchartAttributes()の拡張**
+   - B側のmockTasksから編集されたmermaidIdsを取得
+   - mermaidIdsフィールドをflowchartAttrsに追加
+
+2. **handleFlowchartUpdate()の拡張**
+   - 受信したmermaidIdsをtask.mermaid_idsへ反映
+   - 変更をコンソールログに出力
+
+**成功基準（修正完了）**:
+- ✅ B側でmermaid_ids編集 → A側のtask.mermaid_idsに反映
+- ✅ タスク詳細モーダルでmermaid_idsが更新表示される
+- ✅ JSONエクスポート時に最新のmermaid_idsが含まれる
+
+**工数**: 1-1.5時間（修正完了）
+
+**完了日**: 2026-03-22
 
 ---
 
@@ -134,9 +156,42 @@ flowchart-editor.html                     task-manager.html
 
 **目的**: タスクマネージャーとフローチャートエディターを完全に統合し、双方向のシームレスな連携を実現
 
+**前提条件**: Phase 1修正完了
+
 **実装内容**:
 
-#### 1. flowchart-editor.htmlにタスク一覧パネルを追加
+#### Phase 2-A: タスク一覧同期（A→B） ⭐ **次のステップ**
+
+**仕様書**: [phase2a-task-list-sync.md](./phase2a-task-list-sync.md)
+
+**目的**: A側の全タスクをB側の左サイドパネルに自動表示
+
+**実装内容**:
+- A側のタスクリストをLocalStorageから読み込み
+- mockTasksをA側データで動的に置き換え
+- mermaid_ids空のタスクも表示
+- タスク追加・削除時の自動更新（storage event）
+
+**工数**: 2-2.5時間
+
+#### Phase 2-B: 双方向ハイライト（ノード↔タスク）
+
+**前提条件**: Phase 2-A完了
+
+**目的**: タスククリック時にノードをハイライト、ノードクリック時にタスクをハイライト
+
+**実装内容**:
+- タスククリック → 関連ノード/エッジをハイライト表示
+- ノードクリック → 関連タスクを左パネルでハイライト
+- ステータスカラーの同期
+
+**工数**: 3-4時間
+
+#### Phase 2-C: タスク一覧パネルUI改善
+
+**前提条件**: Phase 2-A完了
+
+**目的**: 洗練されたタスク一覧パネルUI
 
 **UI構成**:
 ```
@@ -144,9 +199,9 @@ flowchart-editor.html                     task-manager.html
 │ Flowchart Editor                    [×]         │
 ├──────────┬──────────────────────────────────────┤
 │タスク一覧│         SVGキャンバス                 │
-│          │                                      │
+│ [検索]   │                                      │
 │☑ WBS1.1.0│   ┌─────┐                           │
-│ 要件定義  │   │node1│                           │
+│ 要件定義  │   │node1│ ← ハイライト              │
 │ 📌 F_01  │   └─────┘                           │
 │          │      ↓                               │
 │☐ WBS1.2.0│   ┌─────┐                           │
@@ -155,15 +210,14 @@ flowchart-editor.html                     task-manager.html
 └──────────┴──────────────────────────────────────┘
 ```
 
-**実装**:
-- タスク一覧の動的生成
-- タスククリック時にノードをハイライト
-- ノードクリック時にタスクをハイライト
-- ステータスカラーの同期
+**実装内容**:
+- フィルタリング・検索機能
+- ステータス別表示
+- ドラッグ&ドロップでノード割当
 
-**工数**: 6-8時間
+**工数**: 4-5時間
 
-#### 2. manualEdges/Nodesのプロジェクトデータへの統合
+#### Phase 2-D: manualEdges/Nodesのプロジェクトデータへの統合
 
 **データ構造拡張**:
 ```json
@@ -181,7 +235,7 @@ flowchart-editor.html                     task-manager.html
 
 **工数**: 4-6時間
 
-#### 3. 統合エクスポート機能
+#### Phase 2-E: 統合エクスポート機能
 
 新しいエクスポート形式:
 - 📄 JSON形式（完全データ）- プロジェクト名・タスク・フローチャートデータ含む
@@ -190,7 +244,12 @@ flowchart-editor.html                     task-manager.html
 
 **工数**: 2-3時間
 
-**Phase 2合計工数**: 12-17時間（2-3日間）
+**Phase 2合計工数**: 15-20.5時間（2-3日間）
+- Phase 2-A: 2-2.5時間
+- Phase 2-B: 3-4時間
+- Phase 2-C: 4-5時間
+- Phase 2-D: 4-6時間
+- Phase 2-E: 2-3時間
 
 **成功基準**:
 - ✅ flowchart-editor.htmlでタスク一覧が表示される
@@ -351,9 +410,11 @@ Month 2-3（将来）
 | 日付 | 変更内容 |
 |------|---------|
 | 2026-03-22 | 初版作成 - Phase 0～3の実装計画策定 |
+| 2026-03-22 | Phase 1完了を反映、Phase 1修正セクション追加 |
+| 2026-03-22 | Phase 2をA/B/C/D/Eに細分化、Phase 2-A詳細仕様へのリンク追加 |
 
 ---
 
 **最終更新**: 2026-03-22
-**ステータス**: Phase 1実装中
-**次のアクション**: flowchart-editor.htmlにpublishFlowchartAttributes()を実装
+**ステータス**: Phase 1完了（v2.16.0予定）、Phase 2-A仕様策定中
+**次のアクション**: Phase 2-A実装（タスク一覧同期 A→B）

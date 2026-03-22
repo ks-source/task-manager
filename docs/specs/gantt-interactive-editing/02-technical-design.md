@@ -17,6 +17,9 @@
 
 ## アーキテクチャ概要
 
+> **🔴 重要**: ウィンドウ間通信は `postMessage` APIを使用します。
+> 詳細は [05-file-protocol-support.md](./05-file-protocol-support.md) を参照してください。
+
 ### コンポーネント構成
 
 ```
@@ -25,12 +28,14 @@
 ├─────────────────────────────────────────────────────────┤
 │  ・タスクデータ管理 (projectData.tasks)                  │
 │  ・updateTaskDates() ← 新規追加                         │
+│  ・handleGanttMessage() ← postMessage ハンドラ          │
 │  ・saveToLocalStorage()                                │
 │  ・renderTaskList()                                    │
 └─────────────────────────────────────────────────────────┘
                         ↑
-                        │ window.opener 通信
-                        │
+                        │ postMessage 双方向通信
+                        │ (file://プロトコル対応)
+                        ↓
 ┌─────────────────────────────────────────────────────────┐
 │    ガントチャートウィンドウ (generateGanttHTML内)          │
 ├─────────────────────────────────────────────────────────┤
@@ -43,7 +48,8 @@
 │  ・getBarZone() - 領域判定                              │
 │  ・positionToDate() - 座標→日付変換                     │
 │  ・updatePreview() - プレビュー更新                      │
-│  ・applyDateChange() - メイン画面へ反映                  │
+│  ・applyDateChange() - postMessage 送信                 │
+│  ・handleMainWindowMessage() ← postMessage ハンドラ     │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -624,8 +630,9 @@ previewBar.style.width = `${newWidth}px`;
 - [01-ui-ux-design.md](./01-ui-ux-design.md) - UI/UX設計
 - [03-data-synchronization.md](./03-data-synchronization.md) - データ同期仕様
 - [04-implementation-plan.md](./04-implementation-plan.md) - 実装計画
+- [05-file-protocol-support.md](./05-file-protocol-support.md) - 🔴 **file://プロトコル対応（必読）**
 
 ---
 
 **最終更新**: 2026-03-21
-**ステータス**: 仕様確定、実装待ち
+**ステータス**: 仕様確定、postMessage実装へ移行予定

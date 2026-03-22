@@ -3,13 +3,62 @@
 ---
 **feature**: クロスHTML連携
 **version**: 1.0
-**status**: design
+**status**: ⚠️ **DEPRECATED（陳腐化）**
 **created**: 2026-03-21
-**updated**: 2026-03-21
+**updated**: 2026-03-22
 **priority**: 🔴 Critical
 ---
 
-## 概要
+## ⚠️ 重要: このドキュメントは陳腐化しています
+
+### 最新の実装とドキュメントはこちら
+
+**新しいドキュメント**: [../data-integration/](../data-integration/)
+
+このディレクトリ（`cross-html-sync/`）は**設計段階のドキュメント**として2026-03-21に作成されましたが、実際の実装は**data-integration/**ディレクトリで完了しました。
+
+### 陳腐化の理由
+
+| 項目 | cross-html-sync/ (本ディレクトリ) | data-integration/ (最新) |
+|------|----------------------------------|-------------------------|
+| **ステータス** | 設計のみ、実装なし | Phase 1実装完了 |
+| **作成日** | 2026-03-21 | 2026-03-22 |
+| **内容** | 理論的な設計仕様 | 実装レポート・修正仕様 |
+| **コミット** | なし | v2.15.0でコミット済み |
+| **動作確認** | なし | 検証シナリオあり |
+
+### 移行ガイド
+
+以下のドキュメントを参照してください:
+
+1. **全体概要を知りたい**
+   → [../data-integration/README.md](../data-integration/README.md)
+
+2. **Phase 0-3の実装計画を見たい**
+   → [../data-integration/future-roadmap.md](../data-integration/future-roadmap.md)
+
+3. **Phase 1の実装内容を確認したい**
+   → [../data-integration/phase1-implementation-summary.md](../data-integration/phase1-implementation-summary.md)
+
+4. **最新の修正仕様（mermaid_ids双方向同期）**
+   → [../data-integration/phase1-mermaid-ids-fix.md](../data-integration/phase1-mermaid-ids-fix.md) ⭐ **最優先で読むべきドキュメント**
+
+### このドキュメントを残す理由
+
+- **設計思想の記録**: LocalStorage選定理由、データ永続化戦略などの背景情報
+- **技術比較資料**: postMessage vs LocalStorageの比較
+- **FAQ参考資料**: 容量超過時の対処など、一部情報は有用
+
+### 今後の方針
+
+- ✅ このディレクトリは**参考資料**として保持
+- ✅ 新規実装は**data-integration/**を参照
+- ✅ 仕様変更は**data-integration/**のみ更新
+- ⚠️ このディレクトリのドキュメントは今後更新されません
+
+---
+
+## 概要（以下は設計段階の記録です）
 
 **独立したHTMLファイル間**でタスクデータとフローチャート属性を双方向同期する仕組み。
 

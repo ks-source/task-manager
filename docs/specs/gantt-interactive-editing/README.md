@@ -33,6 +33,7 @@
 2. [**技術設計・実装方針**](./02-technical-design.md) - ドラッグ検出、座標変換、ウィンドウ間通信
 3. [**データフロー・同期仕様**](./03-data-synchronization.md) - メイン画面との同期、整合性チェック
 4. [**実装計画・工数見積もり**](./04-implementation-plan.md) - フェーズ分け、工数、リスク管理
+5. [**file://プロトコル対応**](./05-file-protocol-support.md) - 🔴 HTMLファイル単体動作、postMessage実装
 
 ### 関連ドキュメント
 - [CHANGELOG.md](../../../CHANGELOG.md) - v2.8.0 ガントチャート機能の実装履歴
@@ -149,10 +150,14 @@
 
 - **言語**: JavaScript（ES6+）
 - **既存機能**: ガントチャート表示機能（v2.8.0以降）
-- **ウィンドウ間通信**: `window.opener` API
+- **ウィンドウ間通信**: `postMessage` API ⭐ **file://プロトコル対応**
 - **対象ブラウザ**: Edge/Chrome 90+
+- **動作環境**:
+  - ✅ file:///（HTMLファイル直接開き） - **推奨**
+  - ✅ http://localhost（ローカルサーバー） - 下位互換
 - **主要API**:
   - Mouse Events (mousedown, mousemove, mouseup)
+  - postMessage API（クロスウィンドウ通信）
   - getBoundingClientRect()
   - File System Access API（既存の保存機能）
 
@@ -191,23 +196,30 @@
 │ ・プレビュー表示│              │                │
 │ ・新日付計算    │              │                │
 │  ↓             │              │                │
-│ ドラッグ終了    │─────通信───►│ window.opener  │
-│ mouseup        │   (1)       │ .updateTaskDates()│
+│ ドラッグ終了    │─postMessage─►│ message        │
+│ mouseup        │   (1)       │ イベント検知    │
 │                │              │  ↓             │
 │                │              │ タスクデータ更新│
 │                │              │ start_date     │
 │                │              │ finish_date    │
 │                │              │  ↓             │
-│                │◄────通知─────│ 更新完了       │
-│ 確認通知表示    │   (2)       │                │
+│                │◄─postMessage─│ 更新完了通知    │
+│ 確認応答受信    │   (2)       │                │
+│  ↓             │              │                │
+│ 最新データ要求  │─postMessage─►│ projectData    │
+│                │◄─postMessage─│ 送信           │
+│ renderGantt()  │   (3)       │                │
 └────────────────┘              └────────────────┘
 
-通信データ例:
-window.opener.updateTaskDates(
-  "WBS1.1.0",      // タスクID
-  "2026-03-04",    // 新開始日
-  "2026-03-08"     // 新終了日
-);
+通信データ例（postMessage）:
+window.opener.postMessage({
+  type: 'GANTT_DATE_CHANGE',
+  payload: {
+    wbsNo: "WBS1.1.0",
+    startDate: "2026-03-04",
+    endDate: "2026-03-08"
+  }
+}, '*');
 ```
 
 ---
@@ -266,8 +278,11 @@ window.opener.updateTaskDates(
 | 日付 | バージョン | 変更内容 |
 |------|-----------|---------|
 | 2026-03-21 | 1.0 | 初版作成 - 仕様書構成確定 |
+| 2026-03-21 | 1.1 | postMessage対応追加 - file://プロトコル対応 |
 
 ---
 
 **最終更新**: 2026-03-21
-**次のアクション**: Phase 1実装開始 - [04-implementation-plan.md](./04-implementation-plan.md) を参照
+**次のアクション**:
+1. **🔴 重要**: [05-file-protocol-support.md](./05-file-protocol-support.md) を確認 - postMessage実装方針
+2. Phase 1実装開始 - [04-implementation-plan.md](./04-implementation-plan.md) を参照
