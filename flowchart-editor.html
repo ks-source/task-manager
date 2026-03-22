@@ -10319,17 +10319,22 @@ ${metadataJson}
 
       if (!section || !list) return;
 
-      const refs = elementReferences[elementId] || [];
-
-      if (refs.length === 0) {
-        section.style.display = 'none';
-        return;
-      }
-
+      // セクションを常に表示（「参照を追加」ボタンを表示するため）
       section.style.display = 'block';
+
+      const refs = elementReferences[elementId] || [];
 
       // リストをクリア
       list.innerHTML = '';
+
+      if (refs.length === 0) {
+        // 参照が0件の場合はヒントメッセージを表示
+        const hint = document.createElement('div');
+        hint.style.cssText = 'color: #999; font-size: 12px; padding: 8px; text-align: center;';
+        hint.textContent = 'まだ参照がありません';
+        list.appendChild(hint);
+        return;
+      }
 
       // 各参照を表示
       for (const refId of refs) {
