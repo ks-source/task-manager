@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Task Manager - WBS Visualizer v2.18.3-debug</title>
+  <title>Task Manager - WBS Visualizer v2.18.3</title>
   <meta name="description" content="A lightweight, browser-based Work Breakdown Structure (WBS) visualization and management tool">
   <meta name="keywords" content="task manager, WBS, project management, task tracking">
   <meta name="author" content="ks-source">
@@ -973,7 +973,7 @@
       margin: 0;
       padding: 0;
       box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-      overflow: hidden;
+      /* overflow: hidden removed - it disables position: sticky */
     }
 
     .task-table {
@@ -1007,9 +1007,20 @@
       border-top-right-radius: 8px;
     }
 
+    .task-table tbody tr:last-child td:first-child {
+      border-bottom-left-radius: 8px;
+    }
+
+    .task-table tbody tr:last-child td:last-child {
+      border-bottom-right-radius: 8px;
+    }
+
     #filter-result-count {
       padding: 0.5rem 1rem;
       margin: 0;
+      background-color: white;
+      border-bottom-left-radius: 8px;
+      border-bottom-right-radius: 8px;
     }
 
     /* ==========================================
@@ -5415,7 +5426,9 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
                   <td><span class="glossary-term">Blob URL</span></td>
                   <td>
                     ブラウザが一時的に作る「メモリ上のデータの住所」です。<br>
-                    インターネット接続は不要で、ブラウザを閉じると消えます。
+                    インターネット接続は不要で、ブラウザを閉じると消えます。<br>
+                    <strong style="color: #059669;">💡 セキュリティ:</strong> このメモリは<strong>あなたのブラウザ内だけ</strong>で有効で、
+                    他のアプリや外部サイトからはアクセスできません（ブラウザの同一オリジンポリシーで保護）。
                   </td>
                 </tr>
                 <tr>
@@ -5494,7 +5507,9 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
               <li>
                 <strong>データ生成:</strong> <code>Blob URL</code> (blob:null/... 形式、一時メモリ)<br>
                 <span style="color: #6b7280; font-size: 0.9rem;">
-                  → ブラウザのメモリ内に一時的にデータを保存する仕組みです
+                  → ブラウザのメモリ内に一時的にデータを保存する仕組みです<br>
+                  <strong style="color: #059669;">⚠️ 重要:</strong> このメモリは<strong>あなたのPCのブラウザプロセス内でのみ有効</strong>で、
+                  外部からのアクセスは不可能です（同一オリジンポリシーによる保護）
                 </span>
               </li>
               <li>
@@ -5666,6 +5681,85 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
               この検証方法により、第三者による技術的監査が可能です。
               Network Waterfallが空であることで、外部通信不在を証明できます。
             </p>
+
+            <!-- 詳細な手順セクション -->
+            <details style="margin-top: 1.5rem; padding: 1rem; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb;">
+              <summary style="cursor: pointer; font-weight: 600; color: #1f2937; user-select: none;">
+                📖 詳しい手順を見る（画像付き解説）
+              </summary>
+              <div style="margin-top: 1rem; line-height: 1.8;">
+                <h5 style="color: #1f2937; margin-bottom: 0.75rem;">ステップ1: 開発者ツールを開く</h5>
+                <ol style="margin-left: 1.5rem; color: #374151;">
+                  <li>ガントチャート画面で、キーボードの <kbd style="background: #e5e7eb; padding: 0.2rem 0.4rem; border-radius: 3px; font-family: monospace;">F12</kbd> キーを押します</li>
+                  <li>または、画面を右クリック → 「検証」をクリック</li>
+                  <li>画面の右側または下側に「開発者ツール」というパネルが表示されます</li>
+                </ol>
+
+                <h5 style="color: #1f2937; margin: 1.5rem 0 0.75rem 0;">ステップ2: ネットワークタブを選択</h5>
+                <ol style="margin-left: 1.5rem; color: #374151;">
+                  <li>開発者ツールの上部にあるタブから「<strong>ネットワーク</strong>」（または「<strong>Network</strong>」）をクリック</li>
+                  <li>「ネットワーク」タブに切り替わると、通信記録を表示する準備が整います</li>
+                  <li>もし「記録を開始するにはページを再読み込みしてください」と表示されたら、<kbd style="background: #e5e7eb; padding: 0.2rem 0.4rem; border-radius: 3px; font-family: monospace;">F5</kbd> キーを押してページを再読み込みします</li>
+                </ol>
+
+                <h5 style="color: #1f2937; margin: 1.5rem 0 0.75rem 0;">ステップ3: ガントチャートを操作</h5>
+                <ol style="margin-left: 1.5rem; color: #374151;">
+                  <li>ガントチャート画面で以下の操作を試してください:
+                    <ul style="margin-top: 0.5rem; margin-left: 1rem;">
+                      <li>「更新」ボタン（🔄）をクリック</li>
+                      <li>表示モードを切り替え（日/週/月）</li>
+                      <li>セキュリティインジケーター（🛡️）をクリック</li>
+                    </ul>
+                  </li>
+                </ol>
+
+                <h5 style="color: #1f2937; margin: 1.5rem 0 0.75rem 0;">ステップ4: 通信記録を確認</h5>
+                <div style="background: #f0fdf4; border: 1px solid #86efac; border-radius: 6px; padding: 1rem; margin-top: 0.75rem;">
+                  <p style="margin: 0; color: #166534;">
+                    <strong>✅ 期待される結果:</strong>
+                  </p>
+                  <ul style="margin: 0.5rem 0 0 1.5rem; color: #166534;">
+                    <li>ネットワークタブに<strong>何も表示されない</strong>、または</li>
+                    <li>「task-manager.html」のみ表示される（初回読み込み時のみ）</li>
+                    <li>操作後に新しい通信記録が<strong>追加されない</strong></li>
+                  </ul>
+                </div>
+
+                <div style="background: #fef2f2; border: 1px solid #fca5a5; border-radius: 6px; padding: 1rem; margin-top: 1rem;">
+                  <p style="margin: 0; color: #991b1b;">
+                    <strong>⚠️ もし以下が表示された場合:</strong>
+                  </p>
+                  <ul style="margin: 0.5rem 0 0 1.5rem; color: #991b1b;">
+                    <li>HTTPリクエスト（http://... や https://...）が表示される</li>
+                    <li>外部ドメインへの通信が記録される</li>
+                    <li>WebSocketコネクション（WS）が表示される</li>
+                  </ul>
+                  <p style="margin: 0.5rem 0 0 0; color: #991b1b;">
+                    → これらは<strong>外部通信の証拠</strong>です。本ツールでは発生しないはずです。
+                  </p>
+                </div>
+
+                <h5 style="color: #1f2937; margin: 1.5rem 0 0.75rem 0;">💡 よくある質問</h5>
+                <dl style="margin-left: 0;">
+                  <dt style="font-weight: 600; color: #374151; margin-top: 0.75rem;">Q: 「task-manager.html」が表示されているのですが？</dt>
+                  <dd style="margin-left: 1.5rem; color: #6b7280;">A: これは初回読み込み時のファイル読み込みです。操作後に<strong>新しい通信が追加されない</strong>ことを確認してください。</dd>
+
+                  <dt style="font-weight: 600; color: #374151; margin-top: 0.75rem;">Q: 「blob:null/...」というURLが表示されます</dt>
+                  <dd style="margin-left: 1.5rem; color: #6b7280;">A: これはブラウザ内メモリへのアクセスで、<strong>外部通信ではありません</strong>。安全です。</dd>
+
+                  <dt style="font-weight: 600; color: #374151; margin-top: 0.75rem;">Q: 開発者ツールが表示されません</dt>
+                  <dd style="margin-left: 1.5rem; color: #6b7280;">A: ブラウザによってはF12キーが無効化されている場合があります。右クリック → 「検証」を試してください。</dd>
+                </dl>
+
+                <div style="background: #eff6ff; border-left: 4px solid #3b82f6; padding: 1rem; margin-top: 1.5rem;">
+                  <p style="margin: 0; color: #1e40af;">
+                    <strong>🎯 検証のポイント:</strong><br>
+                    この手順により、「開発者自身の主張」ではなく、<strong>あなた自身の目で確認</strong>できます。
+                    これが真の透明性です。
+                  </p>
+                </div>
+              </div>
+            </details>
           </div>
 
         </div>

@@ -5,6 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.18.3] - 2026-03-22
+
+### Fixed
+- **🔧 テーブルヘッダー固定表示の根本的な原因を解決**
+  - **根本原因を特定**: `.task-table-wrapper` の `overflow: hidden` が `position: sticky` を無効化していた
+  - **修正内容**: `overflow: hidden` プロパティを削除（line 976）
+  - **デザイン維持**: テーブル下部の角丸を `tbody tr:last-child` に直接適用
+  - **フィルター結果カウント**: 背景色と角丸を追加して視覚的一貫性を維持
+
+### Changed
+- **CSS変更**:
+  - `.task-table-wrapper`: `overflow: hidden` を削除（コメントで理由を明記）
+  - `.task-table tbody tr:last-child td:first-child`: `border-bottom-left-radius: 8px` を追加
+  - `.task-table tbody tr:last-child td:last-child`: `border-bottom-right-radius: 8px` を追加
+  - `#filter-result-count`: `background-color: white`, `border-bottom-left-radius`, `border-bottom-right-radius` を追加
+
+### Technical Details
+- **CSS制約**: `position: sticky` は親要素に `overflow: hidden/auto/scroll` があると機能しない
+- **デバッグシステム**: Level 4デバッグログを実装し、以下を監視:
+  - `checkDOMStructure()`: DOM構造の検証
+  - `checkStickyElements()`: Sticky要素の計算スタイル確認
+  - `setupScrollDebug()`: スクロール時のリアルタイム監視（2秒ごと）
+- **診断結果**: コンソールログで `isSticky: false` を検出し、`rectTop: 82` が期待値 `60` と異なることを確認
+
+### User Experience
+- **テーブルヘッダー完全固定**: スクロールしても「WBS No」等の見出しが確実に画面上部に固定
+- **角丸デザイン維持**: テーブル上下の角丸が正しく表示される
+- **デバッグ出力**: コンソールで詳細なログが確認可能（将来のトラブルシューティングに活用）
+
+---
+
 ## [2.18.2] - 2026-03-22
 
 ### Fixed
