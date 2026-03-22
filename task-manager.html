@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Task Manager - WBS Visualizer v2.16.0</title>
+  <title>Task Manager - WBS Visualizer v2.17.0</title>
   <meta name="description" content="A lightweight, browser-based Work Breakdown Structure (WBS) visualization and management tool">
   <meta name="keywords" content="task manager, WBS, project management, task tracking">
   <meta name="author" content="ks-source">
@@ -65,11 +65,61 @@
       align-items: center;
     }
 
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
     .header-title {
       font-size: 1.125rem;
       font-weight: 600;
       color: var(--color-primary);
       margin: 0;
+    }
+
+    /* Circular Progress Indicator */
+    .progress-indicator-btn {
+      position: relative;
+      background: none;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      transition: background-color 0.2s ease;
+    }
+
+    .progress-indicator-btn:hover {
+      background-color: rgba(0, 0, 0, 0.05);
+    }
+
+    .progress-ring {
+      width: 24px;
+      height: 24px;
+      transform: rotate(-90deg);
+    }
+
+    .progress-ring-bg {
+      fill: none;
+      stroke: #e0e0e0;
+      stroke-width: 3;
+    }
+
+    .progress-ring-fill {
+      fill: none;
+      stroke: var(--color-primary);
+      stroke-width: 3;
+      transition: stroke-dashoffset 0.5s ease;
+    }
+
+    .progress-percentage {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--color-gray-dark);
+      white-space: nowrap;
     }
 
     .header-nav {
@@ -185,66 +235,7 @@
     }
 
     /* ==========================================
-     * Progress Summary (Sticky + Collapsible)
-     * ========================================== */
-    .progress-summary-card {
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      background-color: white;
-      transition: box-shadow 0.3s ease;
-    }
-
-    .progress-summary-card.collapsed {
-      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-    }
-
-    .progress-summary-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1rem;
-    }
-
-    .progress-summary-header .card-title {
-      margin-bottom: 0;
-    }
-
-    .collapse-toggle-btn {
-      background: none;
-      border: 1px solid var(--color-border);
-      border-radius: 4px;
-      padding: 0.25rem 0.5rem;
-      cursor: pointer;
-      font-size: 0.9rem;
-      color: var(--color-gray-dark);
-      transition: all 0.2s ease;
-    }
-
-    .collapse-toggle-btn:hover {
-      background-color: var(--color-gray-light);
-      border-color: var(--color-primary);
-    }
-
-    .progress-summary-main {
-      margin-bottom: 1rem;
-    }
-
-    .progress-details-collapsible {
-      max-height: 1000px;
-      overflow: hidden;
-      transition: max-height 0.4s ease, opacity 0.4s ease, margin 0.4s ease;
-      opacity: 1;
-    }
-
-    .progress-details-collapsible.collapsed {
-      max-height: 0;
-      opacity: 0;
-      margin: 0;
-    }
-
-    /* ==========================================
-     * Progress Summary (Original Styles)
+     * Progress Summary
      * ========================================== */
     .progress-summary {
       display: grid;
@@ -984,7 +975,16 @@
    * Header / Menu Bar
    * ========================================== -->
   <header class="header">
-    <h1 class="header-title" id="project-name-display">新規プロジェクト</h1>
+    <div class="header-left">
+      <h1 class="header-title" id="project-name-display">新規プロジェクト</h1>
+      <button class="progress-indicator-btn" onclick="openProgressModal()" title="プロジェクト進捗を表示">
+        <svg class="progress-ring" viewBox="0 0 36 36">
+          <path class="progress-ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+          <path class="progress-ring-fill" id="progress-ring-path" stroke-dasharray="100" stroke-dashoffset="55" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+        </svg>
+        <span class="progress-percentage" id="header-progress-percentage">0%</span>
+      </button>
+    </div>
     <nav class="header-nav">
       <button class="icon-button" onclick="showDashboard()" title="ダッシュボード">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1047,61 +1047,6 @@
   <div class="container">
     <!-- Dashboard -->
     <div class="dashboard" id="dashboard">
-      <!-- Progress Summary Card (Sticky Header with Collapsible Details) -->
-      <div class="card progress-summary-card" id="progress-summary-card">
-        <!-- Header Section -->
-        <div class="progress-summary-header" id="progress-summary-header">
-          <h2 class="card-title">プロジェクト進捗サマリー</h2>
-          <button class="collapse-toggle-btn" id="progress-collapse-btn" onclick="toggleProgressDetails()" title="詳細を展開/折りたたみ">
-            <span id="progress-collapse-icon">▼</span>
-          </button>
-        </div>
-
-        <!-- Always Visible Section: Overall Progress Bar -->
-        <div class="progress-summary-main">
-          <div class="progress-item">
-            <div class="progress-label">
-              <span>全体進捗</span>
-              <span id="overall-progress-text">0% (0/73)</span>
-            </div>
-            <div class="progress-bar-container">
-              <div class="progress-bar" id="overall-progress-bar" style="width: 0%">0%</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Collapsible Section: Phase Progress + Status Legend -->
-        <div class="progress-details-collapsible" id="progress-details">
-          <div class="mt-2">
-            <h3 style="font-size: 1rem; margin-bottom: 0.5rem;">フェーズ別進捗</h3>
-            <div id="phase-progress-container"></div>
-          </div>
-
-          <div class="status-legend mt-2">
-            <div class="status-badge status-completed">
-              <span class="status-dot"></span>
-              <span>完了: <strong id="count-completed">0</strong>件</span>
-            </div>
-            <div class="status-badge status-in-progress">
-              <span class="status-dot"></span>
-              <span>進行中: <strong id="count-in-progress">0</strong>件</span>
-            </div>
-            <div class="status-badge status-not-started">
-              <span class="status-dot"></span>
-              <span>未着手: <strong id="count-not-started">73</strong>件</span>
-            </div>
-            <div class="status-badge status-on-hold">
-              <span class="status-dot"></span>
-              <span>保留: <strong id="count-on-hold">0</strong>件</span>
-            </div>
-            <div class="status-badge status-postponed">
-              <span class="status-dot"></span>
-              <span>延期: <strong id="count-postponed">0</strong>件</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <!-- Task List Card -->
       <div class="card">
         <h2 class="card-title">タスク一覧</h2>
@@ -1170,6 +1115,64 @@
   <!-- ==========================================
    * Task Detail Modal
    * ========================================== -->
+  <!-- Progress Summary Modal -->
+  <div class="modal" id="progress-modal">
+    <div class="modal-content" style="max-width: 700px;">
+      <div class="modal-header">
+        <h2 class="modal-title">プロジェクト進捗サマリー</h2>
+        <button class="modal-close" onclick="closeProgressModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <!-- Overall Progress -->
+        <div class="modal-section">
+          <div class="progress-item">
+            <div class="progress-label">
+              <span style="font-weight: 600;">全体進捗</span>
+              <span id="modal-overall-progress-text">0% (0/0)</span>
+            </div>
+            <div class="progress-bar-container">
+              <div class="progress-bar" id="modal-overall-progress-bar" style="width: 0%">0%</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Phase Progress -->
+        <div class="modal-section">
+          <h3 class="modal-section-title">フェーズ別進捗</h3>
+          <div id="modal-phase-progress-container"></div>
+        </div>
+
+        <!-- Status Legend -->
+        <div class="modal-section">
+          <h3 class="modal-section-title">ステータス内訳</h3>
+          <div class="status-legend">
+            <div class="status-badge status-completed">
+              <span class="status-dot"></span>
+              <span>完了: <strong id="modal-count-completed">0</strong>件</span>
+            </div>
+            <div class="status-badge status-in-progress">
+              <span class="status-dot"></span>
+              <span>進行中: <strong id="modal-count-in-progress">0</strong>件</span>
+            </div>
+            <div class="status-badge status-not-started">
+              <span class="status-dot"></span>
+              <span>未着手: <strong id="modal-count-not-started">0</strong>件</span>
+            </div>
+            <div class="status-badge status-on-hold">
+              <span class="status-dot"></span>
+              <span>保留: <strong id="modal-count-on-hold">0</strong>件</span>
+            </div>
+            <div class="status-badge status-postponed">
+              <span class="status-dot"></span>
+              <span>延期: <strong id="modal-count-postponed">0</strong>件</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Task Detail Modal -->
   <div class="modal" id="task-modal">
     <div class="modal-content">
       <div class="modal-header">
@@ -1617,7 +1620,6 @@
     let currentFileName = '(新規ファイル)';
     let isEditingTaskInfo = false;
     let showDeleted = false; // 削除済みタスク表示フラグ
-    let progressDetailsCollapsed = localStorage.getItem('progress-details-collapsed') === 'true'; // 進捗詳細の折りたたみ状態
 
     // Status mapping (Japanese to English keys)
     const STATUS_MAP = {
@@ -1644,7 +1646,6 @@
       setupCrossHTMLSync(); // 🆕 クロスHTML連携の初期化
       setupGanttCommunication(); // 🔧 ガントチャートとの通信（postMessage）
       setupSearchListener();
-      initProgressSummary(); // 🆕 進捗サマリーの折りたたみ状態を復元
 
       // プロジェクト名をヘッダーに反映
       updateProjectNameDisplay();
@@ -1974,83 +1975,8 @@
         return;
       }
 
-      calculateStatistics();
-      renderProgressSummary();
+      updateHeaderProgress(); // Update circular progress indicator in header
       renderTaskTable();
-    }
-
-    function calculateStatistics() {
-      const stats = {
-        total: projectData.tasks.length,
-        completed: 0,
-        in_progress: 0,
-        not_started: 0,
-        on_hold: 0,
-        postponed: 0,
-        cancelled: 0,
-        unknown: 0,
-        by_phase: {}
-      };
-
-      projectData.tasks.forEach(task => {
-        const statusKey = STATUS_MAP[task.status] || 'unknown';
-        stats[statusKey]++;
-
-        if (!stats.by_phase[task.phase]) {
-          stats.by_phase[task.phase] = {
-            total: 0,
-            completed: 0
-          };
-        }
-        stats.by_phase[task.phase].total++;
-        if (task.status === '完了') {
-          stats.by_phase[task.phase].completed++;
-        }
-      });
-
-      projectData.statistics = stats;
-    }
-
-    function renderProgressSummary() {
-      const stats = projectData.statistics;
-
-      // Overall progress
-      const overallPercent = Math.round((stats.completed / stats.total) * 100);
-      document.getElementById('overall-progress-text').textContent =
-        `${overallPercent}% (${stats.completed}/${stats.total})`;
-      document.getElementById('overall-progress-bar').style.width = overallPercent + '%';
-      document.getElementById('overall-progress-bar').textContent = overallPercent + '%';
-
-      // Status counts
-      document.getElementById('count-completed').textContent = stats.completed;
-      document.getElementById('count-in-progress').textContent = stats.in_progress;
-      document.getElementById('count-not-started').textContent = stats.not_started;
-      document.getElementById('count-on-hold').textContent = stats.on_hold;
-      document.getElementById('count-postponed').textContent = stats.postponed;
-
-      // Phase progress
-      const phaseContainer = document.getElementById('phase-progress-container');
-      phaseContainer.innerHTML = '';
-
-      Object.keys(stats.by_phase).forEach(phase => {
-        const phaseData = stats.by_phase[phase];
-        const percent = Math.round((phaseData.completed / phaseData.total) * 100);
-
-        const progressHtml = `
-          <div class="progress-item mt-1">
-            <div class="progress-label">
-              <span>${phase}</span>
-              <span>${percent}% (${phaseData.completed}/${phaseData.total})</span>
-            </div>
-            <div class="progress-bar-container">
-              <div class="progress-bar ${percent === 100 ? 'success' : ''}" style="width: ${percent}%">
-                ${percent}%
-              </div>
-            </div>
-          </div>
-        `;
-        phaseContainer.innerHTML += progressHtml;
-      });
     }
 
     function renderTaskTable() {
@@ -2180,41 +2106,92 @@
       console.log(`Show deleted tasks: ${showDeleted}`);
     }
 
-    function toggleProgressDetails() {
-      progressDetailsCollapsed = !progressDetailsCollapsed;
+    // ==========================================
+    // Progress Summary (Header Indicator + Modal)
+    // ==========================================
+    function updateHeaderProgress() {
+      // Calculate overall progress
+      const completedTasks = projectData.tasks.filter(t => !t.deleted && t.status === '完了').length;
+      const totalTasks = projectData.tasks.filter(t => !t.deleted).length;
+      const percentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
-      const detailsElement = document.getElementById('progress-details');
-      const cardElement = document.getElementById('progress-summary-card');
-      const iconElement = document.getElementById('progress-collapse-icon');
+      // Update circular progress ring
+      const circumference = 100;
+      const offset = circumference - percentage;
+      document.getElementById('progress-ring-path').style.strokeDashoffset = offset;
 
-      if (progressDetailsCollapsed) {
-        // Collapse: Hide details
-        detailsElement.classList.add('collapsed');
-        cardElement.classList.add('collapsed');
-        iconElement.textContent = '▲';
-      } else {
-        // Expand: Show details
-        detailsElement.classList.remove('collapsed');
-        cardElement.classList.remove('collapsed');
-        iconElement.textContent = '▼';
-      }
-
-      // Save state to localStorage
-      localStorage.setItem('progress-details-collapsed', progressDetailsCollapsed);
-      console.log(`Progress details ${progressDetailsCollapsed ? 'collapsed' : 'expanded'}`);
+      // Update percentage text
+      document.getElementById('header-progress-percentage').textContent = `${percentage}%`;
     }
 
-    function initProgressSummary() {
-      // Restore collapsed state from localStorage
-      if (progressDetailsCollapsed) {
-        const detailsElement = document.getElementById('progress-details');
-        const cardElement = document.getElementById('progress-summary-card');
-        const iconElement = document.getElementById('progress-collapse-icon');
+    function openProgressModal() {
+      // Render progress data in modal
+      renderProgressModal();
+      // Show modal
+      document.getElementById('progress-modal').classList.add('active');
+    }
 
-        detailsElement.classList.add('collapsed');
-        cardElement.classList.add('collapsed');
-        iconElement.textContent = '▲';
-      }
+    function closeProgressModal() {
+      document.getElementById('progress-modal').classList.remove('active');
+    }
+
+    function renderProgressModal() {
+      // Calculate overall progress
+      const nonDeletedTasks = projectData.tasks.filter(t => !t.deleted);
+      const completedTasks = nonDeletedTasks.filter(t => t.status === '完了').length;
+      const totalTasks = nonDeletedTasks.length;
+      const percentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+      // Update overall progress in modal
+      document.getElementById('modal-overall-progress-text').textContent = `${percentage}% (${completedTasks}/${totalTasks})`;
+      document.getElementById('modal-overall-progress-bar').style.width = `${percentage}%`;
+      document.getElementById('modal-overall-progress-bar').textContent = `${percentage}%`;
+
+      // Phase progress
+      const phases = [...new Set(projectData.tasks.map(t => t.phase))].sort();
+      const phaseContainer = document.getElementById('modal-phase-progress-container');
+      phaseContainer.innerHTML = '';
+
+      phases.forEach(phase => {
+        const phaseTasks = projectData.tasks.filter(t => t.phase === phase && !t.deleted);
+        const phaseCompleted = phaseTasks.filter(t => t.status === '完了').length;
+        const phaseTotal = phaseTasks.length;
+        const phasePercentage = phaseTotal > 0 ? Math.round((phaseCompleted / phaseTotal) * 100) : 0;
+
+        const phaseHtml = `
+          <div class="progress-item" style="margin-bottom: 0.75rem;">
+            <div class="progress-label">
+              <span>${phase}</span>
+              <span>${phasePercentage}% (${phaseCompleted}/${phaseTotal})</span>
+            </div>
+            <div class="progress-bar-container">
+              <div class="progress-bar" style="width: ${phasePercentage}%">${phasePercentage}%</div>
+            </div>
+          </div>
+        `;
+        phaseContainer.innerHTML += phaseHtml;
+      });
+
+      // Status counts
+      const statusCounts = {
+        '完了': 0,
+        '進行中': 0,
+        '未着手': 0,
+        '保留': 0,
+        '延期': 0
+      };
+
+      nonDeletedTasks.forEach(task => {
+        if (statusCounts.hasOwnProperty(task.status)) {
+          statusCounts[task.status]++;
+        }
+      });
+
+      document.getElementById('modal-count-completed').textContent = statusCounts['完了'];
+      document.getElementById('modal-count-in-progress').textContent = statusCounts['進行中'];
+      document.getElementById('modal-count-not-started').textContent = statusCounts['未着手'];
+      document.getElementById('modal-count-on-hold').textContent = statusCounts['保留'];
+      document.getElementById('modal-count-postponed').textContent = statusCounts['延期'];
     }
 
     // ==========================================

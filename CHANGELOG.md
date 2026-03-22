@@ -5,7 +5,55 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.16.0] - 2026-03-22
+## [2.17.0] - 2026-03-22
+
+### Changed
+- **🎯 プロジェクト進捗表示の大幅な簡略化（パターンA: 円形インジケーター + モーダル）**
+  - **v2.16.0の上部固定カードを削除**: 存在感が大きすぎる問題を解決
+  - **ヘッダーに円形プログレスインジケーターを追加**: 超ミニマル表示（幅50px程度）
+    - SVG円形リング + パーセンテージ表示
+    - クリックで詳細モーダルを表示
+    - 進捗に応じて円形リングがアニメーション
+  - **進捗詳細モーダル**: クリック時に全体進捗、フェーズ別進捗、ステータス内訳を表示
+  - **画面領域の大幅確保**: タスク一覧が広く表示される
+
+### Removed
+- v2.16.0で追加したプログレスサマリーカード（上部固定）を削除
+- v2.16.0の折りたたみ機能関連のCSS・JavaScriptを削除
+  - `.progress-summary-card`, `.progress-details-collapsible` 等のCSS
+  - `toggleProgressDetails()`, `initProgressSummary()` 関数
+  - `progressDetailsCollapsed` グローバル変数
+
+### Technical Details
+- **HTML変更**:
+  - ヘッダーに `.header-left` コンテナ追加（プロジェクト名 + 円形インジケーター）
+  - 円形プログレスインジケーターボタン追加（SVG円形リング + パーセンテージ）
+  - 進捗詳細モーダル追加（`#progress-modal`）
+  - 既存のプログレスサマリーカード削除
+- **新規CSS** (lines 68-123):
+  - `.header-left`: ヘッダー左側コンテナ（flexbox配置）
+  - `.progress-indicator-btn`: 円形インジケーターボタン
+  - `.progress-ring`: SVG円形リング（24px × 24px）
+  - `.progress-ring-bg`: 背景リング（グレー）
+  - `.progress-ring-fill`: 進捗リング（プライマリーカラー、アニメーション付き）
+  - `.progress-percentage`: パーセンテージテキスト
+- **新規JavaScript** (lines 2185-2271):
+  - `updateHeaderProgress()`: ヘッダーの円形リングを更新
+  - `openProgressModal()`: 進捗詳細モーダルを開く
+  - `closeProgressModal()`: モーダルを閉じる
+  - `renderProgressModal()`: モーダル内の進捗データを更新（全体進捗、フェーズ別、ステータス内訳）
+- **既存関数の変更**:
+  - `renderDashboard()`: `calculateStatistics()`, `renderProgressSummary()` を削除、`updateHeaderProgress()` を呼び出し
+
+### User Experience
+- **超ミニマル**: ヘッダーに円形インジケーターのみ（幅50px、垂直スペース0px追加）
+- **常時表示**: ページのどこにいても進捗確認可能
+- **情報階層**: 常時表示（円形リング + %）→ クリック（詳細モーダル）
+- **PC向け最適化**: ホバー効果、クリック操作でデスクトップ環境に最適
+
+---
+
+## [2.16.0] - 2026-03-22 (Deprecated - Replaced by v2.17.0)
 
 ### Added
 - **プロジェクト進捗サマリーの折りたたみ機能（パターンB: 2段階シンプル）**
@@ -14,29 +62,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **状態保存**: localStorage に折りたたみ状態を保存、ページリロード時に復元
   - **視覚的フィードバック**: 折りたたみ時にボックスシャドウ強調
 
-### Changed
-- **HTML構造変更**: プロジェクト進捗サマリーを3セクションに分割
-  - ヘッダー（タイトル + 折りたたみボタン）
-  - 常時表示部分（全体進捗バー）
-  - 折りたたみ可能部分（フェーズ別進捗 + ステータス凡例）
-
-### Technical Details
-- **新規CSS**:
-  - `.progress-summary-card`: 上部固定スタイル（position: sticky, z-index: 10）
-  - `.progress-summary-header`: ヘッダー部分（flexbox配置）
-  - `.collapse-toggle-btn`: 折りたたみボタン（ホバー効果付き）
-  - `.progress-details-collapsible`: 折りたたみアニメーション（max-height, opacity）
-- **新規JavaScript**:
-  - `toggleProgressDetails()`: 詳細の展開/折りたたみとlocalStorage保存（lines 2182-2204）
-  - `initProgressSummary()`: ページロード時の状態復元（lines 2206-2217）
-  - グローバル変数 `progressDetailsCollapsed`（line 1620）
-- **初期化**: `init()` 関数に `initProgressSummary()` 呼び出しを追加（line 1647）
-
-### User Experience
-- **デフォルト状態**: ミニマルプレビュー（折りたたみ）で上部固定
-- **スクロール時**: 全体進捗バーが常に表示され、進捗確認が容易
-- **詳細確認時**: ボタンクリックでフェーズ別進捗とステータス凡例を表示
-- **PC向け最適化**: モバイル対応は考慮せず、デスクトップ利用を想定
+### Note
+- **⚠️ このバージョンはv2.17.0で置き換えられました**: 存在感が大きすぎる問題のため、より簡略化されたパターンA（円形インジケーター + モーダル）に変更
 
 ---
 
