@@ -1765,20 +1765,18 @@
       const table = document.querySelector('.task-table');
       const thead = document.querySelector('.task-table thead');
 
-      debugLog(3, 'DOM', 'Elements:', {
-        wrapper: !!wrapper,
-        table: !!table,
-        thead: !!thead
-      });
+      debugLog(3, 'DOM', 'Elements:');
+      debugLog(3, 'DOM', `  wrapper: ${!!wrapper}`);
+      debugLog(3, 'DOM', `  table: ${!!table}`);
+      debugLog(3, 'DOM', `  thead: ${!!thead}`);
 
       if (wrapper && table && thead) {
-        debugLog(3, 'DOM', 'Parent chain:', {
-          theadParent: thead.parentElement?.tagName,
-          tableParent: table.parentElement?.className,
-          wrapperParent: wrapper.parentElement?.className
-        });
+        debugLog(3, 'DOM', 'Parent chain:');
+        debugLog(3, 'DOM', `  theadParent: ${thead.parentElement?.tagName}`);
+        debugLog(3, 'DOM', `  tableParent: ${table.parentElement?.className}`);
+        debugLog(3, 'DOM', `  wrapperParent: ${wrapper.parentElement?.className}`);
       } else {
-        debugLog(1, 'ERROR', 'Missing DOM elements!', { wrapper: !!wrapper, table: !!table, thead: !!thead });
+        debugLog(1, 'ERROR', `Missing DOM elements! wrapper=${!!wrapper}, table=${!!table}, thead=${!!thead}`);
       }
     }
 
@@ -1790,31 +1788,28 @@
 
       if (thead) {
         const styles = window.getComputedStyle(thead);
-        debugLog(3, 'STICKY', 'Table header computed styles:', {
-          position: styles.position,
-          top: styles.top,
-          zIndex: styles.zIndex,
-          backgroundColor: styles.backgroundColor
-        });
+        debugLog(3, 'STICKY', 'Table header computed styles:');
+        debugLog(3, 'STICKY', `  position: ${styles.position}`);
+        debugLog(3, 'STICKY', `  top: ${styles.top}`);
+        debugLog(3, 'STICKY', `  zIndex: ${styles.zIndex}`);
+        debugLog(3, 'STICKY', `  backgroundColor: ${styles.backgroundColor}`);
 
         const rect = thead.getBoundingClientRect();
-        debugLog(3, 'STICKY', 'Table header position:', {
-          top: rect.top,
-          bottom: rect.bottom,
-          height: rect.height
-        });
+        debugLog(3, 'STICKY', 'Table header position:');
+        debugLog(3, 'STICKY', `  top: ${rect.top}`);
+        debugLog(3, 'STICKY', `  bottom: ${rect.bottom}`);
+        debugLog(3, 'STICKY', `  height: ${rect.height}`);
       } else {
         debugLog(1, 'ERROR', 'Table header not found!');
       }
 
       if (panel) {
         const styles = window.getComputedStyle(panel);
-        debugLog(3, 'STICKY', 'Filter panel computed styles:', {
-          position: styles.position,
-          top: styles.top,
-          zIndex: styles.zIndex,
-          maxHeight: styles.maxHeight
-        });
+        debugLog(3, 'STICKY', 'Filter panel computed styles:');
+        debugLog(3, 'STICKY', `  position: ${styles.position}`);
+        debugLog(3, 'STICKY', `  top: ${styles.top}`);
+        debugLog(3, 'STICKY', `  zIndex: ${styles.zIndex}`);
+        debugLog(3, 'STICKY', `  maxHeight: ${styles.maxHeight}`);
       }
     }
 
@@ -1829,14 +1824,13 @@
           if (thead) {
             const rect = thead.getBoundingClientRect();
             const styles = window.getComputedStyle(thead);
-            debugLog(4, 'SCROLL', 'Table header during scroll:', {
-              scrollY: window.scrollY,
-              rectTop: rect.top,
-              rectBottom: rect.bottom,
-              computedPosition: styles.position,
-              computedTop: styles.top,
-              isSticky: rect.top === 60 || rect.top === 140
-            });
+            debugLog(4, 'SCROLL', 'Table header during scroll:');
+            debugLog(4, 'SCROLL', `  scrollY: ${window.scrollY}`);
+            debugLog(4, 'SCROLL', `  rectTop: ${rect.top}`);
+            debugLog(4, 'SCROLL', `  rectBottom: ${rect.bottom}`);
+            debugLog(4, 'SCROLL', `  computedPosition: ${styles.position}`);
+            debugLog(4, 'SCROLL', `  computedTop: ${styles.top}`);
+            debugLog(4, 'SCROLL', `  isSticky: ${rect.top === 60 || rect.top === 140}`);
           }
         }
       });
@@ -2246,11 +2240,10 @@
       const thead = document.querySelector('.task-table thead');
       if (thead) {
         const styles = window.getComputedStyle(thead);
-        debugLog(3, 'RENDER', 'Table header styles after render:', {
-          position: styles.position,
-          top: styles.top,
-          zIndex: styles.zIndex
-        });
+        debugLog(3, 'RENDER', 'Table header styles after render:');
+        debugLog(3, 'RENDER', `  position: ${styles.position}`);
+        debugLog(3, 'RENDER', `  top: ${styles.top}`);
+        debugLog(3, 'RENDER', `  zIndex: ${styles.zIndex}`);
       }
     }
 
@@ -2351,11 +2344,10 @@
       const toggleBtn = document.getElementById('filter-panel-toggle');
       const tableHeaders = document.querySelectorAll('.task-table thead');
 
-      debugLog(3, 'FILTER', 'Elements found:', {
-        panel: !!panel,
-        toggleBtn: !!toggleBtn,
-        tableHeadersCount: tableHeaders.length
-      });
+      debugLog(3, 'FILTER', 'Elements found:');
+      debugLog(3, 'FILTER', `  panel: ${!!panel}`);
+      debugLog(3, 'FILTER', `  toggleBtn: ${!!toggleBtn}`);
+      debugLog(3, 'FILTER', `  tableHeadersCount: ${tableHeaders.length}`);
 
       if (filterPanelOpen) {
         panel.classList.add('active');
@@ -2372,11 +2364,10 @@
 
         // パネルのスタイルも確認
         const panelStyles = window.getComputedStyle(panel);
-        debugLog(3, 'FILTER', 'Filter panel styles (open):', {
-          maxHeight: panelStyles.maxHeight,
-          overflow: panelStyles.overflow,
-          position: panelStyles.position
-        });
+        debugLog(3, 'FILTER', 'Filter panel styles (open):');
+        debugLog(3, 'FILTER', `  maxHeight: ${panelStyles.maxHeight}`);
+        debugLog(3, 'FILTER', `  overflow: ${panelStyles.overflow}`);
+        debugLog(3, 'FILTER', `  position: ${panelStyles.position}`);
       } else {
         panel.classList.remove('active');
         toggleBtn.classList.remove('active');
@@ -2392,10 +2383,9 @@
 
         // パネルのスタイルも確認
         const panelStyles = window.getComputedStyle(panel);
-        debugLog(3, 'FILTER', 'Filter panel styles (closed):', {
-          maxHeight: panelStyles.maxHeight,
-          overflow: panelStyles.overflow
-        });
+        debugLog(3, 'FILTER', 'Filter panel styles (closed):');
+        debugLog(3, 'FILTER', `  maxHeight: ${panelStyles.maxHeight}`);
+        debugLog(3, 'FILTER', `  overflow: ${panelStyles.overflow}`);
       }
     }
 
@@ -5489,13 +5479,47 @@ WBS1.2.0,PH1,設計,基本設計書作成,F_02,佐藤花子,山田太郎,10,2026
           <!-- 使用技術 -->
           <div class="tech-section">
             <h4>🔧 使用技術</h4>
+
+            <p>
+              <strong>このツールが使っている技術の一覧です:</strong>
+            </p>
+
             <ul>
-              <li><strong>プロトコル:</strong> <code>file://</code> (ローカルファイルシステム)</li>
-              <li><strong>データ生成:</strong> <code>Blob URL</code> (blob:null/... 形式、一時メモリ)</li>
-              <li><strong>通信方式:</strong> <code>window.postMessage API</code> (同一PC内のウィンドウ間通信のみ)</li>
-              <li><strong>ストレージ:</strong> <code>LocalStorage</code> (ブラウザ内、5MB上限、PC内のみ保存)</li>
-              <li><strong>レンダリング:</strong> ブラウザネイティブHTML/CSS/JavaScript (外部依存なし)</li>
+              <li>
+                <strong>プロトコル:</strong> <code>file://</code> (ローカルファイルシステム)<br>
+                <span style="color: #6b7280; font-size: 0.9rem;">
+                  → あなたのPC内のファイルを開く仕組みです
+                </span>
+              </li>
+              <li>
+                <strong>データ生成:</strong> <code>Blob URL</code> (blob:null/... 形式、一時メモリ)<br>
+                <span style="color: #6b7280; font-size: 0.9rem;">
+                  → ブラウザのメモリ内に一時的にデータを保存する仕組みです
+                </span>
+              </li>
+              <li>
+                <strong>通信方式:</strong> <code>window.postMessage API</code> (同一PC内のウィンドウ間通信のみ)<br>
+                <span style="color: #6b7280; font-size: 0.9rem;">
+                  → 同じPC内のウィンドウ同士がメッセージを送り合う機能です
+                </span>
+              </li>
+              <li>
+                <strong>ストレージ:</strong> <code>LocalStorage</code> (ブラウザ内、5MB上限、PC内のみ保存)<br>
+                <span style="color: #6b7280; font-size: 0.9rem;">
+                  → ブラウザ内の「保存箱」です。PCのハードディスク内に保存されます
+                </span>
+              </li>
+              <li>
+                <strong>レンダリング:</strong> ブラウザネイティブHTML/CSS/JavaScript (外部依存なし)<br>
+                <span style="color: #6b7280; font-size: 0.9rem;">
+                  → ブラウザに最初から入っている機能だけで動作します
+                </span>
+              </li>
             </ul>
+
+            <p style="color: #6b7280; font-size: 0.9rem; margin-top: 1rem;">
+              <strong>📖 用語の詳細は、上記の「用語集」セクションをご覧ください。</strong>
+            </p>
           </div>
 
           <!-- A-B連携の安全性 -->
